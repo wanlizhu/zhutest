@@ -5,4 +5,4 @@ mkdir -p build
 cd build
 cmake ..
 make
-./triangle
+./wzhutest

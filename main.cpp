@@ -83,7 +83,7 @@ GLuint upload_vertex_array(int count) {
         vboptr = (float *)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-        printf("glMapBuffer: %lld us\n", duration);
+        printf("glMapBuffer: %lld us\n", (long long)duration);
         for (int i = 0; i < count * 3; i++) {
             *vboptr++ = rand01() * (rand01() > 0.5 ? 1 : -1);
         }
@@ -94,9 +94,9 @@ GLuint upload_vertex_array(int count) {
     GLuint ebo = 0;
     glGenBuffers(1, &ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ARRAY_BUFFER, count * 3 * sizeof(int),  NULL, GL_STATIC_DRAW);
-    int* eboptr = (int*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-    for (int i = 0; i < count * 3; i++) {
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(int),  NULL, GL_STATIC_DRAW);
+    int* eboptr = (int*)glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
+    for (int i = 0; i < count; i++) {
         *eboptr++ = i;
     }
     glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
@@ -139,16 +139,17 @@ int main()
 
     glfwSetFramebufferSizeCallback(window, glfw_callback_fb_size);
     GLuint program = compile_and_link_program();
-    GLuint vao = upload_vertex_array(900000);
+    GLuint vao = upload_vertex_array(900);
 
-    glViewport(0, 0, 1920, 1080);    
+    glViewport(0, 0, 1920, 1080);
+    glDisable(GL_DEPTH_TEST);
     glUseProgram(program);
     glBindVertexArray(vao);
 
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0, 0, 0, 1);
         glClear(GL_COLOR_BUFFER_BIT);
-        glDrawElements(GL_TRIANGLES, 900000, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 900, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
