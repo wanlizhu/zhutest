@@ -15,6 +15,14 @@ if [[ $USER == wanliz ]]; then
     fi
 fi
 
+function zhu-reload {
+    if [[ -e ~/zhutest/utils.sh ]]; then
+        source ~/zhutest/utils.sh
+    else
+        echo "~/zhutest/utils.sh doesn't exist!"
+    fi
+}
+
 function zhu-viewperf-install {
     if [[ ! -e ~/viewperf2020/viewperf/bin/viewperf ]]; then
         if ! mountpoint -q /mnt/linuxqa; then
@@ -88,18 +96,29 @@ function zhu-perf-generate-flamegraph {
     perfdata=$1 
     if [[ -z $perfdata ]]; then
         perfdata=system-wide.perf.data
+        echo "perf is recording system-wide counters into $perfdata for 5 seconds"
         sudo perf record -a -g --call-graph dwarf --freq=2000 --output=$perfdata -- sleep 5 || return -1
     fi
 
     if [[ -e $perfdata ]]; then
         sudo chmod 666 $perfdata
-        sudo perf script --no-inline --force --input=$perfdata -F +pid > $perfdata.perthreads && echo "Generated $perfdata.perthreads" &&
-        sudo perf script --no-inline --force --input=$perfdata > /tmp/$perfdata.script && echo "Generated /tmp/$perfdata.script" &&
-        sudo ~/flamegraph.git/stackcollapse-perf.pl /tmp/$perfdata.script > /tmp/$perfdata.script.collapse && echo "Generated /tmp/$perfdata.script.collapse" &&
-        sudo ~/flamegraph.git/stackcollapse-recursive.pl /tmp/$perfdata.script.collapse > /tmp/$perfdata.script.collapse.recursive && echo "Generated /tmp/$perfdata.script.collapse.recursive" &&
-        sudo ~/flamegraph.git/flamegraph.pl /tmp/$perfdata.script.collapse.recursive > $perfdata.svg  &&
-        echo "Generated $perfdata.svg"
+        sudo perf script --no-inline --force --input=$perfdata -F +pid > $perfdata.withpid && echo "Generated $perfdata.withpid" &&
+        sudo perf script --no-inline --force --input=$perfdata > /tmp/$perfdata.script &&
+        sudo ~/flamegraph.git/stackcollapse-perf.pl /tmp/$perfdata.script > /tmp/$perfdata.script.collapse &&
+        sudo ~/flamegraph.git/stackcollapse-recursive.pl /tmp/$perfdata.script.collapse > $perfdata.folded && echo "Generated $perfdata.folded" &&
+        sort -k2 -nr $perfdata.folded | head -n 1000 > $perfdata.folded.top1k && echo "Generated $perfdata.folded.top1k" &&
+        sudo ~/flamegraph.git/flamegraph.pl $perfdata.folded > $perfdata.svg  && echo "Generated $perfdata.svg" &&
+        sudo ~/flamegraph.git/flamegraph.pl --minwidth '1%' $perfdata.folded > $perfdata.mini.svg  && echo "Generated $perfdata.mini.svg" 
     fi 
+}
+
+function zhu-flamegraph-diff {
+    if [[ -z $2 ]]; then
+        echo "Usage: zhu-flamegraph-diff perf1.data.folded perf2.data.folded"
+        return -1
+    fi
+
+    ~/flamegraph.git/difffolded.pl -n -s $1 $2 | ~/flamegraph.git/flamegraph.pl > $(basename $1)_$(basename $2).diff.svg 
 }
 
 function zhu-start-gdm3 {
