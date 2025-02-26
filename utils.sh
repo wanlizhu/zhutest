@@ -33,7 +33,7 @@ function zhu-send-files {
     fi 
     if [[ ! -e ~/.zhurc.client ]]; then
         read -p "Client IP: " client
-        read -p " Username: " username
+        read -e -i $USER -p " Username: " username
         read -s -p " Password: " password
         echo "$username@$client $password" > ~/.zhurc.client
     fi
@@ -49,7 +49,7 @@ function zhu-send-files {
     password=$(cat ~/.zhurc.client | awk '{print $2}')
     username=$(cat ~/.zhurc.client | awk '{print $1}' | awk -F '@' '{print $1}')
     hostname=$(cat ~/.zhurc.client | awk '{print $1}' | awk -F '@' '{print $2}')
-    sshpass -p $password scp -r "$files" $username@$hostname:/home/$username/Downloads/
+    sshpass -p $password scp -r $files $username@$hostname:/home/$username/Downloads/
 }
 
 function zhu-viewperf-install {
