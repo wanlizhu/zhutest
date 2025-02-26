@@ -24,6 +24,25 @@ function zhu-reload {
     fi
 }
 
+function zhu-connect-nvidia-vpn {
+    if [[ -z $(which openconnect) ]]; then
+        sudo apt install -y openconnect
+    fi
+
+    if [[ $1 == "headless" ]]; then
+        while IFS= read -r line; do 
+            if [[ -z "$line" ]]; then
+                break 
+            fi
+            export ${line%%=*}=${line#*=}
+        done
+    else 
+        eval $(openconnect --useragent="AnyConnect-compatible OpenConnect VPN Agent" --external-browser $(which google-chrome) --authenticate ngvpn02.vpn.nvidia.com/SAML-EXT)
+    fi
+
+    [ -n ["$COOKIE"] ] && echo -n "$COOKIE" | sudo openconnect --cookie-on-stdin $CONNECT_URL --servercert $FINGERPRINT --resolve $RESOLVE 
+}
+
 function zhu-send-files {
     if [[ -z $(which sshpass) ]]; then
         sudo apt install -y sshpass
@@ -398,7 +417,7 @@ function zhu-build-nvidia-driver {
             NV_COLOR_OUTPUT=1 \
             NV_GUARDWORD= \
             NV_COMPRESS_THREADS=$(nproc) \
-            NV_FAST_PACKAGE_COMPRESSION=zstd drivers dist $arch $build_type -j$threads "$@"
+            NV_FAST_PACKAGE_COMPRESSION=zstd drivers dist linux $arch $build_type -j$threads "$@"
     else
         time $HOME/wanliz-p4sw-common/misc/linux/unix-build \
             --tools  $HOME/wanliz-p4sw-common/tools \
@@ -408,7 +427,7 @@ function zhu-build-nvidia-driver {
             NV_COLOR_OUTPUT=1 \
             NV_GUARDWORD= \
             NV_COMPRESS_THREADS=$(nproc) \
-            NV_FAST_PACKAGE_COMPRESSION=zstd $arch $build_type -j$threads "$@"
+            NV_FAST_PACKAGE_COMPRESSION=zstd linux $arch $build_type -j$threads "$@"
     fi
 }
 
