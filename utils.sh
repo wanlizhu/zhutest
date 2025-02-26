@@ -328,14 +328,17 @@ function zhu-install-nvidia-driver {
     echo "[2] Install local builds"
     read -p "Use (default is 1): " ans
     if [[ -z $ans || $ans == 1 ]]; then
-        read -p "Nvidia driver desc: " driver_desc
-        sudo bash -c "
+        if [[ $UID == 0 ]]; then
+            read -p "Nvidia driver desc: " driver_desc
             cd /root
             if [[ ! -d /root/nvt ]]; then
                 /mnt/linuxqa/nvtest/bin/nvt.sh sync
             fi
             /mnt/linuxqa/nvtest/bin/nvt.sh drivers $driver_desc
-        "
+        else
+            echo "Login as root (don't use sudo) and run again"
+            return -1
+        fi
     else
         mapfile -t files < <(find $P4ROOT/_out ~/Downloads -type f -name 'NVIDIA-*.run')
         ((${#files[@]})) || { echo "No nvidia .run found"; return -1; }
