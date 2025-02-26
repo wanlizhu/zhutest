@@ -343,6 +343,7 @@ function zhu-sync {
         git push
     fi
     popd >/dev/null 
+    zhu-reload 
 }
 
 function zhu-install-nvidia-driver {
