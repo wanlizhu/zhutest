@@ -24,6 +24,34 @@ function zhu-reload {
     fi
 }
 
+function zhu-send-files {
+    if [[ -z $(which sshpass) ]]; then
+        sudo apt install -y sshpass
+    fi
+    if [[ -z $(which fzf) ]]; then
+        sudo apt install -y fzf 
+    fi 
+    if [[ ! -e ~/.zhurc.client ]]; then
+        read -p "Client IP: " client
+        read -p " Username: " username
+        read -s -p " Password: " password
+        echo "$username@$client $password" > ~/.zhurc.client
+    fi
+    if ! sshpass -p $(cat ~/.zhurc.client | awk '{print $2}') ssh -o StrictHostKeyChecking=no $(cat ~/.zhurc.client | awk '{print $1}') exit; then 
+        rm -rf ~/.zshrc.client
+    fi
+    if [[ ! -e ~/.zhurc.client ]]; then
+        echo "Invalid ~/.zhurc.client has been removed, run again"
+        return -1
+    fi
+
+    files=$(ls * | fzf -m) 
+    password=$(cat ~/.zhurc.client | awk '{print $2}')
+    username=$(cat ~/.zhurc.client | awk '{print $1}' | awk -F '@' '{print $1}')
+    hostname=$(cat ~/.zhurc.client | awk '{print $1}' | awk -F '@' '{print $2}')
+    sshpass -p $password scp -r "$files" $username@$hostname:/home/$username/Downloads/
+}
+
 function zhu-viewperf-install {
     if [[ ! -e ~/viewperf2020/viewperf/bin/viewperf ]]; then
         if ! mountpoint -q /mnt/linuxqa; then
