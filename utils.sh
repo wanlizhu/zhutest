@@ -2,6 +2,7 @@
 export __GL_SYNC_TO_VBLANK=0
 export vblank_mode=0
 export __GL_DEBUG_BYPASS_ASSERT=c 
+[[ -z $DISPLAY ]] && export DISPLAY=:0
 if [[ $USER == wanliz ]]; then
     export P4CLIENT=wanliz-p4sw-bugfix_main
     export P4ROOT=$HOME/$P4CLIENT
@@ -324,38 +325,21 @@ function zhu-install-nvidia-driver {
         zhu-mount-linuxqa || return -1
     fi
 
-    echo "[1] Run nvt.sh as root"
-    echo "[2] Install local builds"
-    read -p "Use (default is 1): " ans
-    if [[ -z $ans || $ans == 1 ]]; then
-        if [[ $UID == 0 ]]; then
-            read -p "Nvidia driver desc: " driver_desc
-            cd /root
-            if [[ ! -d /root/nvt ]]; then
-                /mnt/linuxqa/nvtest/bin/nvt.sh sync
-            fi
-            /mnt/linuxqa/nvtest/bin/nvt.sh drivers $driver_desc
-        else
-            echo "Login as root (don't use sudo) and run again"
-            return -1
-        fi
-    else
-        mapfile -t files < <(find $P4ROOT/_out ~/Downloads -type f -name 'NVIDIA-*.run')
-        ((${#files[@]})) || { echo "No nvidia .run found"; return -1; }
-        select file in "${files[@]}"; do 
-            [[ $file ]] && { 
-                sudo systemctl stop display-manager 
-                chmod +x $file 
-                sudo $file  && {
-                    echo "Nvidia driver is installed!"
-                    read -e -i yes -p "Do you want to start display manager? " ans
-                    [[ $ans == yes ]] && sudo systemctl start display-manager
-                } || cat /var/log/nvidia-installer.log
-                return 
-            }
-            echo "Invalid choice, try again"
-        done
-    fi
+    mapfile -t files < <(find $P4ROOT/_out ~/Downloads -type f -name 'NVIDIA-*.run')
+    ((${#files[@]})) || { echo "No nvidia .run found"; return -1; }
+    select file in "${files[@]}"; do 
+        [[ $file ]] && { 
+            sudo systemctl stop display-manager 
+            chmod +x $file 
+            sudo $file  && {
+                echo "Nvidia driver is installed!"
+                read -e -i yes -p "Do you want to start display manager? " ans
+                [[ $ans == yes ]] && sudo systemctl start display-manager
+            } || cat /var/log/nvidia-installer.log
+            return 
+        }
+        echo "Invalid choice, try again"
+    done
 }
 
 function zhu-build-nvidia-driver {
