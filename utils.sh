@@ -49,6 +49,7 @@ function zhu-send-files {
     password=$(cat ~/.zhurc.client | awk '{print $2}')
     username=$(cat ~/.zhurc.client | awk '{print $1}' | awk -F '@' '{print $1}')
     hostname=$(cat ~/.zhurc.client | awk '{print $1}' | awk -F '@' '{print $2}')
+    echo "$files"
     sshpass -p $password scp -r $files $username@$hostname:/home/$username/Downloads/
 }
 
