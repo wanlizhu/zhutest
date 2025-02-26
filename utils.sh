@@ -348,14 +348,19 @@ function zhu-sync {
     zhu-reload 
 }
 
-function zhu-install-nvidia-driver {
+function zhu-download-nvidia-driver {
     if [[ -z $(apt list --installed 2>/dev/null | grep python3-pymysql) ]]; then 
         sudo apt install -y python3-pymysql axel 
     fi
+
     if ! mountpoint -q /mnt/linuxqa; then
         zhu-mount-linuxqa || return -1
     fi
 
+    echo TODO
+}
+
+function zhu-install-nvidia-driver {
     mapfile -t files < <(find $P4ROOT/_out ~/Downloads -type f -name 'NVIDIA-*.run')
     ((${#files[@]})) || { echo "No nvidia .run found"; return -1; }
     select file in "${files[@]}"; do 
