@@ -36,7 +36,7 @@ function zhu-send-files {
         read -e -i macos -p "Client OS: " clientos
         read -e -i $USER -p " Username: " username
         read -s -p " Password: " password
-        echo "$username@$client $password" > ~/.zhurc.client
+        echo "$username@$client $password $clientos" > ~/.zhurc.client
     fi
     if ! sshpass -p $(cat ~/.zhurc.client | awk '{print $2}') ssh -o StrictHostKeyChecking=no $(cat ~/.zhurc.client | awk '{print $1}') exit; then 
         rm -rf ~/.zshrc.client
@@ -50,6 +50,7 @@ function zhu-send-files {
     password=$(cat ~/.zhurc.client | awk '{print $2}')
     username=$(cat ~/.zhurc.client | awk '{print $1}' | awk -F '@' '{print $1}')
     hostname=$(cat ~/.zhurc.client | awk '{print $1}' | awk -F '@' '{print $2}')
+    clientos=$(cat ~/.zhurc.client | awk '{print $3}')
     sshpass -p $password scp -r ${files//$'\n'/ } $username@$hostname:/$([[ $clientos == macos ]] && echo Users || echo home)/$username/Downloads/
 }
 
