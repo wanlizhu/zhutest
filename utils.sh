@@ -311,44 +311,34 @@ function zhu-install-nvidia-driver {
         zhu-mount-linuxqa || return -1
     fi
 
-    if [[ -e $1 ]]; then
-        echo "$1"
-        read -p "Press [ENTER] to continue: " _
-        sudo systemctl stop display-manager 
-        chmod +x $1 
-        sudo $1 && {
-            echo "Nvidia driver is installed!"
-            read -e -i yes -p "Do you want to start display manager? " ans
-            [[ $ans == yes ]] && sudo systemctl start display-manager
-        } || cat /var/log/nvidia-installer.log
+    echo "[1] Run nvt.sh as root"
+    echo "[2] Install local builds"
+    read -p "Use (default is 1): " ans
+    if [[ -z $ans || $ans == 1 ]]; then
+        read -p "Nvidia driver desc: " driver_desc
+        sudo bash -c "
+            cd /root
+            if [[ ! -d /root/nvt ]]; then
+                /mnt/linuxqa/nvtest/bin/nvt.sh sync
+            fi
+            /mnt/linuxqa/nvtest/bin/nvt.sh drivers $driver_desc
+        "
     else
-        echo "[1] Download driver using nvtest/bin/drivers.py"
-        echo "[2] Install local builds"
-        read -p "Use (default is 1): " ans
-        if [[ -z $ans || $ans == 1 ]]; then
-            pushd ~/Downloads >/dev/null 
-            sudo bash -c "[[ ! -d /root/nvt ]] && /mnt/linuxqa/nvtest/bin/nvt.sh sync"
-            sudo bash -c "/mnt/linuxqa/nvtest/bin/nvt.sh drivers --help 2>&1 | grep Examples -A 8"
-            read -p "Driver desc: " driver_desc
-
-            sudo bash -c "/mnt/linuxqa/nvtest/bin/nvt.sh drivers download $driver_desc" 
-            echo && read -e -i "$(pwd)/NVIDIA-Linux-x86_64-DVS.run" -p "Downloaded driver name: " driver 
-            
-            if [[ -e $driver ]]; then
-                zhu-install-nvidia-driver "$driver"
-            fi 
-            popd >/dev/null 
-        else
-            mapfile -t files < <(find $P4ROOT/_out ~/Downloads -type f -name 'NVIDIA-*.run')
-            ((${#files[@]})) || { echo "No nvidia .run found"; return -1; }
-            select file in "${files[@]}"; do 
-                [[ $file ]] && { 
-                    zhu-install-nvidia-driver "$file"
-                    return 
-                }
-                echo "Invalid choice, try again"
-            done
-        fi
+        mapfile -t files < <(find $P4ROOT/_out ~/Downloads -type f -name 'NVIDIA-*.run')
+        ((${#files[@]})) || { echo "No nvidia .run found"; return -1; }
+        select file in "${files[@]}"; do 
+            [[ $file ]] && { 
+                sudo systemctl stop display-manager 
+                chmod +x $file 
+                sudo $file  && {
+                    echo "Nvidia driver is installed!"
+                    read -e -i yes -p "Do you want to start display manager? " ans
+                    [[ $ans == yes ]] && sudo systemctl start display-manager
+                } || cat /var/log/nvidia-installer.log
+                return 
+            }
+            echo "Invalid choice, try again"
+        done
     fi
 }
 
