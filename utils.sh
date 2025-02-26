@@ -328,12 +328,10 @@ function zhu-install-nvidia-driver {
         if [[ -z $ans || $ans == 1 ]]; then
             pushd ~/Downloads >/dev/null 
             sudo bash -c "[[ ! -d /root/nvt ]] && /mnt/linuxqa/nvtest/bin/nvt.sh sync"
-            sudo bash -c "/mnt/linuxqa/nvtest/bin/drivers.py --help 2>&1 | grep Examples -A 8"
+            sudo bash -c "/mnt/linuxqa/nvtest/bin/nvt.sh drivers --help 2>&1 | grep Examples -A 8"
             read -p "Driver desc: " driver_desc
 
-            sudo bash -c "/mnt/linuxqa/nvtest/bin/drivers.py download $driver_desc" || {
-                sudo bash -c "/mnt/linuxqa/nvtest/bin/drivers.py download $driver_desc" 
-            } 
+            sudo bash -c "/mnt/linuxqa/nvtest/bin/nvt.sh drivers download $driver_desc" 
             echo && read -e -i "$(pwd)/NVIDIA-Linux-x86_64-DVS.run" -p "Downloaded driver name: " driver 
             
             if [[ -e $driver ]]; then
