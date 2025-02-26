@@ -303,6 +303,19 @@ function zhu-mount-linuxqa {
     sudo mount linuxqa:/storage5/dvsbuilds /mnt/dvsbuilds
 }
 
+function zhu-sync {
+    pushd ~/zhutest >/dev/null
+    if git diff --quiet && git diff --cached --quiet; then # No local changes
+        git pull
+    else
+        git add .
+        git commit -m "$(date)"
+        git pull
+        git push
+    fi
+    popd >/dev/null 
+}
+
 function zhu-install-nvidia-driver {
     if [[ -z $(apt list --installed 2>/dev/null | grep python3-pymysql) ]]; then 
         sudo apt install -y python3-pymysql axel 
