@@ -88,6 +88,29 @@ function zhu-perf-install {
     }
 }
 
+function zhu-get-unused-filename {
+    if [[ -e "$1" ]]; then
+        filename="$1"
+        counter=1
+        # Name contains an extension
+        if [[ "$filename" == *.* && "$filename" != .* ]]; then
+            base="${filename%.*}"
+            ext="${filename##*.}"
+            while [[ -e "${base}-${counter}.${ext}" ]]; do 
+                ((counter++))
+            done
+            echo "${base}-${counter}.${ext}"
+        else # No extension
+            while [[ -e "${filename}-${counter}" ]]; do
+                ((counter++))
+            done
+            echo "${filename}-${counter}"
+        fi
+    else
+        echo "$1"
+    fi
+}
+
 function zhu-perf-generate-flamegraph {
     if [[ ! -e ~/flamegraph.git/flamegraph.pl ]]; then
         git clone --depth 1 https://github.com/brendangregg/FlameGraph.git ~/flamegraph.git || return -1
@@ -95,12 +118,13 @@ function zhu-perf-generate-flamegraph {
 
     perfdata=$1 
     if [[ -z $perfdata ]]; then
-        perfdata=system-wide.perf.data
+        perfdata=$(zhu-get-unused-filename system-wide.perf.data)
         echo "perf is recording system-wide counters into $perfdata for 5 seconds"
         sudo perf record -a -g --call-graph dwarf --freq=2000 --output=$perfdata -- sleep 5 || return -1
     fi
 
     if [[ -e $perfdata ]]; then
+        perfdata=$(zhu-get-unused-filename $perfdata)
         sudo chmod 666 $perfdata
         sudo perf script --no-inline --force --input=$perfdata -F +pid > $perfdata.withpid && echo "Generated $perfdata.withpid" &&
         sudo perf script --no-inline --force --input=$perfdata > /tmp/$perfdata.script &&
@@ -159,6 +183,10 @@ function zhu-start-openbox {
 function zhu-test-maya-high-interrupt-count-on-gdm3 {
     zhu-perf-install 
     rm -rf /tmp/fps.log 
+
+    if [[ -z $(which trace-cmd) ]]; then
+        sudo apt install -y trace-cmd
+    fi
 
     # Round 1 for the number of interrupts
     zhu-viewperf-maya-subtest5 &
@@ -228,7 +256,7 @@ function zhu-test-maya-high-interrupt-count-on-gdm3 {
     mayapid=$!
     sleep 2
 
-    #zhu-perf-generate-flamegraph
+    zhu-perf-generate-flamegraph
     #zhu-record-interrupt-event
     wait $mayapid
 
@@ -340,7 +368,7 @@ function zhu-build-nvidia-driver {
 }
 
 function zhu-lsfunc {
-    declare -f | grep 'zhu-' | grep -v declare
+    declare -f | grep 'zhu-' | grep -v declare | grep '()'
 }
 
 function zhu-check-nvidia-gsp {
