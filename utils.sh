@@ -149,7 +149,7 @@ function zhu-perf-generate-flamegraph {
 
     perfdata=$1 
     if [[ -z $perfdata ]]; then
-        perfdata=$(zhu-get-unused-filename system-wide.perf.data)
+        perfdata=$(zhu-get-unused-filename system.perfdata)
         echo "perf is recording system-wide counters into $perfdata for 5 seconds"
         sudo perf record -a -g --call-graph dwarf --freq=2000 --output=$perfdata -- sleep 5 || return -1
     else
