@@ -36,6 +36,9 @@ function zhu-connect-nvidia-vpn {
             fi
             export ${line%%=*}=${line#*=}
         done
+    elif [[ $1 == "cookie" ]]; then
+        openconnect --useragent="AnyConnect-compatible OpenConnect VPN Agent" --external-browser $(which google-chrome) --authenticate ngvpn02.vpn.nvidia.com/SAML-EXT
+        return 
     else 
         eval $(openconnect --useragent="AnyConnect-compatible OpenConnect VPN Agent" --external-browser $(which google-chrome) --authenticate ngvpn02.vpn.nvidia.com/SAML-EXT)
     fi
