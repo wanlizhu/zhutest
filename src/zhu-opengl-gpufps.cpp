@@ -68,7 +68,8 @@ void glXSwapBuffers(Display *dpy, GLXDrawable drawable) {
             snprintf(tmpstr, 100, "%07.2f cpufps (%06.3f ms)  -  %07.2f gpufps (%06.3f ms)  =  %07.2f fps (%06.3f ms)\n", 
                 float(1000.0 / cpu_time_ms), (float)cpu_time_ms,
                 float(1000.0 / gpu_time_ms), (float)gpu_time_ms,
-                float(1000.0 / (cpu_time_ms - gpu_time_ms)), float(cpu_time_ms - gpu_time_ms));
+                float(1000.0 / cpu_time_ms) - float(1000.0 / gpu_time_ms),
+                float(cpu_time_ms - gpu_time_ms));
 
             if (logfile) {
                 fwrite(tmpstr, 1, strlen(tmpstr), logfile);
