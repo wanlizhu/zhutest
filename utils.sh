@@ -29,6 +29,15 @@ function zhu-connect-nvidia-vpn {
         sudo apt install -y openconnect
     fi
 
+    if [[ ! -z $(pidof openconnect) ]]; then
+        read -e -i yes -p "Kill previous openconnect process ($(pidof openconnect))? " ans
+        if [[ $ans == yes ]]; then
+            sudo kill -SIGINT $(pidof openconnect)
+            echo "Wait for 3 seconds after killing openconnect"
+            sleep 3
+        fi
+    fi
+
     if [[ $1 == "headless" ]]; then
         while IFS= read -r line; do 
             if [[ -z "$line" ]]; then
@@ -41,15 +50,6 @@ function zhu-connect-nvidia-vpn {
         return 
     else 
         eval $(openconnect --useragent="AnyConnect-compatible OpenConnect VPN Agent" --external-browser $(which google-chrome) --authenticate ngvpn02.vpn.nvidia.com/SAML-EXT)
-    fi
-
-    if [[ ! -z $(pidof openconnect) ]]; then
-        read -e -i yes -p "Kill previous openconnect process ($(pidof openconnect))? " ans
-        if [[ $ans == yes ]]; then
-            sudo kill -SIGINT $(pidof openconnect)
-            echo "Wait for 3 seconds after killing openconnect"
-            sleep 3
-        fi
     fi
 
     [ -n ["$COOKIE"] ] && echo -n "$COOKIE" | sudo openconnect --cookie-on-stdin $CONNECT_URL --servercert $FINGERPRINT --resolve $RESOLVE 
