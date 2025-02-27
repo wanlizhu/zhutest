@@ -468,3 +468,9 @@ function zhu-enable-nvidia-gsp {
     sudo update-initramfs -u 
     echo "A reboot is pending"
 }
+
+function zhu-opengl-gpufps {
+    if [[ ! -e /usr/local/lib/zhu-opengl-gpufps.so ]]; then
+        echo 
+    fi
+}
