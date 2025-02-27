@@ -478,3 +478,8 @@ function zhu-opengl-gpufps {
 
     __GL_SYNC_TO_VBLANK=0 vblank_mode=0 LD_PRELOAD=/tmp/zhu-opengl-gpufps.so "$@"
 }
+
+function zhu-opengl-gpufps-rebuild {
+    rm -rf /tmp/zhu-opengl-gpufps.so
+    zhu-opengl-gpufps "$@"
+}

@@ -31,6 +31,8 @@ void glXSwapBuffers(Display *dpy, GLXDrawable drawable) {
             if (getenv("zhu_gpufps_log_file")) { 
                 logfile = fopen(getenv("zhu_gpufps_log_file"), "a");
             }
+        } else {
+            printf("Failed to init glad!\n");
         }
     }
 
