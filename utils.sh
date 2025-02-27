@@ -470,16 +470,10 @@ function zhu-enable-nvidia-gsp {
 }
 
 function zhu-opengl-gpufps {
-    if [[ ! -e /tmp/zhu-opengl-gpufps.so ]]; then
-        gcc -c ~/zhutest/src/glad.c -fPIC -o /tmp/glad.a &&
-        g++ -shared -fPIC -o /tmp/zhu-opengl-gpufps.so ~/zhutest/src/zhu-opengl-gpufps.cpp -ldl -lGL -lX11 /tmp/glad.a &&
-        echo "Generated /tmp/zhu-opengl-gpufps.so" || return -1
-    fi
+    rm -rf /tmp/zhu-opengl-gpufps.so
+    gcc -c ~/zhutest/src/glad.c -fPIC -o /tmp/glad.a &&
+    g++ -shared -fPIC -o /tmp/zhu-opengl-gpufps.so ~/zhutest/src/zhu-opengl-gpufps.cpp -ldl -lGL -lX11 /tmp/glad.a &&
+    echo "Generated /tmp/zhu-opengl-gpufps.so" || return -1
 
     __GL_SYNC_TO_VBLANK=0 vblank_mode=0 LD_PRELOAD=/tmp/zhu-opengl-gpufps.so "$@"
-}
-
-function zhu-opengl-gpufps-rebuild {
-    rm -rf /tmp/zhu-opengl-gpufps.so
-    zhu-opengl-gpufps "$@"
 }
