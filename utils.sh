@@ -82,22 +82,21 @@ function zhu-send-files {
     if [[ -z $(which fzf) ]]; then
         sudo apt install -y fzf 
     fi 
+
     if [[ ! -e ~/.zhutest.client ]]; then
         read -p "Client IP: " client
         read -e -i macos -p "Client OS: " clientos
-        read -e -i $USER -p " Username: " username
+        read -e -i wanliz -p " Username: " username
         read -s -p " Password: " password
         echo "$username@$client $password $clientos" > ~/.zhutest.client
     fi
-    if ! sshpass -p $(cat ~/.zhutest.client | awk '{print $2}') ssh -o StrictHostKeyChecking=no $(cat ~/.zhutest.client | awk '{print $1}') exit; then 
-        rm -rf ~/.zhutest.client
-    fi
-    if [[ ! -e ~/.zhutest.client ]]; then
-        echo "Invalid ~/.zhutest.client has been removed, run again"
-        return -1
-    fi
 
-    files=$(ls * | fzf -m) 
+    files=$(find . -maxdepth 1 -mindepth 1 ! -name ".*" | sort | fzf -m) 
+    echo 
+    echo "$files" > /tmp/files
+    total_bytes=$(awk '{total += $1} END {print total}' < <(xargs -a /tmp/files du -b | awk '{print $1}'))
+    echo "Transferring $(cat /tmp/xxx | wc -l) files of $(echo $total_bytes | numfmt --to=iec)..."
+
     password=$(cat ~/.zhutest.client | awk '{print $2}')
     username=$(cat ~/.zhutest.client | awk '{print $1}' | awk -F '@' '{print $1}')
     hostname=$(cat ~/.zhutest.client | awk '{print $1}' | awk -F '@' '{print $2}')
@@ -242,7 +241,7 @@ function zhu-start-bare-x {
         xset s off 
 
         sudo sed -i 's/console/anybody/g' /etc/X11/Xwrapper.config
-        [[ -z $(grep '"DPMS" "false"' /etc/X11/xorg.conf) ]] && sudo sed -i 's/"DPMS"/"DPMS" "false"/g' /etc/X11/xorg.conf
+        [[ -e /etc/X11/xorg.conf && -z $(grep '"DPMS" "false"' /etc/X11/xorg.conf) ]] && sudo sed -i 's/"DPMS"/"DPMS" "false"/g' /etc/X11/xorg.conf
         [[ ! -z $(pidof Xorg) ]] && pkill Xorg
 
         sudo systemctl stop display-manager
@@ -298,7 +297,7 @@ function zhu-test-maya-high-interrupt-count-on-gdm3 {
         count=$(trace-cmd report | grep -i nvidia | grep "irq=$nvidia_irq" | wc -l)
         echo "The number of interrupts is $count" > /tmp/xxx.log
     else
-        echo "" | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter
+        echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter
         amdgpu_irq=$(grep 'amdgpu' /proc/interrupts | awk '{print $1}' | cut -d: -f1 | head -1)
         count=$(trace-cmd report | grep -i amdgpu | grep "irq=$amdgpu_irq" | wc -l)
         echo "The number of interrupts is $count" > /tmp/xxx.log
@@ -548,4 +547,59 @@ function zhu-upgrade-nsight-systems {
         popd >/dev/null 
         popd >/dev/null 
     fi
+}
+
+function zhu-find-package-by-soname {
+    find /usr/lib -type f -name $1* | tee /tmp/so.list
+    while IFS= read -r line; do
+        dpkg -S $(realpath $line)
+    done < /tmp/so.list
+}
+
+function zhu-install-amd-driver-with-symbols {
+    echo "[1] Install debuginfod service to fetch debug symbols on demand (recommend)"
+    echo "[2] Install traditional *-dbgsym packages for debug symbols"
+    echo "[3] Install both"
+    read -p "Select: " method
+    
+    if [[ $method == 1 || $method == 3 ]]; then
+        sudo apt install -y debuginfod
+        sudo apt install -y elfutils
+        if ! grep "DEBUGINFOD_URLS" ~/.bashrc; then
+            echo "export DEBUGINFOD_URLS=\"https://debuginfod.ubuntu.com/\"" >> ~/.bashrc
+            source ~/.bashrc
+        fi
+        echo "The debuginfod service is installed!"
+    fi 
+
+    if [[ $method == 2 || $method == 3 ]]; then
+        # The AMDGPU driver (amdgpu) is part of the Linux kernel
+        if [[ ! -e /etc/apt/sources.list.d/ddebs.list ]]; then
+            mkdir -p /etc/apt/sources.list.d
+            sudo tee /etc/apt/sources.list.d/ddebs.list << EOF
+deb http://ddebs.ubuntu.com/ $(lsb_release -cs) main restricted universe multiverse
+deb http://ddebs.ubuntu.com/ $(lsb_release -cs)-updates main restricted universe multiverse
+EOF
+        fi
+
+        sudo apt install -y ubuntu-dbgsym-keyring  # Import the debug symbol archive key
+        sudo apt update | tee /tmp/apt-update.log
+        if [[ -z $(cat /tmp/apt-update.log | grep "http://ddebs.ubuntu.com/ $(lsb_release -cs)" | grep "does not have a Release file") ]]; then
+            sudo apt install -y linux-image-$(uname -r)-dbgsym  # This installs symbols for the kernel and its modules (including amdgpu)
+            sudo apt install -y libdrm2-dbgsym libdrm-amdgpu1-dbgsym #mesa-dbgsym
+            sudo apt install -y mesa-opencl-icd-dbgsym libgl1-mesa-dri-dbgsym libglapi-mesa-dbgsym  # Install debug symbols for OpenGL/OpenCL
+            sudo apt install -y mesa-vulkan-drivers-dbgsym  # Install debug symbols for Mesa and Vulkan drivers
+            sudo apt install -y xserver-xorg-video-amdgpu-dbgsym  # Install the Xorg AMDGPU display driver
+            sudo apt install -y libglx-mesa0-dbgsym  # Install debug symbols for libGLX_mesa.so
+            #sudo apt install -y mesa-va-drivers-dbgsym mesa-vdpau-drivers-dbgsym  # Install debug symbols for video decode/encode
+            
+            if [[ ! -e /usr/lib/debug/lib/modules/$(uname -r)/kernel/drivers/gpu/drm/amd/amdgpu/amdgpu.ko && ! -e /usr/lib/debug/lib/modules/$(uname -r)/kernel/drivers/gpu/drm/amd/amdgpu/amdgpu.ko.zst ]]; then
+                echo "Debug symbols for the AMDGPU kernel driver are missing: /usr/lib/debug/lib/modules/$(uname -r)/kernel/drivers/gpu/drm/amd/amdgpu/amdgpu.ko"
+                return -1
+            fi
+            echo "Debug symbols for AMD GPU driver are installed!"
+        else
+            echo "The ddebs.ubuntu.com repo does not have debug symbols for your Ubuntu release ($(lsb_release -cs))"
+        fi
+    fi 
 }
