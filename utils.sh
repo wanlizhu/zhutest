@@ -31,8 +31,8 @@ function zhu-config-sudo {
 }
 
 function zhu-config-path {
-    for dir in "~/nsight-systems-internal/current" \
-               "~/nsight-graphics-internal/current"; do 
+    for dir in "~/nsight-systems-internal/current/host-linux-x64" \
+               "~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64"; do 
         if ! grep "$dir" ~/.bashrc; then
             echo "PATH=\"$dir:\$PATH\"" >> ~/.bashrc
         fi 
