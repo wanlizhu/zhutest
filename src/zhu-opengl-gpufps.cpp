@@ -38,7 +38,7 @@ void glXSwapBuffers(Display *dpy, GLXDrawable drawable) {
             glad_inited = true;
             glGenQueries(2, gpu_query_ids);
             logfile = fopen("/tmp/fps.csv", "w");
-            const char* header = "cpu fps, gpu fps, diff (cpu-gps) fps\n";
+            const char* header = "cpu fps, gpu fps, diff fps\n";
             fwrite(header, 1, strlen(header), logfile);
             fclose(logfile);
             logfile = fopen("/tmp/fps.csv", "a");
@@ -92,11 +92,19 @@ void __attribute__((destructor)) shutdown() {
     if (logfile) {
         fclose(logfile);
 
+        std::vector<double> sums;
+        std::vector<int> counts;
+        std::vector<std::string> names;
+
         std::ifstream file("/tmp/fps.csv");
         std::string line;
         std::getline(file, line); // Ignore header line
-        std::vector<double> sums;
-        std::vector<int> counts;
+        std::stringstream ss(line);
+        while (std::getline(ss, line, ',')) {
+            size_t start = line.find_first_not_of(" \t\r\n");
+            size_t end = line.find_last_not_of(" \t\r\n");
+            names.push_back(line.substr(start, end - start + 1));
+        }
 
         while (std::getline(file, line)) {
             std::stringstream ss(line);
@@ -114,7 +122,7 @@ void __attribute__((destructor)) shutdown() {
         }
 
         for (int i = 0; i < sums.size(); i++) {
-            printf("Avg of column %d: %07.2f\n", i + 1, sums[i] / counts[i]);
+            printf("Avg of column %d: %07.2f  (%s)\n", i + 1, sums[i] / counts[i], names[i].c_str());
         }
     }
 }
