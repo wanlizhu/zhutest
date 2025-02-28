@@ -24,6 +24,26 @@ function zhu-reload {
     fi
 }
 
+function zhu-config-sudo {
+    if ! sudo grep -q "$USER ALL=(ALL) NOPASSWD:ALL" /etc/sudoers; then
+        echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
+    fi
+}
+
+function zhu-config-path {
+    for dir in "~/nsight-systems-internal/current" \
+               "~/nsight-graphics-internal/current"; do 
+        if ! grep "$dir" ~/.bashrc; then
+            echo 'PATH="$dir:$PATH"' >> ~/.bashrc
+        fi
+    done
+}
+
+function zhu-config-nvidia-laptop {
+    export __NV_PRIME_RENDER_OFFLOAD=1
+    export __GLX_VENDOR_LIBRARY_NAME=nvidia
+}
+
 function zhu-connect-nvidia-vpn {
     if [[ -z $(which openconnect) ]]; then
         sudo apt install -y openconnect
@@ -62,26 +82,26 @@ function zhu-send-files {
     if [[ -z $(which fzf) ]]; then
         sudo apt install -y fzf 
     fi 
-    if [[ ! -e ~/.zhurc.client ]]; then
+    if [[ ! -e ~/.zhutest.client ]]; then
         read -p "Client IP: " client
         read -e -i macos -p "Client OS: " clientos
         read -e -i $USER -p " Username: " username
         read -s -p " Password: " password
-        echo "$username@$client $password $clientos" > ~/.zhurc.client
+        echo "$username@$client $password $clientos" > ~/.zhutest.client
     fi
-    if ! sshpass -p $(cat ~/.zhurc.client | awk '{print $2}') ssh -o StrictHostKeyChecking=no $(cat ~/.zhurc.client | awk '{print $1}') exit; then 
-        rm -rf ~/.zshrc.client
+    if ! sshpass -p $(cat ~/.zhutest.client | awk '{print $2}') ssh -o StrictHostKeyChecking=no $(cat ~/.zhutest.client | awk '{print $1}') exit; then 
+        rm -rf ~/.zhutest.client
     fi
-    if [[ ! -e ~/.zhurc.client ]]; then
-        echo "Invalid ~/.zhurc.client has been removed, run again"
+    if [[ ! -e ~/.zhutest.client ]]; then
+        echo "Invalid ~/.zhutest.client has been removed, run again"
         return -1
     fi
 
     files=$(ls * | fzf -m) 
-    password=$(cat ~/.zhurc.client | awk '{print $2}')
-    username=$(cat ~/.zhurc.client | awk '{print $1}' | awk -F '@' '{print $1}')
-    hostname=$(cat ~/.zhurc.client | awk '{print $1}' | awk -F '@' '{print $2}')
-    clientos=$(cat ~/.zhurc.client | awk '{print $3}')
+    password=$(cat ~/.zhutest.client | awk '{print $2}')
+    username=$(cat ~/.zhutest.client | awk '{print $1}' | awk -F '@' '{print $1}')
+    hostname=$(cat ~/.zhutest.client | awk '{print $1}' | awk -F '@' '{print $2}')
+    clientos=$(cat ~/.zhutest.client | awk '{print $3}')
     sshpass -p $password scp -r ${files//$'\n'/ } $username@$hostname:/$([[ $clientos == macos ]] && echo Users || echo home)/$username/Downloads/
 }
 
@@ -476,4 +496,56 @@ function zhu-opengl-gpufps {
     echo "Generated /tmp/zhu-opengl-gpufps.so" || return -1
 
     __GL_SYNC_TO_VBLANK=0 vblank_mode=0 LD_PRELOAD=/tmp/zhu-opengl-gpufps.so "$@"
+}
+
+function zhu-encrypt {
+    read -s -p "Password: " passwd 
+    echo -n "$1" | openssl enc -aes-256-cbc -pbkdf2 -iter 10000 -salt -base64 -A -pass "pass:${passwd}" 
+}
+
+function zhu-decrypt {
+    read -s -p "Password: " passwd 
+    echo -n "$1" | openssl enc -d -aes-256-cbc -pbkdf2 -iter 10000 -salt -base64 -A -pass "pass:${passwd}" 
+}
+
+function zhu-upgrade-nsight-systems {
+    if [[ ! -e ~/.zhutest.artifactory.apikey ]]; then
+        echo $(zhu-decrypt 'U2FsdGVkX18elI7G2zmszU2FUxbRUHvvE8I+ZRUBdyZVdczSVW59b/Klyq8fgihi2oIXR6P1zDVjptpwVemHV71PgHm6exawmqpqxpS6UuJfBTxiW60s4VR6JJVlWYVt') > ~/.zhutest.artifactory.apikey
+    fi  
+
+    ARTIFACTORY_API_KEY=$(cat ~/.zhutest.artifactory.apikey)
+    latest_version=$(curl -s -H "X-JFrog-Art-Api: $ARTIFACTORY_API_KEY" https://urm.nvidia.com/artifactory/api/storage/swdt-nsys-generic/ctk/ \
+        | jq -r '.children[] | .uri | select(test("^/[0-9]") and (test("^/202") | not))' \
+        | sed 's/^\///' \
+        | sort -Vr \
+        | head -n1)
+    latest_subver=$(curl -s -H "X-JFrog-Art-Api: $ARTIFACTORY_API_KEY" https://urm.nvidia.com/artifactory/api/storage/swdt-nsys-generic/ctk/$latest_version/ \
+        | jq -r '.children[] | .uri | select(test("^/[0-9]"))' \
+        | sed 's/^\///' \
+        | sort -V \
+        | tail -n1)
+
+    if [[ -e ~/nsight-systems-internal/current ]]; then
+        current=$(basename $(readlink ~/nsight-systems-internal/current))
+        echo "Installed version is $current"
+        if [[ $current == $latest_subver ]]; then
+            echo "No need to upgrade"
+            return 
+        fi
+    else
+        echo "Installed version is NULL"
+    fi
+    
+    read -p "Upgrade to $latest_subver? " ans 
+    if [[ $ans == yes ]]; then
+        pushd ~/Downloads >/dev/null
+        wget --no-check-certificate --header="X-JFrog-Art-Api: $ARTIFACTORY_API_KEY" https://urm.nvidia.com/artifactory/swdt-nsys-generic/ctk/$latest_version/$latest_subver/nsight_systems-linux-x86_64-$latest_subver.tar.gz &&
+        tar -zxvf nsight_systems-linux-x86_64-$latest_subver.tar.gz &&
+        mkdir -p ~/nsight-systems-internal && 
+        mv nsight_systems ~/nsight-systems-internal/$latest_subver &&
+        pushd ~/nsight-systems-internal >/dev/null &&
+        ln -sf $latest_subver current 
+        popd >/dev/null 
+        popd >/dev/null 
+    fi
 }
