@@ -39,6 +39,14 @@ function zhu-config-path {
     done
 }
 
+function zhu-is-installed {
+    if [[ -z $(apt list --installed 2>/dev/null | grep "$1" | grep 'installed') ]]; then
+        return -1
+    else
+        return 0
+    fi
+}
+
 function zhu-config-nvidia-laptop {
     export __NV_PRIME_RENDER_OFFLOAD=1
     export __GLX_VENDOR_LIBRARY_NAME=nvidia
@@ -95,13 +103,13 @@ function zhu-send-files {
     echo 
     echo "$files" > /tmp/files
     total_bytes=$(awk '{total += $1} END {print total}' < <(xargs -a /tmp/files du -b | awk '{print $1}'))
-    echo "Transferring $(cat /tmp/xxx | wc -l) files of $(echo $total_bytes | numfmt --to=iec)..."
+    echo "Transferring $(cat /tmp/files | wc -l) files of $(echo $total_bytes | numfmt --to=iec)..."
 
     password=$(cat ~/.zhutest.client | awk '{print $2}')
     username=$(cat ~/.zhutest.client | awk '{print $1}' | awk -F '@' '{print $1}')
     hostname=$(cat ~/.zhutest.client | awk '{print $1}' | awk -F '@' '{print $2}')
     clientos=$(cat ~/.zhutest.client | awk '{print $3}')
-    sshpass -p $password scp -r ${files//$'\n'/ } $username@$hostname:/$([[ $clientos == macos ]] && echo Users || echo home)/$username/Downloads/
+    sshpass -p $password scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ${files//$'\n'/ } $username@$hostname:/$([[ $clientos == macos ]] && echo Users || echo home)/$username/Downloads/
 }
 
 function zhu-viewperf-install {
@@ -155,8 +163,13 @@ EOF
 }
 
 function zhu-perf-install {
-    sudo apt install -y linux-tools-$(uname -r) linux-tools-generic >/dev/null 2>&1
-    sudo apt install -y libtraceevent-dev >/dev/null 2>&1
+    if ! zhu-is-installed linux-tools-$(uname -r); then 
+        sudo apt install -y linux-tools-$(uname -r) linux-tools-generic >/dev/null 2>&1
+    fi 
+
+    if ! zhu-is-installed libtraceevent-dev; then 
+        sudo apt install -y libtraceevent-dev >/dev/null 2>&1
+    fi 
 
     # Rebuild tools/perf to link against libtraceevent
     sudo perf stat -e irq:irq_handler_entry sleep 1 >/dev/null 2>&1 || {
@@ -167,6 +180,20 @@ function zhu-perf-install {
         make clean && make && sudo cp -vf perf $(which perf)
         popd >/dev/null
     }
+}
+
+function zhu-perf-diff {
+    perfdir1=$(realpath $1)
+    perfdir2=$(realpath $2)
+    if [[ ! -d $perfdir1 || ! -d $perfdir2 ]]; then
+        echo "2 valid perf dirs are required!"
+        return -1
+    fi
+
+    ~/flamegraph.git/difffolded.pl -n -s $perfdir1/perf.data.folded $perfdir2/perf.data.folded > $(basename $perfdir1)_$(basename $perfdir2).diff.txt &&
+    echo "Generated $(basename $perfdir1)_$(basename $perfdir2).diff.txt" &&
+    cat $(basename $perfdir1)_$(basename $perfdir2).diff.txt | ~/flamegraph.git/flamegraph.pl > $(basename $perfdir1)_$(basename $perfdir2).diff.svg && 
+    echo "Generated $(basename $perfdir1)_$(basename $perfdir2).diff.svg"
 }
 
 function zhu-get-unused-filename {
@@ -197,34 +224,30 @@ function zhu-perf-generate-flamegraph {
         git clone --depth 1 https://github.com/brendangregg/FlameGraph.git ~/flamegraph.git || return -1
     fi
 
-    perfdata=$1 
-    if [[ -z $perfdata ]]; then
-        perfdata=$(zhu-get-unused-filename system.perfdata)
-        echo "perf is recording system-wide counters into $perfdata for 5 seconds"
-        sudo perf record -a -g --call-graph dwarf --freq=2000 --output=$perfdata -- sleep 5 || return -1
+    output_dir=$1 
+    if [[ -z $output_dir ]]; then
+        output_dir=$(zhu-get-unused-filename systemperf)
     else
-        perfdata=$(zhu-get-unused-filename $perfdata)
+        output_dir=$(zhu-get-unused-filename $output_dir)
     fi
+    mkdir -p $output_dir || return -1
 
-    if [[ -e $perfdata ]]; then
-        sudo chmod 666 $perfdata
-        sudo perf script --no-inline --force --input=$perfdata -F +pid > $perfdata.withpid && echo "Generated $perfdata.withpid" &&
-        sudo perf script --no-inline --force --input=$perfdata > /tmp/$perfdata.script &&
-        sudo ~/flamegraph.git/stackcollapse-perf.pl /tmp/$perfdata.script > /tmp/$perfdata.script.collapse &&
-        sudo ~/flamegraph.git/stackcollapse-recursive.pl /tmp/$perfdata.script.collapse > $perfdata.folded && echo "Generated $perfdata.folded" &&
-        sort -k2 -nr $perfdata.folded | head -n 1000 > $perfdata.folded.top1k && echo "Generated $perfdata.folded.top1k" &&
-        sudo ~/flamegraph.git/flamegraph.pl $perfdata.folded > $perfdata.svg  && echo "Generated $perfdata.svg" &&
-        sudo ~/flamegraph.git/flamegraph.pl --minwidth '1%' $perfdata.folded > $perfdata.mini.svg  && echo "Generated $perfdata.mini.svg" 
+    data_path=$output_dir/perf.data
+    echo "perf is recording system-wide counters into $output_dir/perf.data for 5 seconds"
+    sudo perf record -a -g --call-graph dwarf --freq=2000 --output=$data_path -- sleep 5 || return -1
+
+    if [[ -e $data_path ]]; then
+        pushd $output_dir >/dev/null && pwd 
+        sudo chmod 666 perf.data
+        sudo perf script --no-inline --force --input=perf.data -F +pid > perf.data.threads && echo "Generated perf.data.threads" &&
+        sudo perf script --no-inline --force --input=perf.data > /tmp/perf.data.script &&
+        sudo ~/flamegraph.git/stackcollapse-perf.pl /tmp/perf.data.script > /tmp/perf.data.script.collapse &&
+        sudo ~/flamegraph.git/stackcollapse-recursive.pl /tmp/perf.data.script.collapse > perf.data.folded && echo "Generated perf.data.folded" &&
+        sort -k2 -nr perf.data.folded | head -n 1000 > perf.data.folded.top1k && echo "Generated perf.data.folded.top1k" &&
+        sudo ~/flamegraph.git/flamegraph.pl perf.data.folded > perf.data.svg  && echo "Generated perf.data.svg" &&
+        sudo ~/flamegraph.git/flamegraph.pl --minwidth '1%' perf.data.folded > perf.data.mini.svg  && echo "Generated perf.data.mini.svg" 
+        popd >/dev/null 
     fi 
-}
-
-function zhu-flamegraph-diff {
-    if [[ -z $2 ]]; then
-        echo "Usage: zhu-flamegraph-diff perf1.data.folded perf2.data.folded"
-        return -1
-    fi
-
-    ~/flamegraph.git/difffolded.pl -n -s $1 $2 | ~/flamegraph.git/flamegraph.pl > $(basename $1)_$(basename $2).diff.svg 
 }
 
 function zhu-start-gdm3 {
@@ -407,25 +430,30 @@ function zhu-download-nvidia-driver {
         zhu-mount-linuxqa || return -1
     fi
 
+    cd /mnt/builds/daily/display/x86_64/dev/gpu_drv/bugfix_main
     echo TODO
 }
 
 function zhu-install-nvidia-driver {
-    mapfile -t files < <(find $P4ROOT/_out ~/Downloads -type f -name 'NVIDIA-*.run')
-    ((${#files[@]})) || { echo "No nvidia .run found"; return -1; }
-    select file in "${files[@]}"; do 
-        [[ $file ]] && { 
-            sudo systemctl stop display-manager 
-            chmod +x $file 
-            sudo $file  && {
-                echo "Nvidia driver is installed!"
-                read -e -i yes -p "Do you want to start display manager? " ans
-                [[ $ans == yes ]] && sudo systemctl start display-manager
-            } || cat /var/log/nvidia-installer.log
-            return 
-        }
-        echo "Invalid choice, try again"
-    done
+    if [[ -e $1 ]]; then
+        sudo systemctl stop display-manager 
+        chmod +x $(realpath $1) 
+        sudo $(realpath $1) && {
+            echo "Nvidia driver is installed!"
+            read -e -i yes -p "Do you want to start display manager? " ans
+            [[ $ans == yes ]] && sudo systemctl start display-manager
+        } || cat /var/log/nvidia-installer.log
+    else
+        mapfile -t files < <(find $P4ROOT/_out ~/Downloads -type f -name 'NVIDIA-*.run')
+        ((${#files[@]})) || { echo "No nvidia .run found"; return -1; }
+        select file in "${files[@]}"; do 
+            [[ $file ]] && { 
+                zhu-install-nvidia-driver $file 
+                return 
+            }
+            echo "Invalid choice, try again"
+        done
+    fi
 }
 
 function zhu-build-nvidia-driver {
@@ -489,6 +517,10 @@ function zhu-enable-nvidia-gsp {
 }
 
 function zhu-opengl-gpufps {
+    if [[ ! -d ~/zhutest ]]; then
+        git clone --depth 1 https://github.com/wanlizhu/zhutest ~/zhutest
+    fi
+
     rm -rf /tmp/zhu-opengl-gpufps.so
     gcc -c ~/zhutest/src/glad.c -fPIC -o /tmp/glad.a &&
     g++ -shared -fPIC -o /tmp/zhu-opengl-gpufps.so ~/zhutest/src/zhu-opengl-gpufps.cpp -ldl -lGL -lX11 /tmp/glad.a &&
