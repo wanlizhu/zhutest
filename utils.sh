@@ -34,7 +34,7 @@ function zhu-config-path {
     for dir in "~/nsight-systems-internal/current" \
                "~/nsight-graphics-internal/current"; do 
         if ! grep "$dir" ~/.bashrc; then
-            echo 'PATH="$dir:$PATH"' >> ~/.bashrc
+            echo "PATH=\"$dir:\$PATH\"" >> ~/.bashrc
         fi
     done
 }
