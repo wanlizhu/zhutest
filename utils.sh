@@ -714,62 +714,54 @@ function zhu-record-cpu-utilization {
     clk_tck=$(getconf CLK_TCK)
     interval_ms=$(LC_ALL=C printf "%.4f" "$(echo "1000 / $freq" | bc -l)")
     interval_ticks=$(LC_ALL=C printf "%.4f" "$(echo "$interval_ms * $clk_tck / 1000" | bc -l)")
-    header="Timestamp,PID,TID,%usr,%system,%guest,%wait,%CPU,CPU"
-    ( # Record cpu utilization data
-        prev_utime=()
-        prev_stime=()
-        echo "$header" > $file 
-        while [[ -d /proc/$target ]]; do  # Main monitoring loop
-            start_epoch=$(date +%s%3N)
-            current_time=$(date +%T)
 
-            # Process threads using find -print0 for robustness
-            find /proc/$target/task -mindepth 1 -maxdepth 1 -name '[0-9]*' -print0 2>/dev/null | \
-            while IFS= read -r -d '' task; do 
-                tid=${task##*/}
-                stat_file="$task/stat"
-                [[ ! -f $stat_file ]] && continue 
-
-                # Read thread stats into array 
-                read -ra stat < $stat_file 
-                utime=${stat[13]}
-                stime=${stat[14]}
-                cpu=${stat[38]}
-
-                if [[ -n "${prev_utime[$tid]+exists}" ]]; then
-                    delta_utime=$(bc -l <<< "$utime - ${prev_utime[$tid]}")
-                    delta_stime=$(bc -l <<< "$stime - ${prev_stime[$tid]}")
-                    total_delta=$(nc -l <<< "$delta_utime + $delta_stime")
-
-                    usr_pct=$(bc -l <<< "scale=2; ($delta_utime * 100) / $interval_ticks")
-                    sys_pct=$(bc -l <<< "scale=2; ($delta_stime * 100) / $interval_ticks")
-                    total_pct=$(bc -l <<< "scale=2; $usr_pct + $sys_pct")
-
-                    # Print out
-                    printf "%s,%d,%d,%.2f,%.2f,0.00,0.00,%.2f,%d\n" \
-                        "$current_time" "$target" "$tid" "$usr_pct" "$sys_pct" "$total_pct" "$cpu" > $file 
-                fi
-
-                prev_utime[$tid]="$utime"
-                prev_stime[$tid]="$stime"
-            done
-
-            # Calculate sleep time with overflow protection
-            elapsed_ms=$(( $(date +%s%3N) - start_epoch ))
-            sleep_sec=$(bc -l <<< "scale=6; ($interval_ms - $elapsed_ms)/1000")
-            (( $(bc -l <<< "$sleep_sec < 0.001") )) && sleep_sec=0.001  # Minimum 1ms sleep
-            sleep "$sleep_sec"
-        done
-    ) &
     echo "Recording cpu utilization data of PID:$target to $file at ${freq}Hz..."
-    
-    if [[ -z $1 ]]; then
-        wait $target
-    else
-        while kill -0 $target; do 
-            sleep 1
+    prev_utime=()
+    prev_stime=()
+    echo "Timestamp,PID,TID,%usr,%system,%guest,%wait,%CPU,CPU" > $file 
+    while [[ -d /proc/$target ]]; do  # Main monitoring loop
+        start_epoch=$(date +%s%3N)
+        current_time=$(date +%T)
+
+        # Process threads using find -print0 for robustness
+        find /proc/$target/task -mindepth 1 -maxdepth 1 -name '[0-9]*' -print0 2>/dev/null | \
+        while IFS= read -r -d '' task; do 
+            tid=${task##*/}
+            stat_file="$task/stat"
+            [[ ! -f $stat_file ]] && continue 
+
+            cat $stat_file
+
+            # Read thread stats into array 
+            read -ra stat < $stat_file 
+            utime=${stat[13]}
+            stime=${stat[14]}
+            cpu=${stat[38]}
+
+            if [[ -n "${prev_utime[$tid]+exists}" ]]; then
+                delta_utime=$(bc -l <<< "$utime - ${prev_utime[$tid]}")
+                delta_stime=$(bc -l <<< "$stime - ${prev_stime[$tid]}")
+                total_delta=$(nc -l <<< "$delta_utime + $delta_stime")
+
+                usr_pct=$(bc -l <<< "scale=2; ($delta_utime * 100) / $interval_ticks")
+                sys_pct=$(bc -l <<< "scale=2; ($delta_stime * 100) / $interval_ticks")
+                total_pct=$(bc -l <<< "scale=2; $usr_pct + $sys_pct")
+
+                # Print out
+                printf "%s,%d,%d,%.2f,%.2f,0.00,0.00,%.2f,%d\n" \
+                    "$current_time" "$target" "$tid" "$usr_pct" "$sys_pct" "$total_pct" "$cpu"  
+            fi
+
+            prev_utime[$tid]="$utime"
+            prev_stime[$tid]="$stime"
         done
-    fi
+
+        # Calculate sleep time with overflow protection
+        elapsed_ms=$(( $(date +%s%3N) - start_epoch ))
+        sleep_sec=$(bc -l <<< "scale=6; ($interval_ms - $elapsed_ms)/1000")
+        (( $(bc -l <<< "$sleep_sec < 0.001") )) && sleep_sec=0.001  # Minimum 1ms sleep
+        sleep "$sleep_sec"
+    done
 
     if [[ ! -e ~/zhutest/src/visualize-csv-data.py ]]; then
         git clone --depth 1 https://github.com/wanlizhu/zhutest ~/zhutest
