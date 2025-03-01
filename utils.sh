@@ -869,8 +869,10 @@ function zhu-enable-cpu-cores-all {
         [[ $core -eq 0 ]] && continue 
         sysfile="/sys/devices/system/cpu/cpu$core/online"
         if [[ -f $sysfile ]]; then
-            echo "1" | sudo tee $sysfile >/dev/null 
-            ((count++))
+            if [[ $(cat $sysfile) == "0" ]]; then
+                echo "1" | sudo tee $sysfile >/dev/null 
+                ((count++))
+            fi 
         fi
     done
 
