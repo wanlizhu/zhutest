@@ -686,7 +686,7 @@ EOF
     fi 
 }
 
-function zhu-nvidia-gpu-utilization {
+function zhu-record-gpu-utilization {
     if [[ ! -z $1 ]]; then
         "$@"
         target=$!
@@ -804,4 +804,19 @@ function zhu-isolate-gpu {
         fi 
         sleep 1  # Avoid busy-waiting
     done
+}
+
+function zhu-lscpu {
+    echo "Available CPU cores ($(lscpu -e=modelname | head -2 | tail -1)):"
+    lscpu -e=cpu,core,maxmhz,scalmhz%,online
+
+}
+
+function zhu-disable-cpu-cores {
+    zhu-lscpu 
+
+}
+
+function zhu-enable-cpu-cores-all {
+echo 
 }
