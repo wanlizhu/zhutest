@@ -768,7 +768,9 @@ function zhu-lscpu {
     reset='\033[0m'
     header_style='\033[1;37;44m'
     text_color='\033[38;5;250m'
+    red_text_color='\033[38;5;196m'
     bg_colors=('\033[48;5;234m' '\033[48;5;239m')
+    strike='\033[9m'  
 
     echo "Available CPU cores ($(lscpu -e=modelname | head -2 | tail -1)):"
 
@@ -779,7 +781,7 @@ function zhu-lscpu {
     done < <(lscpu -e=cpu,core | tail -n +2)
 
     # Show header
-    echo -e "${header_style}CPU  CORE  MAXMHZ    SCLMHZ%  ONLINE${reset}"
+    echo -e "${header_style}CPU  CORE MAXMHZ    SCLMHZ%  ONLINE${reset}"
 
     # Show cpu data
     local color_idx=0 last_core=-1
@@ -790,10 +792,18 @@ function zhu-lscpu {
             color_idx=$(( (color_idx + 1) % ${#bg_colors[@]} ))
             last_core=$core 
         fi
+
         # Finalize style
-        style="${bg_colors[$color_idx]}${text_color}"
-        [[ ${core_counts[$core]} -gt 1 ]] && style="${bold}${style}"
-        [[ "$online" != "yes" ]] && style="${dim}${style}"
+        if [[ $online == "yes" ]]; then
+            if [[ ${core_counts[$core]} -gt 1 ]]; then
+                style="${bg_colors[$color_idx]}${red_text_color}${bold}"
+            else
+                style="${bg_colors[$color_idx]}${text_color}"
+            fi
+        else
+            style="${bg_colors[$color_idx]}${text_color}${dim}${strike}"
+        fi
+
         # Print out
         printf "${style}%-4s %-4s %-7s %-8s %-6s${reset}\n" \
                "$cpu" "$core" "$maxmhz" "$scalmhz" "$online"
