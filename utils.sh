@@ -761,7 +761,6 @@ function zhu-record-cpu-utilization {
             sleep "$sleep_sec"
         done
     ) &
-    subshellpid=$!
     echo "Recording cpu utilization data of PID:$target to $file at ${freq}Hz..."
     
     if [[ -z $1 ]]; then
@@ -771,9 +770,6 @@ function zhu-record-cpu-utilization {
             sleep 1
         done
     fi
-
-    kill -SIGINT $subshellpid
-    sleep 1
 
     if [[ ! -e ~/zhutest/src/visualize-csv-data.py ]]; then
         git clone --depth 1 https://github.com/wanlizhu/zhutest ~/zhutest
