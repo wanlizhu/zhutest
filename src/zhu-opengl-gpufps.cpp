@@ -6,6 +6,11 @@
 #include <string.h>
 #include "glad.h"
 #include <GL/glx.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <string>
 
 // Real glXSwapBuffers
 typedef void (*glXSwapBuffers_T)(Display*, GLXDrawable);
@@ -32,9 +37,11 @@ void glXSwapBuffers(Display *dpy, GLXDrawable drawable) {
             printf("gladLoadGLLoader(...) success!\n");
             glad_inited = true;
             glGenQueries(2, gpu_query_ids);
-            if (getenv("zhu_log_file")) { 
-                logfile = fopen(getenv("zhu_log_file"), "a");
-            }
+            logfile = fopen("/tmp/fps.csv", "w");
+            const char* header = "cpu fps, gpu fps, diff fps\n";
+            fwrite(header, 1, strlen(header), logfile);
+            fclose(logfile);
+            logfile = fopen("/tmp/fps.csv", "a");
         } else {
             printf("gladLoadGLLoader(...) failed!\n");
         }
@@ -65,19 +72,57 @@ void glXSwapBuffers(Display *dpy, GLXDrawable drawable) {
             glGetQueryObjectui64v(gpu_query_ids[1], GL_QUERY_RESULT, &gpu_end);
             double gpu_time_ms = (gpu_end - gpu_start) * 1.0 / 1e6;
             double cpu_time_ms = ((cpu_end.tv_sec - cpu_start.tv_sec) * 1e9 + (cpu_end.tv_nsec - cpu_start.tv_nsec)) * 1.0 / 1e6;
-            snprintf(tmpstr, 100, "%07.2f cpufps  -  %07.2f gpufps  =  %07.2f fps\n", 
+            
+            snprintf(tmpstr, 100, "%07.2f, %07.2f, %07.2f\n", 
                 float(1000.0 / cpu_time_ms),
                 float(1000.0 / gpu_time_ms),
                 float(1000.0 / cpu_time_ms) - float(1000.0 / gpu_time_ms));
-
+            printf("%s", tmpstr);
             if (logfile) {
                 fwrite(tmpstr, 1, strlen(tmpstr), logfile);
-            } else {
-                printf("%s", tmpstr);
             }
 
             query_index = 0;
             cool_down_time = 0;
+        }
+    }
+}
+
+void __attribute__((destructor)) shutdown() {
+    if (logfile) {
+        fclose(logfile);
+
+        std::vector<double> sums;
+        std::vector<int> counts;
+        std::vector<std::string> names;
+
+        std::ifstream file("/tmp/fps.csv");
+        std::string line;
+        std::getline(file, line); // Ignore header line
+        std::stringstream ss(line);
+        while (std::getline(ss, line, ',')) {
+            size_t start = line.find_first_not_of(" \t\r\n");
+            size_t end = line.find_last_not_of(" \t\r\n");
+            names.push_back(line.substr(start, end - start + 1));
+        }
+
+        while (std::getline(file, line)) {
+            std::stringstream ss(line);
+            for (int col = 0; ss.good(); col++) {
+                if (col >= sums.size()) {
+                    sums.push_back(0);
+                    counts.push_back(0);
+                }
+                double val;
+                ss >> val;
+                ss.ignore(); // Ignore comma
+                sums[col] += val;
+                counts[col] += 1;
+            }
+        }
+
+        for (int i = 0; i < sums.size(); i++) {
+            printf("Avg of column %d: %07.2f  (%s)\n", i + 1, sums[i] / counts[i], names[i].c_str());
         }
     }
 }
