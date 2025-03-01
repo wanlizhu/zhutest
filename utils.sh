@@ -856,7 +856,7 @@ function zhu-enable-cpu-cores-all {
         if [[ $range == *-* ]]; then
             start=${range%-*}
             end=${range#*-}
-            for ((core=start; core<=end; cpu++)); do
+            for ((core=start; core<=end; core++)); do
                 cores+=("$core")
             done
         else
