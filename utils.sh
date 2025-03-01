@@ -851,7 +851,7 @@ function zhu-disable-cpu-cores {
 function zhu-enable-cpu-cores-all {
     present=$(cat /sys/devices/system/cpu/present)
     IFS=',' read -ra ranges <<< "$present"
-    declare -A cores 
+    cores=() 
     for range in "${ranges[@]}"; do 
         if [[ $range == *-* ]]; then
             start=${range%-*}
@@ -866,7 +866,7 @@ function zhu-enable-cpu-cores-all {
     done
     echo "${cores[@]}"
     return 
-    
+
     count=0
     for core in "${cores[@]}"; do 
         [[ $core -eq 0 ]] && continue 
