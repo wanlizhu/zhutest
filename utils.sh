@@ -859,6 +859,7 @@ function zhu-enable-cpu-cores-all {
             end=${range#*-}
             for ((core=start; core<=end; core++)); do
                 cores+=("$core")
+                echo "found $core"
             done
         else
             cores+=("$range")
