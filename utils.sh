@@ -825,7 +825,9 @@ function zhu-disable-cpu-cores {
     expanded=($(echo "$cores" | tr ',' '\n' | \
         while read part; do
             if [[ "$part" =~ - ]]; then
-                seq -s ' ' ${part%-*} ${part#*-} || echo $part
+                seq -s ' ' ${part%-*} ${part#*-} 
+            else
+                echo $part
             fi 
         done | tr '\n' ' '))
     
