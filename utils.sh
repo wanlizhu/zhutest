@@ -709,7 +709,7 @@ function zhu-record-cpu-utilization {
         sudo apt install -y bc 
     fi
 
-    freq=50
+    freq=1
     file="/tmp/cpu-utilization.log"
     clk_tck=$(getconf CLK_TCK)
     interval_ms=$(LC_ALL=C printf "%.4f" "$(echo "1000 / $freq" | bc -l)")
@@ -724,13 +724,10 @@ function zhu-record-cpu-utilization {
         current_time=$(date +%T)
 
         # Process threads using find -print0 for robustness
-        find /proc/$target/task -mindepth 1 -maxdepth 1 -name '[0-9]*' -print0 2>/dev/null | \
         while IFS= read -r -d '' task; do 
             tid=${task##*/}
             stat_file="$task/stat"
             [[ ! -f $stat_file ]] && continue 
-
-            cat $stat_file
 
             # Read thread stats into array 
             read -ra stat < $stat_file 
@@ -738,10 +735,10 @@ function zhu-record-cpu-utilization {
             stime=${stat[14]}
             cpu=${stat[38]}
 
-            if [[ -n "${prev_utime[$tid]+exists}" ]]; then
+            if [[ -v prev_utime[$tid] ]]; then
                 delta_utime=$(bc -l <<< "$utime - ${prev_utime[$tid]}")
                 delta_stime=$(bc -l <<< "$stime - ${prev_stime[$tid]}")
-                total_delta=$(nc -l <<< "$delta_utime + $delta_stime")
+                total_delta=$(bc -l <<< "$delta_utime + $delta_stime")
 
                 usr_pct=$(bc -l <<< "scale=2; ($delta_utime * 100) / $interval_ticks")
                 sys_pct=$(bc -l <<< "scale=2; ($delta_stime * 100) / $interval_ticks")
@@ -754,7 +751,7 @@ function zhu-record-cpu-utilization {
 
             prev_utime[$tid]="$utime"
             prev_stime[$tid]="$stime"
-        done
+        done < <(find /proc/$target/task -mindepth 1 -maxdepth 1 -name '[0-9]*' -print0 2>/dev/null)
 
         # Calculate sleep time with overflow protection
         elapsed_ms=$(( $(date +%s%3N) - start_epoch ))
