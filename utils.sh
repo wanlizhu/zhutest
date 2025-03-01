@@ -849,6 +849,7 @@ function zhu-disable-cpu-cores {
 }
 
 function zhu-enable-cpu-cores-all {
+    set -x 
     present=$(cat /sys/devices/system/cpu/present)
     IFS=',' read -ra ranges <<< "$present"
     declare -A cores 
@@ -873,7 +874,7 @@ function zhu-enable-cpu-cores-all {
             ((count++))
         fi
     done
-
+    set +x
     zhu-lscpu 
     echo "Put $count cpu cores back ONLINE!"
 }
