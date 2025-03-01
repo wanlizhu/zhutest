@@ -713,3 +713,95 @@ function zhu-nvidia-gpu-utilization {
 
     python3 ~/zhutest/src/visualize-csv-data.py $file 
 }
+
+function zhu-cgroup-cleanup {
+    echo "zhu-cgroup-cleanup is called for signal $1"
+
+    if [[ ! -z $zhu_child_pid ]] && kill -0 $zhu_child_pid; then
+        echo "Forwarding signal $1 to child process $zhu_child_pid"
+        kill -"$1" $zhu_child_pid 
+        wait $zhu_child_pid
+    fi
+
+    if [[ -d "$zhu_cgroup_path" ]]; then
+        # Move any remaining processes back to root cgroup
+        if [[ -f "$zhu_cgroup_path/tasks" ]]; then
+            while read -r pid; do
+                echo "$pid" | sudo tee /sys/fs/cgroup/devices/tasks >/dev/null
+            done < $zhu_cgroup_path/tasks
+        fi
+        # Remove cgroup directory
+        sudo rmdir $zhu_cgroup_path 
+        echo "The cgroup $zhu_cgroup_path has been removed"
+    fi
+
+    # Remove traps
+    trap - SIGINT SIGTERM RETURN
+}
+
+function zhu-isolate-gpu {
+    if [[ $# -eq 0 ]]; then
+        echo "Usage: zhu-isolate-gpu <program> [args...]"
+        return -1
+    fi
+
+    if [[ $(stat -fc %T /sys/fs/cgroup/) != "cgroup2fs" ]]; then
+        echo "cgroup2fs is required!"
+        return -1
+    fi
+
+    if [[ -z $(which nvidia-container-cli) ]]; then
+        sudo apt install -y curl
+        distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+        curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
+        curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+        if [[ ! -z $(cat /etc/apt/sources.list.d/nvidia-docker.list | grep "Unsupported distribution") ]]; then
+            cat /etc/apt/sources.list.d/nvidia-docker.list
+            return -1
+        fi 
+        sudo apt update
+        sudo apt install -y nvidia-container-toolkit
+        nvidia-container-cli --version || return -1
+    fi
+
+    # Clean previous variables
+    zhu_child_pid=
+    zhu_cgroup_name=
+    zhu_cgroup_path=
+
+    # Trap signals to ensure cgroup cleanup before exit
+    trap 'zhu-cgroup-cleanup SIGINT'  SIGINT
+    trap 'zhu-cgroup-cleanup SIGTERM' SIGTERM
+    trap 'zhu-cgroup-cleanup RETURN'  RETURN
+
+    # Get a list of NVIDIA GPUs
+    IFS=$'\n' read -d '' -r -a gpu_list < <(nvidia-smi --query-gpu=index,name,uuid --format=csv,noheader | nl -v0 -w1 -s': ')
+    if [[ ${#gpu_list[@]} -eq 0 ]]; then
+        echo "No NVIDIA GPU found!"
+        return -1
+    fi
+
+    echo "Available NVIDIA GPUs:"
+    printf '%s\n' "${gpu_list[@]}"
+
+    # Ask for user selection
+    while true; do 
+        read -p "Enter GPU index to enable (0-$(( ${#gpu_list[@]} - 1 ))): " selection
+        if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 0 ] && [ "$selection" -lt ${#gpu_list[@]} ]; then
+            break
+        fi
+        echo "Invalid selection. Please enter a number between 0 and $(( ${#gpu_list[@]} - 1 ))"
+    done
+
+    nvidia-container-cli --device=$selection "$@" &
+    zhu_child_pid=$!
+
+    # Wait child process to terminate, but allow signal handling
+    while kill -0 $zhu_child_pid 2>/dev/null; do 
+        wait -n # Wait for any child process to exit but doesn’t block 
+        if ! kill -0 $zhu_child_pid 2>/dev/null; then
+            break
+        fi 
+        sleep 1  # Avoid busy-waiting
+    done
+}
