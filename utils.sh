@@ -812,7 +812,37 @@ function zhu-lscpu {
 
 function zhu-disable-cpu-cores {
     zhu-lscpu 
+    read -p "Enter cores to disable (e.g. 2,3,5-7): " cores
+    if [[ ! "$cores" =~ ^[0-9,-]+$ ]]; then
+        echo "Invalid input!"
+        return -1
+    fi
 
+    expanded=($(echo "$cores" | tr ',' '\n' | \
+        while read part; do
+            if [[ "$part" =~ - ]]; then
+                seq -s ' ' ${part%-*} ${part#*-} || echo $part
+            fi 
+        done | tr '\n' ' '))
+    
+    for core in "${expanded[@]}"; do 
+        sysfile="/sys/devices/system/cpu/cpu$core/online"
+        if [[ ! -f $sysfile ]]; then
+            echo "Core $core doesn't exist" 
+            continue 
+        fi
+        if [[ $core -eq 0 ]]; then
+            echo "Can't disable CPU0 (system required)"
+            continue 
+        fi
+
+        current=$(cat $sysfile)
+        if [[ $current -eq 1 ]]; then
+            echo "0" | sudo tee $sysfile >/dev/null  
+        fi
+    done
+
+    zhu-lscpu | grep "no"
 }
 
 function zhu-enable-cpu-cores-all {
