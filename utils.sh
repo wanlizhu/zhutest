@@ -860,7 +860,7 @@ function zhu-enable-cpu-cores-all {
                 cores+=("$core")
             done
         else
-            cores+=("$core")
+            cores+=("$range")
         fi
     done
 
