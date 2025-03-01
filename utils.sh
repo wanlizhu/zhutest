@@ -100,7 +100,15 @@ function zhu-send-files {
     fi
 
     files=$(find . -maxdepth 1 -mindepth 1 ! -name ".*" | sort | fzf -m) 
-    echo 
+    echo "$files" > /tmp/files
+    if [[ $(cat /tmp/files | wc -l) -gt 2 ]]; then
+        read -e -i yes -p "Send compressed archive? " ans
+        if [[ $ans == yes ]]; then
+            read -e -i untitled.tar.gz -p "Archive name: " name
+            tar -zcvf $name ${files//$'\n'/ } && files="$(realpath $name)" || echo "Failed to compress!" 
+        fi
+    fi 
+
     echo "$files" > /tmp/files
     total_bytes=$(awk '{total += $1} END {print total}' < <(xargs -a /tmp/files du -b | awk '{print $1}'))
     echo "Transferring $(cat /tmp/files | wc -l) files of $(echo $total_bytes | numfmt --to=iec)..."
@@ -183,17 +191,29 @@ function zhu-perf-install {
 }
 
 function zhu-perf-diff {
-    perfdir1=$(realpath $1)
-    perfdir2=$(realpath $2)
-    if [[ ! -d $perfdir1 || ! -d $perfdir2 ]]; then
-        echo "2 valid perf dirs are required!"
+    if [[ -d $1 ]]; then
+        perfdir1=$(realpath $1)
+        perfdir2=$(realpath $2)
+        if [[ ! -d $perfdir1 || ! -d $perfdir2 ]]; then
+            echo "2 valid perf dirs are required!"
+            return -1
+        fi
+        data1=$perfdir1/perf.data.folded
+        data2=$perfdir2/perf.data.folded
+    else
+        data1=$(realpath $1)
+        data2=$(realpath $2)
+    fi
+
+    if [[ "$data1" != *".folded" || "$data2" != *".folded" ]]; then
+        echo "Input file must end with .folded"
         return -1
     fi
 
-    ~/flamegraph.git/difffolded.pl -n -s $perfdir1/perf.data.folded $perfdir2/perf.data.folded > $(basename $perfdir1)_$(basename $perfdir2).diff.txt &&
-    echo "Generated $(basename $perfdir1)_$(basename $perfdir2).diff.txt" &&
-    cat $(basename $perfdir1)_$(basename $perfdir2).diff.txt | ~/flamegraph.git/flamegraph.pl > $(basename $perfdir1)_$(basename $perfdir2).diff.svg && 
-    echo "Generated $(basename $perfdir1)_$(basename $perfdir2).diff.svg"
+    ~/flamegraph.git/difffolded.pl -n -s $data1 $data2 > $(basename $data1)_$(basename $data2).diff.txt &&
+    echo "Generated $(basename $data1)_$(basename $data2).diff.txt" &&
+    cat $(basename $data1)_$(basename $data2).diff.txt | ~/flamegraph.git/flamegraph.pl > $(basename $data1)_$(basename $data2).diff.svg && 
+    echo "Generated $(basename $data1)_$(basename $data2).diff.svg"
 }
 
 function zhu-get-unused-filename {
@@ -219,7 +239,23 @@ function zhu-get-unused-filename {
     fi
 }
 
-function zhu-perf-generate-flamegraph {
+function zhu-generate-flamegraph {
+    pushd $(dirname $1) >/dev/null && pwd 
+    sudo chmod 666 $(basename $1)
+    sudo perf script --no-inline --force --input=$(basename $1) -F +pid > $(basename $1).threads && echo "Generated $(basename $1).threads" &&
+    sudo perf script --no-inline --force --input=$(basename $1) > /tmp/$(basename $1).script &&
+    sudo ~/flamegraph.git/stackcollapse-perf.pl /tmp/$(basename $1).script > /tmp/$(basename $1).script.collapse &&
+    sudo ~/flamegraph.git/stackcollapse-recursive.pl /tmp/$(basename $1).script.collapse > $(basename $1).folded && echo "Generated $(basename $1).folded" &&
+    sort -k2 -nr $(basename $1).folded | head -n 1000 > $(basename $1).folded.top1k && echo "Generated $(basename $1)a.folded.top1k" &&
+    sudo ~/flamegraph.git/flamegraph.pl $(basename $1).folded > $(basename $1).svg  && echo "Generated $(basename $1).svg" &&
+    sudo ~/flamegraph.git/flamegraph.pl --minwidth '1%' $(basename $1).folded > $(basename $1).mini.svg  && echo "Generated $(basename $1).mini.svg" &&
+    echo "[optional] Generating a text-based graph (this may take time). Press [CTRL-C] to cancel." && sudo perf report --stdio --show-nr-samples --show-cpu-utilization --threads --input=$(basename $1) > /tmp/$(basename $1).graph.txt &&
+    mv /tmp/$(basename $1).graph.txt $(basename $1).graph.txt &&
+    echo "Generated $(basename $1).graph.txt"
+    popd >/dev/null 
+}
+
+function zhu-generate-perf-and-flamegraph {
     if [[ ! -e ~/flamegraph.git/flamegraph.pl ]]; then
         git clone --depth 1 https://github.com/brendangregg/FlameGraph.git ~/flamegraph.git || return -1
     fi
@@ -234,19 +270,10 @@ function zhu-perf-generate-flamegraph {
 
     data_path=$output_dir/perf.data
     echo "perf is recording system-wide counters into $output_dir/perf.data for 5 seconds"
-    sudo perf record -a -g --call-graph dwarf --freq=2000 --output=$data_path -- sleep 5 || return -1
+    sudo perf record -a -s -g --call-graph dwarf --freq=2000 --output=$data_path -- sleep 5 || return -1
 
     if [[ -e $data_path ]]; then
-        pushd $output_dir >/dev/null && pwd 
-        sudo chmod 666 perf.data
-        sudo perf script --no-inline --force --input=perf.data -F +pid > perf.data.threads && echo "Generated perf.data.threads" &&
-        sudo perf script --no-inline --force --input=perf.data > /tmp/perf.data.script &&
-        sudo ~/flamegraph.git/stackcollapse-perf.pl /tmp/perf.data.script > /tmp/perf.data.script.collapse &&
-        sudo ~/flamegraph.git/stackcollapse-recursive.pl /tmp/perf.data.script.collapse > perf.data.folded && echo "Generated perf.data.folded" &&
-        sort -k2 -nr perf.data.folded | head -n 1000 > perf.data.folded.top1k && echo "Generated perf.data.folded.top1k" &&
-        sudo ~/flamegraph.git/flamegraph.pl perf.data.folded > perf.data.svg  && echo "Generated perf.data.svg" &&
-        sudo ~/flamegraph.git/flamegraph.pl --minwidth '1%' perf.data.folded > perf.data.mini.svg  && echo "Generated perf.data.mini.svg" 
-        popd >/dev/null 
+        zhu-generate-flamegraph $output_dir/perf.data
     fi 
 }
 
@@ -361,7 +388,7 @@ function zhu-test-maya-high-interrupt-count-on-gdm3 {
     mayapid=$!
     sleep 2
 
-    zhu-perf-generate-flamegraph
+    zhu-generate-perf-and-flamegraph
     #zhu-record-interrupt-event
     wait $mayapid
 
@@ -581,10 +608,32 @@ function zhu-upgrade-nsight-systems {
     fi
 }
 
-function zhu-find-package-by-soname {
+function zhu-find-package-by-libs {
     find /usr/lib -type f -name $1* | tee /tmp/so.list
     while IFS= read -r line; do
         dpkg -S $(realpath $line)
+    done < /tmp/so.list
+}
+
+function zhu-find-libs-by-build-id {
+    target=$("$1" | tr -d '/')
+    find /usr/lib /usr/bin /lib /bin -type f | while read -r file; do
+        build_id=$(readelf -n "$file" 2>/dev/null | grep 'Build ID')
+        if [[ $build_id == *$target* ]]; then
+            echo "File: $file"
+            echo "$build_id"
+        fi
+    done
+}
+
+function zhu-find-debug-symbols-by-libs {
+    if ! zhu-is-installed debian-goodies; then
+        sudo apt install -y debian-goodies
+    fi
+
+    find /usr/lib -type f -name $1* | tee /tmp/so.list
+    while IFS= read -r line; do
+        find-dbgsym-packages $(realpath $line)
     done < /tmp/so.list
 }
 
@@ -635,4 +684,32 @@ EOF
             echo "The ddebs.ubuntu.com repo does not have debug symbols for your Ubuntu release ($(lsb_release -cs))"
         fi
     fi 
+}
+
+function zhu-nvidia-gpu-utilization {
+    if [[ ! -z $1 ]]; then
+        "$@"
+        target=$!
+    fi
+
+    freq=50
+    file="/tmp/nvidia-gpu-utilization.log"
+    echo "Recording gpu utilization data to $file at ${freq}Hz..."
+    nvidia-smi --query-gpu=power.draw,temperature.gpu,utilization.gpu,utilization.memory,clocks.mem,clocks.gr --format=csv -lms $((1000/$freq)) > $file & 
+    smipid=$!
+
+    if [[ ! -z $1 ]]; then
+        wait $target 
+    else
+        read -p "Press [ENTER] to stop recording: " _
+    fi
+
+    kill -SIGINT $smipid 
+    sleep 1
+
+    if [[ ! -e ~/zhutest/src/visualize-csv-data.py ]]; then
+        git clone --depth 1 https://github.com/wanlizhu/zhutest ~/zhutest
+    fi
+
+    python3 ~/zhutest/src/visualize-csv-data.py $file 
 }
