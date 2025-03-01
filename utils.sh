@@ -846,36 +846,34 @@ function zhu-disable-cpu-cores {
 
     zhu-lscpu 
     echo "Put $count cpu cores OFFLINE!"
-    echo "Total online cpu cores: $(cat /sys/devices/system/cpu/present)"
 }
 
 function zhu-enable-cpu-cores-all {
     present=$(cat /sys/devices/system/cpu/present)
     IFS=',' read -ra ranges <<< "$present"
-    declare -A cpus 
+    declare -A cores 
     for range in "${ranges[@]}"; do 
         if [[ $range == *-* ]]; then
             start=${range%-*}
             end=${range#*-}
-            for ((cpu=start; cpu<=end; cpu++)); do
-                cpus+=("$cpu")
+            for ((core=start; core<=end; cpu++)); do
+                cores+=("$core")
             done
         else
-            cpus+=("$cpu")
+            cores+=("$core")
         fi
     done
 
     count=0
-    for cpu in "${cpus[@]}"; do 
-        [[ $cpu -eq 0 ]] && continue 
-        sysfile="/sys/devices/system/cpu/cpu$cpu/online"
+    for core in "${cores[@]}"; do 
+        [[ $core -eq 0 ]] && continue 
+        sysfile="/sys/devices/system/cpu/cpu$core/online"
         if [[ -f $sysfile ]]; then
-            echo 1 | sudo tee $sysfile >/dev/null 
+            echo "1" | sudo tee $sysfile >/dev/null 
             ((count++))
         fi
     done
 
     zhu-lscpu 
     echo "Put $count cpu cores back ONLINE!"
-    echo "Total online cpu cores: $(cat /sys/devices/system/cpu/present)"
 }
