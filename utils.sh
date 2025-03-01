@@ -731,14 +731,10 @@ function zhu-record-gpu-utilization {
         sudo apt install -y bc
     fi
 
-    freq=1  # Can be less than 1
+    freq=20  # Can be less than 1
     file="/tmp/nvidia-gpu-utilization.log"
     echo "Recording gpu utilization data to $file at ${freq} Hz..."
-    if [[ $freq == "0."* || $freq == 1 ]]; then
-        nvidia-smi --query-gpu=power.draw,temperature.gpu,utilization.gpu,utilization.memory,clocks.mem,clocks.gr --format=csv -lms $(bc -l <<< "x=1000/$freq; scale=0; x/1") | tee $file & 
-    else
-        nvidia-smi --query-gpu=power.draw,temperature.gpu,utilization.gpu,utilization.memory,clocks.mem,clocks.gr --format=csv -lms $(bc -l <<< "x=1000/$freq; scale=0; x/1") > $file & 
-    fi 
+    nvidia-smi --query-gpu=power.draw,temperature.gpu,utilization.gpu,utilization.memory,clocks.mem,clocks.gr --format=csv -lms $(bc -l <<< "x=1000/$freq; scale=0; x/1") > $file & 
     smipid=$!
 
     if [[ ! -z $1 ]]; then
