@@ -831,8 +831,6 @@ function zhu-disable-cpu-cores {
             fi 
         done | tr '\n' ' '))
     
-    echo "ex ${expanded[@]}"
-    return 
     count=0
     for core in "${expanded[@]}"; do 
         sysfile="/sys/devices/system/cpu/cpu$core/online"
