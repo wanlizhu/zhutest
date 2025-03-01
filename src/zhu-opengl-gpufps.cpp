@@ -65,11 +65,10 @@ void glXSwapBuffers(Display *dpy, GLXDrawable drawable) {
             glGetQueryObjectui64v(gpu_query_ids[1], GL_QUERY_RESULT, &gpu_end);
             double gpu_time_ms = (gpu_end - gpu_start) * 1.0 / 1e6;
             double cpu_time_ms = ((cpu_end.tv_sec - cpu_start.tv_sec) * 1e9 + (cpu_end.tv_nsec - cpu_start.tv_nsec)) * 1.0 / 1e6;
-            snprintf(tmpstr, 100, "%07.2f cpufps (%06.3f ms)  -  %07.2f gpufps (%06.3f ms)  =  %07.2f fps (%06.3f ms)\n", 
-                float(1000.0 / cpu_time_ms), (float)cpu_time_ms,
-                float(1000.0 / gpu_time_ms), (float)gpu_time_ms,
-                float(1000.0 / cpu_time_ms) - float(1000.0 / gpu_time_ms),
-                float(cpu_time_ms - gpu_time_ms));
+            snprintf(tmpstr, 100, "%07.2f cpufps  -  %07.2f gpufps  =  %07.2f fps\n", 
+                float(1000.0 / cpu_time_ms),
+                float(1000.0 / gpu_time_ms),
+                float(1000.0 / cpu_time_ms) - float(1000.0 / gpu_time_ms));
 
             if (logfile) {
                 fwrite(tmpstr, 1, strlen(tmpstr), logfile);
