@@ -811,11 +811,15 @@ function zhu-lscpu {
 }
 
 function zhu-disable-cpu-cores {
-    zhu-lscpu 
-    read -p "Enter cores to disable (e.g. 2,3,5-7): " cores
-    if [[ ! "$cores" =~ ^[0-9,-]+$ ]]; then
-        echo "Invalid input!"
-        return -1
+    if [[ -z $1 ]]; then 
+        zhu-lscpu 
+        read -p "Enter cores to disable (e.g. 2,3,5-7): " cores
+        if [[ ! "$cores" =~ ^[0-9,-]+$ ]]; then
+            echo "Invalid input!"
+            return -1
+        fi
+    else 
+        cores="$1"
     fi
 
     expanded=($(echo "$cores" | tr ',' '\n' | \
