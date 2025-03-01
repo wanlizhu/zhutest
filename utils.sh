@@ -763,9 +763,41 @@ function zhu-enable-nvidia-gpu-all {
 }
 
 function zhu-lscpu {
-    echo "Available CPU cores ($(lscpu -e=modelname | head -2 | tail -1)):"
-    lscpu -e=cpu,core,maxmhz,scalmhz%,online
+    bold='\033[1m'
+    dim='\033[2m'
+    reset='\033[0m'
+    header_style='\033[1;37;44m'
+    text_color='\033[38;5;250m'
+    bg_colors=('\033[48;5;234m' '\033[48;5;239m')
 
+    echo "Available CPU cores ($(lscpu -e=modelname | head -2 | tail -1)):"
+
+    # Find P-cores (cores with multiple CPUs)
+    declare -A core_counts
+    while IFS=' ' read -r cpu core; do 
+        ((core_counts[$core]++))
+    done < <(lscpu -e=cpu,core | tail -n +2)
+
+    # Show header
+    echo -e "${header_style}CPU  CORE  MAXMHZ    SCLMHZ%  ONLINE${reset}"
+
+    # Show cpu data
+    local color_idx=0 last_core=-1
+    lscpu -e=cpu,core,maxmhz,scalmhz%,online | tail -n +2 | \
+    while IFS=' ' read -r cpu core maxmhz scalmhz online; do 
+        # Choose background color
+        if [[ "$core" != "$last_core" ]]; then
+            color_idx=$(( (color_idx + 1) % ${#bg_colors[@]} ))
+            last_core=$core 
+        fi
+        # Finalize style
+        style="${bg_colors[$color_idx]}${text_color}"
+        [[ ${core_counts[$core]} -gt 1 ]] && style="${bold}${style}"
+        [[ "$online" != "yes" ]] && style="${dim}${style}"
+        # Print out
+        printf "${style}%-4s %-4s %-7s %-8s %-6s${reset}\n" \
+               "$cpu" "$core" "$maxmhz" "$scalmhz" "$online"
+    done
 }
 
 function zhu-disable-cpu-cores {
