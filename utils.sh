@@ -718,6 +718,7 @@ function zhu-record-cpu-utilization {
     ( # Record cpu utilization data
         prev_utime=()
         prev_stime=()
+        echo "$header" > $file 
         while [[ -d /proc/$target ]]; do  # Main monitoring loop
             start_epoch=$(date +%s%3N)
             current_time=$(date +%T)
@@ -746,7 +747,7 @@ function zhu-record-cpu-utilization {
 
                     # Print out
                     printf "%s,%d,%d,%.2f,%.2f,0.00,0.00,%.2f,%d\n" \
-                        "$current_time" "$target" "$tid" "$usr_pct" "$sys_pct" "$total_pct" "$cpu"
+                        "$current_time" "$target" "$tid" "$usr_pct" "$sys_pct" "$total_pct" "$cpu" > $file 
                 fi
 
                 prev_utime[$tid]="$utime"
