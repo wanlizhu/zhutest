@@ -825,6 +825,7 @@ function zhu-disable-cpu-cores {
             fi 
         done | tr '\n' ' '))
     
+    count=0
     for core in "${expanded[@]}"; do 
         sysfile="/sys/devices/system/cpu/cpu$core/online"
         if [[ ! -f $sysfile ]]; then
@@ -839,12 +840,42 @@ function zhu-disable-cpu-cores {
         current=$(cat $sysfile)
         if [[ $current -eq 1 ]]; then
             echo "0" | sudo tee $sysfile >/dev/null  
+            ((count++))
         fi
     done
 
-    zhu-lscpu | grep "no"
+    zhu-lscpu 
+    echo "Put $count cpu cores OFFLINE!"
+    echo "Total online cpu cores: $(cat /sys/devices/system/cpu/present)"
 }
 
 function zhu-enable-cpu-cores-all {
-    echo 
+    present=$(cat /sys/devices/system/cpu/present)
+    IFS=',' read -ra ranges <<< "$present"
+    declare -A cpus 
+    for range in "${ranges[@]}"; do 
+        if [[ $range == *-* ]]; then
+            start=${range%-*}
+            end=${range#*-}
+            for ((cpu=start; cpu<=end; cpu++)); do
+                cpus+=("$cpu")
+            done
+        else
+            cpus+=("$cpu")
+        fi
+    done
+
+    count=0
+    for cpu in "${cpus[@]}"; do 
+        [[ $cpu -eq 0 ]] && continue 
+        sysfile="/sys/devices/system/cpu/cpu$cpu/online"
+        if [[ -f $sysfile ]]; then
+            echo 1 | sudo tee $sysfile >/dev/null 
+            ((count++))
+        fi
+    done
+
+    zhu-lscpu 
+    echo "Put $count cpu cores back ONLINE!"
+    echo "Total online cpu cores: $(cat /sys/devices/system/cpu/present)"
 }
