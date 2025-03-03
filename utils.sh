@@ -37,8 +37,6 @@ if [[ $USER == wanliz ]]; then
             echo "Enable remote users to run GUI applications"
             echo "export XAUTHORITY=$XAUTHORITY" >> ~/.bashrc
             echo "xhost +si:localuser:\$USER >/dev/null" >> ~/.bashrc
-        else
-            echo "Enable remote users to run GUI applications [FAILED] - Run again in a Terminal GUI"
         fi
     fi
 fi
@@ -66,8 +64,8 @@ function zhu-connect-nvidia-vpn {
     fi
 
     if [[ ! -z $(pidof openconnect) ]]; then
-        read -e -i yes -p "Kill previous openconnect process ($(pidof openconnect))? " ans
-        if [[ $ans == yes ]]; then
+        read -e -i yes -p "Kill previous openconnect process ($(pidof openconnect))? " kill_old_oc
+        if [[ $kill_old_oc == yes ]]; then
             sudo kill -SIGINT $(pidof openconnect)
             echo "Wait for 3 seconds after killing openconnect"
             sleep 3
@@ -128,8 +126,8 @@ function zhu-send-files {
     files=$(find . -maxdepth 1 -mindepth 1 ! -name ".*" | sort | fzf -m) 
     echo "$files" > /tmp/files
     if [[ $(cat /tmp/files | wc -l) -gt 2 ]]; then
-        read -e -i yes -p "Send compressed archive? " ans
-        if [[ $ans == yes ]]; then
+        read -e -i yes -p "Send compressed archive? " compress
+        if [[ $compress == yes ]]; then
             read -e -i untitled.tar.gz -p "Archive name: " name
             tar -zcvf $name ${files//$'\n'/ } && files="$(realpath $name)" || echo "Failed to compress!" 
         fi
@@ -493,8 +491,8 @@ function zhu-install-nvidia-driver {
         chmod +x $(realpath $1) 
         sudo $(realpath $1) && {
             echo "Nvidia driver is installed!"
-            read -e -i yes -p "Do you want to start display manager? " ans
-            [[ $ans == yes ]] && sudo systemctl start display-manager
+            read -e -i yes -p "Do you want to start display manager? " start_dm
+            [[ $start_dm == yes ]] && sudo systemctl start display-manager
         } || cat /var/log/nvidia-installer.log
     else
         mapfile -t files < <(find $P4ROOT/_out ~/Downloads -type f -name 'NVIDIA-*.run')
@@ -515,8 +513,8 @@ function zhu-build-nvidia-driver {
     read -e -i $(nproc) -p "[3/3] Number of build threads: " threads
 
     if [[ ! -d $P4ROOT ]]; then
-        read -e -i "yes" -p "Pull the latest revision of $P4CLIENT? " ans
-        if [[ $ans == yes ]]; then
+        read -e -i "yes" -p "Pull the latest revision of $P4CLIENT? " pull_p4client
+        if [[ $pull_p4client == yes ]]; then
             p4 sync -f //sw/...
         fi
     fi
@@ -620,8 +618,8 @@ function zhu-upgrade-nsight-systems {
         echo "Installed version is NULL"
     fi
     
-    read -p "Upgrade to $latest_subver? " ans 
-    if [[ $ans == yes ]]; then
+    read -p "Upgrade to $latest_subver? " upgrade_nsys 
+    if [[ $upgrade_nsys == yes ]]; then
         pushd ~/Downloads >/dev/null
         wget --no-check-certificate --header="X-JFrog-Art-Api: $ARTIFACTORY_API_KEY" https://urm.nvidia.com/artifactory/swdt-nsys-generic/ctk/$latest_version/$latest_subver/nsight_systems-linux-x86_64-$latest_subver.tar.gz &&
         tar -zxvf nsight_systems-linux-x86_64-$latest_subver.tar.gz &&
@@ -1032,8 +1030,8 @@ function zhu-disable-wayland {
             echo -e "\n[daemon]\nWaylandEnable=false" | tee -a /etc/gdm3/custom.conf >/dev/null
         }
 
-        read -e -i yes -p "Restart display-manager to activate changes? " ans
-        if [[ $ans == yes ]]; then
+        read -e -i yes -p "Restart display-manager to activate changes? " restart_dm
+        if [[ $restart_dm == yes ]]; then
             if [[ $XDG_SESSION_TYPE == tty ]]; then
                 sudo systemctl restart display-manager
             else
