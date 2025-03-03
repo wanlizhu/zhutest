@@ -3,40 +3,34 @@ export __GL_SYNC_TO_VBLANK=0
 export vblank_mode=0
 export __GL_DEBUG_BYPASS_ASSERT=c 
 [[ -z $DISPLAY ]] && export DISPLAY=:0
+
 if [[ $USER == wanliz ]]; then
     export P4CLIENT=wanliz-p4sw-bugfix_main
     export P4ROOT=$HOME/$P4CLIENT
     export P4IGNORE=$HOME/.p4ignore 
     export P4PORT=p4proxy-sc.nvidia.com:2006
     export P4USER=wanliz 
+
     if [[ ! -e $P4IGNORE ]]; then
         echo "_out" > $P4IGNORE
         echo ".git" >> $P4IGNORE
         echo ".vscode" >> $P4IGNORE
     fi
-fi
 
-function zhu-reload {
-    if [[ -e ~/zhutest/utils.sh ]]; then
-        source ~/zhutest/utils.sh
-    else
-        echo "~/zhutest/utils.sh doesn't exist!"
-    fi
-}
-
-function zhu-config-bashrc {
     if ! sudo grep -q "$USER ALL=(ALL) NOPASSWD:ALL" /etc/sudoers; then
         echo "Enable sudo without password"
         echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
     fi
 
-    echo "Add tool dirs to \$PATH"
-    for dir in "~/nsight-systems-internal/current/host-linux-x64" \
-               "~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64"; do 
-        if ! grep "$dir" ~/.bashrc; then
-            echo "PATH=\"$dir:\$PATH\"" >> ~/.bashrc
-        fi 
-    done
+    if [[ -z $(grep "nsight-systems-internal/current/host-linux-x64" ~/.bashrc) ]]; then
+        echo "Append Nsight systems to \$PATH"
+        echo "PATH=\"~/nsight-systems-internal/current/host-linux-x64:\$PATH\"" >> ~/.bashrc
+    fi
+
+    if [[ -z $(grep "nsight-graphics-internal/current/host/linux-desktop-nomad-x64" ~/.bashrc) ]]; then
+        echo "Append Nsight graphics to \$PATH"
+        echo "PATH=\"~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64:\$PATH\"" >> ~/.bashrc
+    fi
 
     if [[ -z $(grep "export XAUTHORITY=" ~/.bashrc) ]]; then
         if [[ $XDG_SESSION_TYPE == tty ]]; then
@@ -47,9 +41,15 @@ function zhu-config-bashrc {
             echo "Enable remote users to run GUI applications [FAILED] - Run again in a Terminal GUI"
         fi
     fi
+fi
 
-    source ~/.bashrc 
-    echo "~/.bashrc sourced!"
+function zhu-reload {
+    if [[ -e ~/zhutest/utils.sh ]]; then
+        source ~/zhutest/utils.sh
+        echo "~/zhutest/utils.sh sourced!"
+    else
+        echo "~/zhutest/utils.sh doesn't exist!"
+    fi
 }
 
 function zhu-is-installed {
