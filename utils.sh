@@ -24,12 +24,12 @@ if [[ $USER == wanliz ]]; then
 
     if [[ -z $(grep "nsight-systems-internal/current/host-linux-x64" ~/.bashrc) ]]; then
         echo "Append Nsight systems to \$PATH"
-        echo "PATH=\"~/nsight-systems-internal/current/host-linux-x64:\$PATH\"" >> ~/.bashrc
+        echo "export PATH=\"~/nsight-systems-internal/current/host-linux-x64:\$PATH\"" >> ~/.bashrc
     fi
 
     if [[ -z $(grep "nsight-graphics-internal/current/host/linux-desktop-nomad-x64" ~/.bashrc) ]]; then
         echo "Append Nsight graphics to \$PATH"
-        echo "PATH=\"~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64:\$PATH\"" >> ~/.bashrc
+        echo "export PATH=\"~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64:\$PATH\"" >> ~/.bashrc
     fi
 
     if [[ -z $(grep "export XAUTHORITY=" ~/.bashrc) ]]; then
@@ -1023,7 +1023,7 @@ function zhu-run-x86-on-arm {
 }
 
 function zhu-disable-wayland {
-    if [[ $XDG_SESSION_TYPE == "wayland" ]]; then
+    if [[ $XDG_SESSION_TYPE == "tty" ]]; then
         # Config gdm3
         sudo cp /etc/gdm3/custom.conf /etc/gdm3/custom.conf.backup
         sudo sed -i 's/^#WaylandEnable=.*/WaylandEnable=false/' /etc/gdm3/custom.conf || {
