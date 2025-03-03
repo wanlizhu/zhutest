@@ -164,7 +164,7 @@ function zhu-viewperf-install {
     fi
 }
 
-function zhu-viewperf-maya-subtest5 {
+function zhu-test-viewperf-maya-subtest5 {
     [[ -z $DISPLAY ]] && export DISPLAY=:0 
     zhu-viewperf-install
     pushd ~/viewperf2020 >/dev/null
@@ -345,7 +345,7 @@ function zhu-test-maya-high-interrupt-count-on-gdm3 {
     fi
 
     # Round 1 for the number of interrupts
-    zhu-viewperf-maya-subtest5 &
+    zhu-test-viewperf-maya-subtest5 &
     mayapid=$!
     sleep 2
 
@@ -378,7 +378,7 @@ function zhu-test-maya-high-interrupt-count-on-gdm3 {
     fi
 
     # Round 2 for the time cost of interrupt handler (nvidia_isr/amdgpu_irq_handler)
-    zhu-viewperf-maya-subtest5 &
+    zhu-test-viewperf-maya-subtest5 &
     mayapid=$!
     sleep 2
 
@@ -408,7 +408,7 @@ function zhu-test-maya-high-interrupt-count-on-gdm3 {
     cputime_us=$((cputime_ns / 1000))
     echo "Total CPU time in $irq_handler is ${cputime_ms}ms (${cputime_us}us) (${cputime_ns}ns)" >> /tmp/xxx.log
     
-    zhu-viewperf-maya-subtest5 & 
+    zhu-test-viewperf-maya-subtest5 & 
     mayapid=$!
     sleep 2
 
@@ -946,57 +946,6 @@ function zhu-enable-cpu-cores-all {
 
     zhu-lscpu 
     echo "Put $count cpu cores back ONLINE!"
-}
-
-function zhu-install-fex-from-source-code {
-    if [[ ! -z $(which FEXInterpreter) ]]; then
-        return 
-    fi
-
-    sudo apt update 
-    sudo apt install -y git cmake ninja-build clang lld libstdc++-12-dev libepoxy-dev libsdl2-dev libssl-dev libglib2.0-dev libpixman-1-dev libgirepository1.0-dev libc6-dev libslirp-dev debootstrap
-    if [[ ! -d ~/FEX.git ]]; then
-        git clone --depth 1 https://github.com/FEX-Emu/FEX.git ~/FEX.git || return -1
-    fi 
-
-    # Build FEX
-    mkdir -p ~/FEX.git/build 
-    cd ~/FEX.git/build 
-    cmake -DCMAKE_INSTALL_PREFIX=/usr \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DUSE_LINKER=lld \
-          -DENABLE_LTO=True \
-          ..
-    ninja 
-    sudo ninja install || {
-        echo "Failed to build FEX"
-        return -1
-    }
-
-    # Create a root fs for x86_64 libraries 
-    ~/FEX.git/RootFSFetcher --rootfs-name Ubuntu_$(lsb_release -r | awk '{print $2}')
-
-    # Register FEX to handle x86_64 binaries automatically
-    echo ':FEX-x86_64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x3e\x00:\xff\xff\xff\xff\xff\xfe\xfe\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/usr/bin/FEXInterpreter:OC' | sudo tee /usr/lib/binfmt.d/FEX-x86_64.conf >/dev/null
-    sudo systemctl restart systemd-binfmt
-
-    # Mount required directories and configure the rootfs
-    sudo mount --bind /dev /opt/fex-rootfs/dev
-    sudo mount --bind /proc /opt/fex-rootfs/proc
-    sudo mount --bind /sys /opt/fex-rootfs/sys
-    sudo mount --bind /tmp /opt/fex-rootfs/tmp
-
-    # Install dependencies in rootfs
-    sudo chroot /opt/fex-rootfs /bin/bash -c '
-        apt update &&
-        apt install -y libgl1 libsdl2-2.0-0 libopengl0 libgstreamer1.0-0 \
-            vulkan-tools vulkan-validationlayers libvulkan1 mesa-vulkan-drivers \
-            libepoxy-dev mesa-utils  && 
-        apt clean
-    ' || return -1
-
-    # Allow the rootfs to access the host's display 
-    xhost +
 }
 
 function zhu-install-fex {
