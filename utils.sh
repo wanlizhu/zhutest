@@ -74,21 +74,39 @@ function zhu-connect-nvidia-vpn {
         fi
     fi
 
-    if [[ $1 == "headless" ]]; then
-        while IFS= read -r line; do 
-            if [[ -z "$line" ]]; then
-                break 
+    if [[ $1 != "headless" ]]; then
+        if [[ ! -z $(which google-chrome) ]]; then
+            echo "[1] google-chrome"
+            echo "[2] firefox"
+            read -e -i 1 -p "Select a browser to complete SSO Auth: " selection
+            if [[ $selection == 1 ]]; then
+                browser=$(which googlr-chrome)
+            elif [[ $selection == 2 ]]; then
+                browser=$(which firefox)
+            else
+                echo "Invalid input!"
+                return -1
             fi
-            export ${line%%=*}=${line#*=}
-        done
-    elif [[ $1 == "cookie" ]]; then
-        openconnect --useragent="AnyConnect-compatible OpenConnect VPN Agent" --external-browser $(which google-chrome) --authenticate ngvpn02.vpn.nvidia.com/SAML-EXT
-        return 
-    else 
-        eval $(openconnect --useragent="AnyConnect-compatible OpenConnect VPN Agent" --external-browser $(which google-chrome) --authenticate ngvpn02.vpn.nvidia.com/SAML-EXT)
+        else
+            browser=$(which firefox)
+        fi
     fi
 
-    [ -n ["$COOKIE"] ] && echo -n "$COOKIE" | sudo openconnect --cookie-on-stdin $CONNECT_URL --servercert $FINGERPRINT --resolve $RESOLVE 
+    if [[ $1 == "cookie" ]]; then
+        openconnect --useragent="AnyConnect-compatible OpenConnect VPN Agent" --external-browser $browser --authenticate ngvpn02.vpn.nvidia.com/SAML-EXT
+    else 
+        if [[ $1 == "headless" ]]; then
+            while IFS= read -r line; do 
+                if [[ -z "$line" ]]; then
+                    break 
+                fi
+                export ${line%%=*}=${line#*=}
+            done
+        else
+            eval $(openconnect --useragent="AnyConnect-compatible OpenConnect VPN Agent" --external-browser $browser --authenticate ngvpn02.vpn.nvidia.com/SAML-EXT)
+        fi 
+        [ -n ["$COOKIE"] ] && echo -n "$COOKIE" | sudo openconnect --cookie-on-stdin $CONNECT_URL --servercert $FINGERPRINT --resolve $RESOLVE 
+    fi
 }
 
 function zhu-send-files {
