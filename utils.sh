@@ -3,40 +3,51 @@ export __GL_SYNC_TO_VBLANK=0
 export vblank_mode=0
 export __GL_DEBUG_BYPASS_ASSERT=c 
 [[ -z $DISPLAY ]] && export DISPLAY=:0
+
 if [[ $USER == wanliz ]]; then
     export P4CLIENT=wanliz-p4sw-bugfix_main
     export P4ROOT=$HOME/$P4CLIENT
     export P4IGNORE=$HOME/.p4ignore 
     export P4PORT=p4proxy-sc.nvidia.com:2006
     export P4USER=wanliz 
+
     if [[ ! -e $P4IGNORE ]]; then
         echo "_out" > $P4IGNORE
         echo ".git" >> $P4IGNORE
         echo ".vscode" >> $P4IGNORE
+    fi
+
+    if ! sudo grep -q "$USER ALL=(ALL) NOPASSWD:ALL" /etc/sudoers; then
+        echo "Enable sudo without password"
+        echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
+    fi
+
+    if [[ -z $(grep "nsight-systems-internal/current/host-linux-x64" ~/.bashrc) ]]; then
+        echo "Append Nsight systems to \$PATH"
+        echo "export PATH=\"~/nsight-systems-internal/current/host-linux-x64:\$PATH\"" >> ~/.bashrc
+    fi
+
+    if [[ -z $(grep "nsight-graphics-internal/current/host/linux-desktop-nomad-x64" ~/.bashrc) ]]; then
+        echo "Append Nsight graphics to \$PATH"
+        echo "export PATH=\"~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64:\$PATH\"" >> ~/.bashrc
+    fi
+
+    if [[ -z $(grep "export XAUTHORITY=" ~/.bashrc) ]]; then
+        if [[ $XDG_SESSION_TYPE == tty ]]; then
+            echo "Enable remote users to run GUI applications"
+            echo "export XAUTHORITY=$XAUTHORITY" >> ~/.bashrc
+            echo "xhost +si:localuser:\$USER >/dev/null" >> ~/.bashrc
+        fi
     fi
 fi
 
 function zhu-reload {
     if [[ -e ~/zhutest/utils.sh ]]; then
         source ~/zhutest/utils.sh
+        echo "~/zhutest/utils.sh sourced!"
     else
         echo "~/zhutest/utils.sh doesn't exist!"
     fi
-}
-
-function zhu-config-sudo {
-    if ! sudo grep -q "$USER ALL=(ALL) NOPASSWD:ALL" /etc/sudoers; then
-        echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
-    fi
-}
-
-function zhu-config-path {
-    for dir in "~/nsight-systems-internal/current/host-linux-x64" \
-               "~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64"; do 
-        if ! grep "$dir" ~/.bashrc; then
-            echo "PATH=\"$dir:\$PATH\"" >> ~/.bashrc
-        fi 
-    done
 }
 
 function zhu-is-installed {
@@ -47,40 +58,53 @@ function zhu-is-installed {
     fi
 }
 
-function zhu-config-nvidia-laptop {
-    export __NV_PRIME_RENDER_OFFLOAD=1
-    export __GLX_VENDOR_LIBRARY_NAME=nvidia
-}
-
 function zhu-connect-nvidia-vpn {
     if [[ -z $(which openconnect) ]]; then
         sudo apt install -y openconnect
     fi
 
     if [[ ! -z $(pidof openconnect) ]]; then
-        read -e -i yes -p "Kill previous openconnect process ($(pidof openconnect))? " ans
-        if [[ $ans == yes ]]; then
+        read -e -i yes -p "Kill previous openconnect process ($(pidof openconnect))? " kill_old_oc
+        if [[ $kill_old_oc == yes ]]; then
             sudo kill -SIGINT $(pidof openconnect)
             echo "Wait for 3 seconds after killing openconnect"
             sleep 3
         fi
     fi
 
-    if [[ $1 == "headless" ]]; then
-        while IFS= read -r line; do 
-            if [[ -z "$line" ]]; then
-                break 
+    if [[ $1 != "headless" ]]; then
+        if [[ ! -z $(which google-chrome) ]]; then
+            echo "[1] google-chrome"
+            echo "[2] firefox"
+            read -e -i 1 -p "Select a browser to complete SSO Auth: " selection
+            if [[ $selection == 1 ]]; then
+                browser=$(which googlr-chrome)
+            elif [[ $selection == 2 ]]; then
+                browser=$(which firefox)
+            else
+                echo "Invalid input!"
+                return -1
             fi
-            export ${line%%=*}=${line#*=}
-        done
-    elif [[ $1 == "cookie" ]]; then
-        openconnect --useragent="AnyConnect-compatible OpenConnect VPN Agent" --external-browser $(which google-chrome) --authenticate ngvpn02.vpn.nvidia.com/SAML-EXT
-        return 
-    else 
-        eval $(openconnect --useragent="AnyConnect-compatible OpenConnect VPN Agent" --external-browser $(which google-chrome) --authenticate ngvpn02.vpn.nvidia.com/SAML-EXT)
+        else
+            browser=$(which firefox)
+        fi
     fi
 
-    [ -n ["$COOKIE"] ] && echo -n "$COOKIE" | sudo openconnect --cookie-on-stdin $CONNECT_URL --servercert $FINGERPRINT --resolve $RESOLVE 
+    if [[ $1 == "cookie" ]]; then
+        openconnect --useragent="AnyConnect-compatible OpenConnect VPN Agent" --external-browser $browser --authenticate ngvpn02.vpn.nvidia.com/SAML-EXT
+    else 
+        if [[ $1 == "headless" ]]; then
+            while IFS= read -r line; do 
+                if [[ -z "$line" ]]; then
+                    break 
+                fi
+                export ${line%%=*}=${line#*=}
+            done
+        else
+            eval $(openconnect --useragent="AnyConnect-compatible OpenConnect VPN Agent" --external-browser $browser --authenticate ngvpn02.vpn.nvidia.com/SAML-EXT)
+        fi 
+        [ -n ["$COOKIE"] ] && echo -n "$COOKIE" | sudo openconnect --cookie-on-stdin $CONNECT_URL --servercert $FINGERPRINT --resolve $RESOLVE 
+    fi
 }
 
 function zhu-send-files {
@@ -102,8 +126,8 @@ function zhu-send-files {
     files=$(find . -maxdepth 1 -mindepth 1 ! -name ".*" | sort | fzf -m) 
     echo "$files" > /tmp/files
     if [[ $(cat /tmp/files | wc -l) -gt 2 ]]; then
-        read -e -i yes -p "Send compressed archive? " ans
-        if [[ $ans == yes ]]; then
+        read -e -i yes -p "Send compressed archive? " compress
+        if [[ $compress == yes ]]; then
             read -e -i untitled.tar.gz -p "Archive name: " name
             tar -zcvf $name ${files//$'\n'/ } && files="$(realpath $name)" || echo "Failed to compress!" 
         fi
@@ -140,7 +164,7 @@ function zhu-viewperf-install {
     fi
 }
 
-function zhu-viewperf-maya-subtest5 {
+function zhu-test-viewperf-maya-subtest5 {
     [[ -z $DISPLAY ]] && export DISPLAY=:0 
     zhu-viewperf-install
     pushd ~/zhutest-workload.d/viewperf2020 >/dev/null
@@ -321,7 +345,7 @@ function zhu-test-maya-high-interrupt-count-on-gdm3 {
     fi
 
     # Round 1 for the number of interrupts
-    zhu-viewperf-maya-subtest5 &
+    zhu-test-viewperf-maya-subtest5 &
     mayapid=$!
     sleep 2
 
@@ -354,7 +378,7 @@ function zhu-test-maya-high-interrupt-count-on-gdm3 {
     fi
 
     # Round 2 for the time cost of interrupt handler (nvidia_isr/amdgpu_irq_handler)
-    zhu-viewperf-maya-subtest5 &
+    zhu-test-viewperf-maya-subtest5 &
     mayapid=$!
     sleep 2
 
@@ -384,7 +408,7 @@ function zhu-test-maya-high-interrupt-count-on-gdm3 {
     cputime_us=$((cputime_ns / 1000))
     echo "Total CPU time in $irq_handler is ${cputime_ms}ms (${cputime_us}us) (${cputime_ns}ns)" >> /tmp/xxx.log
     
-    zhu-viewperf-maya-subtest5 & 
+    zhu-test-viewperf-maya-subtest5 & 
     mayapid=$!
     sleep 2
 
@@ -400,13 +424,13 @@ function zhu-test-maya-high-interrupt-count-on-gdm3 {
 function zhu-disable-nvidia-interrupt-handler {
     echo "options nvidia NVreg_EnableMSI=0" | sudo tee /etc/modprobe.d/nvidia-disable-interrupt-handler.conf
     sudo update-initramfs -u
-    echo "A reboot is pending"
+    echo "[Action Required] Reboot system to activate changes!"
 }
 
 function zhu-enable-nvidia-interrupt-handler {
     sudo rm -rf /etc/modprobe.d/nvidia-disable-interrupt-handler.conf
     sudo update-initramfs -u
-    echo "A reboot is pending"
+    echo "[Action Required] Reboot system to activate changes!"
 }
 
 function zhu-watch-interrupt-count {
@@ -475,8 +499,8 @@ function zhu-install-nvidia-driver {
         chmod +x $(realpath $1) 
         sudo $(realpath $1) && {
             echo "Nvidia driver is installed!"
-            read -e -i yes -p "Do you want to start display manager? " ans
-            [[ $ans == yes ]] && sudo systemctl start display-manager
+            read -e -i yes -p "Do you want to start display manager? " start_dm
+            [[ $start_dm == yes ]] && sudo systemctl start display-manager
         } || cat /var/log/nvidia-installer.log
     else
         mapfile -t files < <(find $P4ROOT/_out ~/Downloads -type f -name 'NVIDIA-*.run')
@@ -497,8 +521,8 @@ function zhu-build-nvidia-driver {
     read -e -i $(nproc) -p "[3/3] Number of build threads: " threads
 
     if [[ ! -d $P4ROOT ]]; then
-        read -e -i "yes" -p "Pull the latest revision of $P4CLIENT? " ans
-        if [[ $ans == yes ]]; then
+        read -e -i "yes" -p "Pull the latest revision of $P4CLIENT? " pull_p4client
+        if [[ $pull_p4client == yes ]]; then
             p4 sync -f //sw/...
         fi
     fi
@@ -542,13 +566,13 @@ function zhu-disable-nvidia-gsp {
     sudo su -c 'echo options nvidia NVreg_EnableGpuFirmware=0 > /etc/modprobe.d/nvidia-disable-gsp.conf'
     sudo update-initramfs -u 
     echo "GSP can only be disabled in nvidia's closed RM"
-    echo "A reboot is pending"
+    echo "[Action Required] Reboot system to activate changes!"
 }
 
 function zhu-enable-nvidia-gsp {
     sudo rm -rf /etc/modprobe.d/nvidia-disable-gsp.conf
     sudo update-initramfs -u 
-    echo "A reboot is pending"
+    echo "[Action Required] Reboot system to activate changes!"
 }
 
 function zhu-opengl-gpufps {
@@ -602,8 +626,8 @@ function zhu-upgrade-nsight-systems {
         echo "Installed version is NULL"
     fi
     
-    read -p "Upgrade to $latest_subver? " ans 
-    if [[ $ans == yes ]]; then
+    read -p "Upgrade to $latest_subver? " upgrade_nsys 
+    if [[ $upgrade_nsys == yes ]]; then
         pushd ~/Downloads >/dev/null
         wget --no-check-certificate --header="X-JFrog-Art-Api: $ARTIFACTORY_API_KEY" https://urm.nvidia.com/artifactory/swdt-nsys-generic/ctk/$latest_version/$latest_subver/nsight_systems-linux-x86_64-$latest_subver.tar.gz &&
         tar -zxvf nsight_systems-linux-x86_64-$latest_subver.tar.gz &&
@@ -796,7 +820,7 @@ function zhu-disable-nvidia-gpu {
     echo "ACTION==\"add\", SUBSYSTEM==\"pci\", ATTR{vendor}==\"0x$vendor_id\", ATTR{device}==\"0x$dev_id\", ATTR{enable}=\"0\"" | sudo tee /etc/udev/rules.d/99-disable-gpu.rules 
     sudo bash -c "sudo udevadm control --reload-rules; sudo udevadm trigger --action=add" &
     disown 
-    echo "A reboot is pending..."
+    echo "[Action Required] Reboot system to activate changes!"
 }
 
 function zhu-enable-nvidia-gpu-all {
@@ -804,7 +828,7 @@ function zhu-enable-nvidia-gpu-all {
         sudo rm -rf /etc/udev/rules.d/99-disable-gpu.rules
         sudo bash -c "sudo udevadm control --reload-rules; sudo udevadm trigger" &
         disown   
-        echo "A reboot is pending..."
+        echo "[Action Required] Reboot system to activate changes!"
     fi
 }
 
@@ -932,59 +956,17 @@ function zhu-enable-cpu-cores-all {
     echo "Put $count cpu cores back ONLINE!"
 }
 
-function zhu-install-fex-from-source-code {
-    if [[ ! -z $(which FEXInterpreter) ]]; then
-        return 
-    fi
-
-    sudo apt update 
-    sudo apt install -y git cmake ninja-build clang lld libstdc++-12-dev libepoxy-dev libsdl2-dev libssl-dev libglib2.0-dev libpixman-1-dev libgirepository1.0-dev libc6-dev libslirp-dev debootstrap
-    if [[ ! -d ~/FEX.git ]]; then
-        git clone --depth 1 https://github.com/FEX-Emu/FEX.git ~/FEX.git || return -1
-    fi 
-
-    # Build FEX
-    mkdir -p ~/FEX.git/build 
-    cd ~/FEX.git/build 
-    cmake -DCMAKE_INSTALL_PREFIX=/usr \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DUSE_LINKER=lld \
-          -DENABLE_LTO=True \
-          ..
-    ninja 
-    sudo ninja install || {
-        echo "Failed to build FEX"
-        return -1
-    }
-
-    # Create a root fs for x86_64 libraries 
-    ~/FEX.git/RootFSFetcher --rootfs-name Ubuntu_$(lsb_release -r | awk '{print $2}')
-
-    # Register FEX to handle x86_64 binaries automatically
-    echo ':FEX-x86_64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x3e\x00:\xff\xff\xff\xff\xff\xfe\xfe\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/usr/bin/FEXInterpreter:OC' | sudo tee /usr/lib/binfmt.d/FEX-x86_64.conf >/dev/null
-    sudo systemctl restart systemd-binfmt
-
-    # Mount required directories and configure the rootfs
-    sudo mount --bind /dev /opt/fex-rootfs/dev
-    sudo mount --bind /proc /opt/fex-rootfs/proc
-    sudo mount --bind /sys /opt/fex-rootfs/sys
-    sudo mount --bind /tmp /opt/fex-rootfs/tmp
-
-    # Install dependencies in rootfs
-    sudo chroot /opt/fex-rootfs /bin/bash -c '
-        apt update &&
-        apt install -y libgl1 libsdl2-2.0-0 libopengl0 libgstreamer1.0-0 \
-            vulkan-tools vulkan-validationlayers libvulkan1 mesa-vulkan-drivers \
-            libepoxy-dev mesa-utils  && 
-        apt clean
-    ' || return -1
-
-    # Allow the rootfs to access the host's display 
-    xhost +
-}
-
 function zhu-install-fex {
-    echo 
+    if [[ -z $(which FEXInterpreter) ]]; then
+        sudo apt update
+        sudo apt install -y python3 python3-venv ninja-build \
+            libepoxy-dev libsdl2-dev libssl-dev libglib2.0-dev \
+            libpixman-1-dev libslirp-dev debootstrap git
+        git clone --depth 1 https://github.com/FEX-Emu/FEX.git ~/FEX.git
+        pushd ~/FEX.git >/dev/null 
+        ./Scripts/InstallFEX.py 
+        popd >/dev/null 
+    fi
 }
 
 function zhu-run-x64-on-arm64 {
@@ -995,6 +977,26 @@ function zhu-run-x64-on-arm64 {
 
     zhu-install-fex || return -1
     FEXInterpreter --rootfs=/opt/fex-rootfs "$@"
+}
+
+function zhu-disable-wayland {
+    if [[ $XDG_SESSION_TYPE == "tty" ]]; then
+        # Config gdm3
+        sudo cp /etc/gdm3/custom.conf /etc/gdm3/custom.conf.backup
+        sudo sed -i 's/^#WaylandEnable=.*/WaylandEnable=false/' /etc/gdm3/custom.conf || {
+            echo -e "\n[daemon]\nWaylandEnable=false" | tee -a /etc/gdm3/custom.conf >/dev/null
+        }
+
+        read -e -i yes -p "Restart display-manager to activate changes? " restart_dm
+        if [[ $restart_dm == yes ]]; then
+            if [[ $XDG_SESSION_TYPE == tty ]]; then
+                sudo systemctl restart display-manager
+            else
+                echo "Run via SSH or TTY!"
+                return -1
+            fi
+        fi
+    fi
 }
 
 function zhu-test-3dmark-attan-wildlife {
