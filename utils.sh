@@ -121,7 +121,7 @@ function zhu-send-files {
 }
 
 function zhu-viewperf-install {
-    if [[ ! -e ~/viewperf2020/viewperf/bin/viewperf ]]; then
+    if [[ ! -e ~/zhutest-workload.d/viewperf2020/viewperf/bin/viewperf ]]; then
         if ! mountpoint -q /mnt/linuxqa; then
             mount-linuxqa 
         fi
@@ -131,7 +131,7 @@ function zhu-viewperf-install {
         
         pushd ~/Downloads >/dev/null
         tar -zxvf viewperf2020v3.tar.gz
-        mv viewperf2020 ~/viewperf2020
+        mv viewperf2020 ~/zhutest-workload.d/viewperf2020
         popd >/dev/null
     fi
 
@@ -143,7 +143,7 @@ function zhu-viewperf-install {
 function zhu-viewperf-maya-subtest5 {
     [[ -z $DISPLAY ]] && export DISPLAY=:0 
     zhu-viewperf-install
-    pushd ~/viewperf2020 >/dev/null
+    pushd ~/zhutest-workload.d/viewperf2020 >/dev/null
     mkdir -p results/maya-06
 
     if [[ ! -e viewsets/maya/config/subtest5.xml ]]; then
@@ -426,12 +426,20 @@ function zhu-mount-linuxqa {
         sudo apt install -y python-is-python3
     fi
 
-    showmount -e linuxqa
+    showmount -e linuxqa >/dev/null || {
+        echo "No access to linuxqa"
+        return -1
+    }
+
     sudo mkdir -p /mnt/linuxqa /mnt/data /mnt/builds /mnt/dvsbuilds
-    sudo mount linuxqa:/storage/people     /mnt/linuxqa 
-    sudo mount linuxqa:/storage/data       /mnt/data
-    sudo mount linuxqa:/storage3/builds    /mnt/builds
-    sudo mount linuxqa:/storage5/dvsbuilds /mnt/dvsbuilds
+    
+    [[ -z $(ls /mnt/linuxqa 2>/dev/null) ]] && sudo mount linuxqa:/storage/people /mnt/linuxqa && echo "Mounted /mnt/linuxqa" || echo "Failed to mount /mnt/linuxqa"
+    
+    [[ -z $(ls /mnt/data 2>/dev/null) ]] && sudo mount linuxqa:/storage/data /mnt/data && echo "Mounted /mnt/data" || echo "Failed to mount /mnt/data"
+    
+    [[ -z $(ls /mnt/builds 2>/dev/null) ]] && sudo mount linuxqa:/storage3/builds /mnt/builds && echo "Mounted /mnt/builds" || echo "Failed to mount /mnt/builds" 
+    
+    [[ -z $(ls /mnt/dvsbuilds 2>/dev/null) ]] && sudo mount linuxqa:/storage5/dvsbuilds /mnt/dvsbuilds && echo "Mounted /mnt/dvsbuilds" || echo "Failed to mount /mnt/dvsbuilds"
 }
 
 function zhu-sync {
@@ -979,7 +987,7 @@ function zhu-install-fex {
     echo 
 }
 
-function zhu-run-x86-on-arm {
+function zhu-run-x64-on-arm64 {
     if [[ -z $1 ]]; then
         echo "Usage: zhu-run-x86-on-arm <program> [args...]"
         return -1
@@ -987,4 +995,33 @@ function zhu-run-x86-on-arm {
 
     zhu-install-fex || return -1
     FEXInterpreter --rootfs=/opt/fex-rootfs "$@"
+}
+
+function zhu-test-3dmark-attan-wildlife {
+    if [[ ! -e ~/zhutest-workload.d/3dmark-attan-extreme-1.1.2.1-workload-bin ]]; then
+        zhu-mount-linuxqa || return -1
+        
+        which rsync >/dev/null || sudo apt install -y rsync
+        rsync -ah --progress /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Attan_Wild_Life/3dmark-attan-extreme-1.1.2.1-workload-bin.zip ~/Downloads/ || return -1
+
+        which unzip >/dev/null || sudo apt install -y unzip 
+        mkdir -p ~/zhutest-workload.d/3dmark-attan-extreme-1.1.2.1-workload-bin 
+        pushd ~/zhutest-workload.d/3dmark-attan-extreme-1.1.2.1-workload-bin >/dev/null || return -1
+        unzip ~/Downloads/3dmark-attan-extreme-1.1.2.1-workload-bin.zip || return -1
+        popd >/dev/null 
+    fi
+
+    if [[ $(uname -m) == "aarch64" ]]; then
+        zhu-install-fex || return -1
+    fi
+
+    pushd ~/zhutest-workload.d/3dmark-attan-extreme-1.1.2.1-workload-bin >/dev/null 
+    rm -rf result.json
+    chmod +x run_linux_x64.sh 
+    ./run_linux_x64.sh
+
+    which jp >/dev/null || sudo apt install -y jq 
+    result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT") | .value' result.json)
+    echo "Typed result: $result FPS"
+    popd >/dev/null 
 }
