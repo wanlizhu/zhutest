@@ -24,19 +24,32 @@ function zhu-reload {
     fi
 }
 
-function zhu-config-sudo {
+function zhu-config-bashrc {
     if ! sudo grep -q "$USER ALL=(ALL) NOPASSWD:ALL" /etc/sudoers; then
+        echo "Enable sudo without password"
         echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
     fi
-}
 
-function zhu-config-path {
+    echo "Add tool dirs to \$PATH"
     for dir in "~/nsight-systems-internal/current/host-linux-x64" \
                "~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64"; do 
         if ! grep "$dir" ~/.bashrc; then
             echo "PATH=\"$dir:\$PATH\"" >> ~/.bashrc
         fi 
     done
+
+    if [[ -z $(grep "export XAUTHORITY=" ~/.bashrc) ]]; then
+        if [[ $XDG_SESSION_TYPE == tty ]]; then
+            echo "Enable remote users to run GUI applications"
+            echo "export XAUTHORITY=$XAUTHORITY" >> ~/.bashrc
+            echo "xhost +si:localuser:\$USER >/dev/null" >> ~/.bashrc
+        else
+            echo "Enable remote users to run GUI applications [FAILED] - Run again in a Terminal GUI"
+        fi
+    fi
+
+    source ~/.bashrc 
+    echo "~/.bashrc sourced!"
 }
 
 function zhu-is-installed {
@@ -45,11 +58,6 @@ function zhu-is-installed {
     else
         return 0
     fi
-}
-
-function zhu-config-nvidia-laptop {
-    export __NV_PRIME_RENDER_OFFLOAD=1
-    export __GLX_VENDOR_LIBRARY_NAME=nvidia
 }
 
 function zhu-connect-nvidia-vpn {
@@ -400,13 +408,13 @@ function zhu-test-maya-high-interrupt-count-on-gdm3 {
 function zhu-disable-nvidia-interrupt-handler {
     echo "options nvidia NVreg_EnableMSI=0" | sudo tee /etc/modprobe.d/nvidia-disable-interrupt-handler.conf
     sudo update-initramfs -u
-    echo "A reboot is pending"
+    echo "[Action Required] Reboot system to activate changes!"
 }
 
 function zhu-enable-nvidia-interrupt-handler {
     sudo rm -rf /etc/modprobe.d/nvidia-disable-interrupt-handler.conf
     sudo update-initramfs -u
-    echo "A reboot is pending"
+    echo "[Action Required] Reboot system to activate changes!"
 }
 
 function zhu-watch-interrupt-count {
@@ -534,13 +542,13 @@ function zhu-disable-nvidia-gsp {
     sudo su -c 'echo options nvidia NVreg_EnableGpuFirmware=0 > /etc/modprobe.d/nvidia-disable-gsp.conf'
     sudo update-initramfs -u 
     echo "GSP can only be disabled in nvidia's closed RM"
-    echo "A reboot is pending"
+    echo "[Action Required] Reboot system to activate changes!"
 }
 
 function zhu-enable-nvidia-gsp {
     sudo rm -rf /etc/modprobe.d/nvidia-disable-gsp.conf
     sudo update-initramfs -u 
-    echo "A reboot is pending"
+    echo "[Action Required] Reboot system to activate changes!"
 }
 
 function zhu-opengl-gpufps {
@@ -788,7 +796,7 @@ function zhu-disable-nvidia-gpu {
     echo "ACTION==\"add\", SUBSYSTEM==\"pci\", ATTR{vendor}==\"0x$vendor_id\", ATTR{device}==\"0x$dev_id\", ATTR{enable}=\"0\"" | sudo tee /etc/udev/rules.d/99-disable-gpu.rules 
     sudo bash -c "sudo udevadm control --reload-rules; sudo udevadm trigger --action=add" &
     disown 
-    echo "A reboot is pending..."
+    echo "[Action Required] Reboot system to activate changes!"
 }
 
 function zhu-enable-nvidia-gpu-all {
@@ -796,7 +804,7 @@ function zhu-enable-nvidia-gpu-all {
         sudo rm -rf /etc/udev/rules.d/99-disable-gpu.rules
         sudo bash -c "sudo udevadm control --reload-rules; sudo udevadm trigger" &
         disown   
-        echo "A reboot is pending..."
+        echo "[Action Required] Reboot system to activate changes!"
     fi
 }
 
@@ -976,7 +984,16 @@ function zhu-install-fex-from-source-code {
 }
 
 function zhu-install-fex {
-    echo 
+    if [[ -z $(which FEXInterpreter) ]]; then
+        sudo apt update
+        sudo apt install -y python3 python3-venv ninja-build \
+            libepoxy-dev libsdl2-dev libssl-dev libglib2.0-dev \
+            libpixman-1-dev libslirp-dev debootstrap git
+        git clone --depth 1 https://github.com/FEX-Emu/FEX.git ~/FEX.git
+        pushd ~/FEX.git >/dev/null 
+        ./Scripts/InstallFEX.py 
+        popd >/dev/null 
+    fi
 }
 
 function zhu-run-x86-on-arm {
@@ -987,4 +1004,24 @@ function zhu-run-x86-on-arm {
 
     zhu-install-fex || return -1
     FEXInterpreter --rootfs=/opt/fex-rootfs "$@"
+}
+
+function zhu-disable-wayland {
+    if [[ $XDG_SESSION_TYPE == "wayland" ]]; then
+        # Config gdm3
+        sudo cp /etc/gdm3/custom.conf /etc/gdm3/custom.conf.backup
+        sudo sed -i 's/^#WaylandEnable=.*/WaylandEnable=false/' /etc/gdm3/custom.conf || {
+            echo -e "\n[daemon]\nWaylandEnable=false" | tee -a /etc/gdm3/custom.conf >/dev/null
+        }
+
+        read -e -i yes -p "Restart display-manager to activate changes? " ans
+        if [[ $ans == yes ]]; then
+            if [[ $XDG_SESSION_TYPE == tty ]]; then
+                sudo systemctl restart display-manager
+            else
+                echo "Run via SSH or TTY!"
+                return -1
+            fi
+        fi
+    fi
 }
