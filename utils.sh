@@ -33,7 +33,7 @@ if [[ $USER == wanliz ]]; then
     fi
 
     if [[ -z $(grep "export XAUTHORITY=" ~/.bashrc) ]]; then
-        if [[ $XDG_SESSION_TYPE == tty ]]; then
+        if [[ $XDG_SESSION_TYPE == x11 ]]; then
             echo "Enable remote users to run GUI applications"
             echo "export XAUTHORITY=$XAUTHORITY" >> ~/.bashrc
             echo "xhost +si:localuser:\$USER >/dev/null" >> ~/.bashrc
