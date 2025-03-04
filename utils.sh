@@ -1227,7 +1227,29 @@ EOF
 }
 
 function zhu-list-steam-games {
-    echo 
+    steam_root="$HOME/.steam"
+    steam_root=$(readlink -f "$steam_root")
+
+    libfile="$steam_root/steam/steamapps/libraryfolders.vdf"
+    if [[ ! -e "$libfile" ]]; then
+        echo "$libfile doesn't exist!"
+        return -1
+    fi
+
+    libpaths=$(grep -Eo '"path"[[:space:]]+".+"' "$libfile" | awk -F'"' '{print $4}')
+    printf "%-40s %-60s %s\n" "AppID" "Game Name" "Installation Path"
+    printf "%-40s %-60s %s\n" "-----" "---------" "-----------------"
+
+    for libpath in $libpaths; do 
+        find "$libpath/steamapps" -maxdepth 1 -name 'appmanifest_*.acf' -print0 | \
+        while IFS= read -r -d '' manifest; do 
+            app_id=$(basename "$manifest" | cut -d_ -f2 | cut -d. -f1)
+            name=$(grep -Eo '"name"[[:space:]]+".+"' "$manifest" | awk -F'"' '{print $4}')
+            dir=$(grep -Eo '"installdir"[[:space:]]+".+"' "$manifest" | awk -F'"' '{print $4}')
+            fulldir="$libpath/steamapps/common/$dir"
+            printf "%-40s %-60s %s\n" "$app_id" "$name" "$fulldir"
+        done
+    done 
 }
 
 function zhu-test-sottr {
