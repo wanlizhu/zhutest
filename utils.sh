@@ -1138,7 +1138,7 @@ function zhu-cursor-location-to-active-window {
         window_h=$HEIGHT 
 
         client_x=$window_x 
-        client_y=$(($(xwininfo -id $window_id | grep -oP "(?<=Absolute upper-left Y:).*") - $(xprop -root _NET_WORKAREA | awk -F, '{print $2}' | tr -d ' ')))
+        client_y=$(xwininfo -id $window_id | grep -oP "(?<=Absolute upper-left Y:).*")
 
         cursor_x_to_client=$((cursor_x - client_x))
         cursor_y_to_client=$((cursor_y - client_y))
