@@ -1052,8 +1052,6 @@ function zhu-test-3dmark-attan-wildlife {
     zhu-validate-display || return -1
 
     if [[ ! -e ~/zhutest-workload.d/3dmark-attan-wildlife-1.1.2.1 ]]; then
-        zhu-mount-linuxqa || return -1
-        
         which rsync >/dev/null || sudo apt install -y rsync
         zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Attan_Wild_Life/3dmark-attan-extreme-1.1.2.1-workload-bin.zip ~/Downloads/ || return -1
 
@@ -1084,8 +1082,6 @@ function zhu-test-3dmark-disco-steelnomad {
     zhu-validate-display || return -1
 
     if [[ ! -e ~/zhutest-workload.d/3dmark-disco-steelnomad-1.0.0 ]]; then
-        zhu-mount-linuxqa || return -1
-        
         which rsync >/dev/null || sudo apt install -y rsync
         zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Disco_Steel_Nomad/3dmark-disco-1.0.0-bin.zip ~/Downloads/ || return -1
 
@@ -1116,8 +1112,6 @@ function zhu-test-3dmark-pogo-solarbay {
     zhu-validate-display || return -1
 
     if [[ ! -e ~/zhutest-workload.d/3dmark-pogo-solarbay-1.0.5.3 ]]; then
-        zhu-mount-linuxqa || return -1
-        
         which rsync >/dev/null || sudo apt install -y rsync
         zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Pogo_Solar_Bay/3dmark-pogo-1.0.5.3-bin.zip ~/Downloads/ || return -1
 
