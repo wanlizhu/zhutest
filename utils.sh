@@ -146,6 +146,16 @@ function zhu-send-files {
     sshpass -p $password scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ${files//$'\n'/ } $username@$hostname:/$([[ $clientos == macos ]] && echo Users || echo home)/$username/Downloads/
 }
 
+function zhu-validate-display {
+    if [[ $(ls /tmp/.X11-unix | wc -l) == 0 ]]; then
+        if [[ -e /mnt/nvtest/nvt.sh ]]; then
+            /mnt/nvtest/nvt.sh 3840x2160__runcmd --cmd 'sleep 1000000000' || return -1
+        else
+            echo TODO
+        fi
+    fi
+}
+
 function zhu-install-perf {
     if ! zhu-is-installed linux-tools-$(uname -r); then 
         sudo apt install -y linux-tools-$(uname -r) linux-tools-generic >/dev/null 2>&1
@@ -289,7 +299,8 @@ function zhu-start-openbox {
 }
 
 function zhu-test-maya-high-interrupt-count-on-gdm3 {
-    zhu-install-perf 
+    zhu-validate-display || return -1
+    zhu-install-perf  || return -1
     rm -rf /tmp/fps.log 
 
     if [[ -z $(which trace-cmd) ]]; then
@@ -1003,6 +1014,8 @@ function zhu-cursor-click-on-window {
 }
 
 function zhu-test-3dmark-attan-wildlife {
+    zhu-validate-display || return -1
+
     if [[ ! -e ~/zhutest-workload.d/3dmark-attan-wildlife-1.1.2.1 ]]; then
         zhu-mount-linuxqa || return -1
         
@@ -1033,6 +1046,8 @@ function zhu-test-3dmark-attan-wildlife {
 }
 
 function zhu-test-3dmark-disco-steelnomad {
+    zhu-validate-display || return -1
+
     if [[ ! -e ~/zhutest-workload.d/3dmark-disco-steelnomad-1.0.0 ]]; then
         zhu-mount-linuxqa || return -1
         
@@ -1063,6 +1078,8 @@ function zhu-test-3dmark-disco-steelnomad {
 }
 
 function zhu-test-3dmark-pogo-solarbay {
+    zhu-validate-display || return -1
+
     if [[ ! -e ~/zhutest-workload.d/3dmark-pogo-solarbay-1.0.5.3 ]]; then
         zhu-mount-linuxqa || return -1
         
@@ -1093,6 +1110,8 @@ function zhu-test-3dmark-pogo-solarbay {
 }
 
 function zhu-test-unigine-heaven {
+    zhu-validate-display || return -1
+
     if [[ ! -e ~/zhutest-workload.d/unigine-heaven-1.6.5 ]]; then
         phoronix-test-suite install pts/unigine-heaven-1.6.5 || return -1
         pushd ~/.phoronix-test-suite/installed-tests/pts/unigine-heaven-1.6.5 >/dev/null 
@@ -1112,6 +1131,8 @@ function zhu-test-unigine-heaven {
 }
 
 function zhu-test-unigine-vally {
+    zhu-validate-display || return -1
+
     if [[ ! -e ~/zhutest-workload.d/unigine-valley-1.1.8 ]]; then
         phoronix-test-suite install pts/unigine-valley-1.1.8 || return -1
         pushd ~/.phoronix-test-suite/installed-tests/pts/unigine-valley-1.1.8 >/dev/null 
@@ -1131,6 +1152,8 @@ function zhu-test-unigine-vally {
 }
 
 function zhu-test-unigine-superposition {
+    zhu-validate-display || return -1
+
     if [[ ! -e ~/zhutest-workload.d/unigine-super-1.0.7 ]]; then
         phoronix-test-suite install pts/unigine-super-1.0.7 || return -1
         pushd ~/.phoronix-test-suite/installed-tests/pts/unigine-super-1.0.7 >/dev/null 
@@ -1171,8 +1194,8 @@ function zhu-viewperf-install {
 }
 
 function zhu-test-viewperf {
-    [[ -z $DISPLAY ]] && export DISPLAY=:0 
-    zhu-viewperf-install
+    zhu-validate-display || return -1
+    zhu-viewperf-install || return -1
 
     # Start all viewsets in viewperf GUI
     ~/zhutest-workload.d/viewperf2020/RunViewperf 
@@ -1198,8 +1221,8 @@ function zhu-test-viewperf {
 }
 
 function zhu-test-viewperf-maya-subtest5 {
-    [[ -z $DISPLAY ]] && export DISPLAY=:0 
-    zhu-viewperf-install
+    zhu-validate-display || return -1
+    zhu-viewperf-install || return -1
 
     pushd ~/zhutest-workload.d/viewperf2020 >/dev/null
     mkdir -p results/maya-06
