@@ -184,9 +184,13 @@ function zhu-install-pts {
     [[ -z $(which curl) ]] && sudo apt install -y curl 
     latest_url=$(curl -s -L -o /dev/null -w "%{url_effective}\n"  https://github.com/phoronix-test-suite/phoronix-test-suite/releases/latest/)
     latest_tag=$(echo "$latest_url" | awk -F'/' '{print $NF}')
+    
     pushd ~/Downloads >/dev/null 
     wget --no-check-certificate  https://github.com/phoronix-test-suite/phoronix-test-suite/releases/download/$latest_tag/phoronix-test-suite-${latest_tag:1}.tar.gz || return -1
-    sudo dpkg -i ./phoronix-test-suite-${latest_tag:1}.tar.gz
+    tar -zxvf phoronix-test-suite-${latest_tag:1}.tar.gz
+    cd phoronix-test-suite
+    sudo ./install-sh
+    sudo apt install -y php-cli php-xml
     popd >/dev/null 
 }
 
