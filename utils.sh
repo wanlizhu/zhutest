@@ -1236,9 +1236,9 @@ function zhu-list-steam-games {
         return -1
     fi
 
+    rm -rf /tmp/steam-games.list
     libpaths=$(grep -Eo '"path"[[:space:]]+".+"' "$libfile" | awk -F'"' '{print $4}')
-    printf "%-40s %-60s %s\n" "AppID" "Game Name" "Installation Path"
-    printf "%-40s %-60s %s\n" "-----" "---------" "-----------------"
+    echo "App ID,Game Name,Installation Path" > /tmp/steam-games.list
 
     for libpath in $libpaths; do 
         find "$libpath/steamapps" -maxdepth 1 -name 'appmanifest_*.acf' -print0 | \
@@ -1247,11 +1247,9 @@ function zhu-list-steam-games {
             name=$(grep -Eo '"name"[[:space:]]+".+"' "$manifest" | awk -F'"' '{print $4}')
             dir=$(grep -Eo '"installdir"[[:space:]]+".+"' "$manifest" | awk -F'"' '{print $4}')
             fulldir="$libpath/steamapps/common/$dir"
-            printf "%-40s %-60s %s\n" "$app_id" "$name" "$fulldir"
+            echo "$app_id,$name,$fulldir" >> /tmp/steam-games.list
         done
     done 
-}
 
-function zhu-test-sottr {
-    echo 
+    column -s, -t /tmp/steam-games.list
 }
