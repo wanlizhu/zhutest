@@ -149,10 +149,24 @@ function zhu-send-files {
 function zhu-validate-display {
     if [[ $(ls /tmp/.X11-unix | wc -l) == 0 ]]; then
         if [[ -e /mnt/nvtest/nvt.sh ]]; then
-            /mnt/nvtest/nvt.sh 3840x2160__runcmd --cmd 'sleep 1000000000' || return -1
+            /mnt/nvtest/nvt.sh 3840x2160__runcmd --cmd 'sleep 1000000000' &
         else
             echo TODO
         fi
+
+        while [[ -z $(pidof Xorg) ]]; do 
+            echo "Wait for Xorg to start..."
+            sleep 1
+        done
+        while ! $(which glxgear) >/dev/null 2>&1; do 
+            echo "Wait for glxgears to success..."
+            sleep 1
+        done
+    fi
+
+    if [[ $(ls /tmp/.X11-unix | wc -l) == 0 ]]; then
+        echo "Failed to open a display!"
+        return -1
     fi
 }
 
