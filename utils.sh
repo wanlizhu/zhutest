@@ -463,7 +463,7 @@ function zhu-fetch-from-linuxqa {
 
     if [[ -z $(ls /mnt/linuxqa) && -d "$2" ]]; then
         pushd "$2" >/dev/null 
-        wget "${1//\/mnt\/linuxqa/http://linuxqa}" 
+        curl -k -# -O "${1//\/mnt\/linuxqa/http://linuxqa/people}" 
         popd >/dev/null 
     else
         rsync -ah --progress "$1" "$2" 
