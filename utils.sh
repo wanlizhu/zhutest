@@ -17,10 +17,12 @@ if [[ $USER == wanliz ]]; then
         echo ".vscode" >> $P4IGNORE
     fi
 
-    if ! sudo grep -q "$USER ALL=(ALL) NOPASSWD:ALL" /etc/sudoers; then
-        echo "Enable sudo without password"
-        echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
-    fi
+    if [[ $UID != "0" ]]; then
+        if ! sudo grep -q "$USER ALL=(ALL) NOPASSWD:ALL" /etc/sudoers; then
+            echo "Enable sudo without password"
+            echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
+        fi
+    fi 
 
     if [[ -z $(grep "nsight-systems-internal/current/host-linux-x64" ~/.bashrc) ]]; then
         echo "Append Nsight systems to \$PATH"
