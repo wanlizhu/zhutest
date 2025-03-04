@@ -182,8 +182,7 @@ function zhu-set-env {
 
 function zhu-install-lsgpus {
     if [[ -z $(which lsgpus) ]]; then
-        zhu-mount-linuxqa || return -1
-        sudo cp -v /mnt/nvtest/bin/Linux_amd64/lsgpus /usr/local/bin/
+        zhu-fetch-from-linuxqa /mnt/nvtest/bin/Linux_amd64/lsgpus /usr/local/bin/
     fi
 }
 
@@ -450,22 +449,23 @@ function zhu-mount-linuxqa {
     }
 
     sudo mkdir -p /mnt/linuxqa /mnt/data /mnt/builds /mnt/dvsbuilds
-    
-    [[ -z $(ls /mnt/linuxqa 2>/dev/null) ]] && {
-        sudo mount linuxqa:/storage/people /mnt/linuxqa && echo "Mounted /mnt/linuxqa" || echo "Failed to mount /mnt/linuxqa"
-    }
-    
-    [[ -z $(ls /mnt/data 2>/dev/null) ]] && {
-        sudo mount linuxqa:/storage/data /mnt/data && echo "Mounted /mnt/data" || echo "Failed to mount /mnt/data"
-    }
-    
-    [[ -z $(ls /mnt/builds 2>/dev/null) ]] && {
-        sudo mount linuxqa:/storage3/builds /mnt/builds && echo "Mounted /mnt/builds" || echo "Failed to mount /mnt/builds"
-    } 
-    
-    [[ -z $(ls /mnt/dvsbuilds 2>/dev/null) ]] && {
-        sudo mount linuxqa:/storage5/dvsbuilds /mnt/dvsbuilds && echo "Mounted /mnt/dvsbuilds" || echo "Failed to mount /mnt/dvsbuilds"
-    }
+    [[ -z $(ls /mnt/linuxqa 2>/dev/null) ]] && sudo mount linuxqa:/storage/people /mnt/linuxqa && echo "Mounted /mnt/linuxqa" 
+    [[ -z $(ls /mnt/data 2>/dev/null) ]] && sudo mount linuxqa:/storage/data /mnt/data && echo "Mounted /mnt/data" 
+    [[ -z $(ls /mnt/builds 2>/dev/null) ]] && sudo mount linuxqa:/storage3/builds /mnt/builds && echo "Mounted /mnt/builds" 
+    [[ -z $(ls /mnt/dvsbuilds 2>/dev/null) ]] && sudo mount linuxqa:/storage5/dvsbuilds /mnt/dvsbuilds && echo "Mounted /mnt/dvsbuilds" 
+}
+
+function zhu-fetch-from-linuxqa {
+    zhu-mount-linuxqa || return -1
+    [[ -z $(which curl) ]] && sudo apt install -y curl
+
+    if [[ -z $(ls /mnt/linuxqa) && -d "$2" ]]; then
+        pushd "$2" >/dev/null 
+        curl -k -# -O "${1//\/mnt\/linuxqa/http://linuxqa}" 
+        popd >/dev/null 
+    else
+        rsync -ah --progress "$1" "$2" 
+    fi
 }
 
 function zhu-sync {
@@ -487,11 +487,7 @@ function zhu-download-nvidia-driver {
         sudo apt install -y python3-pymysql axel 
     fi
 
-    if ! mountpoint -q /mnt/linuxqa; then
-        zhu-mount-linuxqa || return -1
-    fi
-
-    cd /mnt/builds/daily/display/x86_64/dev/gpu_drv/bugfix_main
+    #builds/daily/display/x86_64/dev/gpu_drv/bugfix_main ~/Downloads 
     echo TODO
 }
 
@@ -1059,7 +1055,7 @@ function zhu-test-3dmark-attan-wildlife {
         zhu-mount-linuxqa || return -1
         
         which rsync >/dev/null || sudo apt install -y rsync
-        rsync -ah --progress /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Attan_Wild_Life/3dmark-attan-extreme-1.1.2.1-workload-bin.zip ~/Downloads/ || return -1
+        zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Attan_Wild_Life/3dmark-attan-extreme-1.1.2.1-workload-bin.zip ~/Downloads/ || return -1
 
         which unzip >/dev/null || sudo apt install -y unzip 
         mkdir -p ~/zhutest-workload.d/3dmark-attan-wildlife-1.1.2.1 
@@ -1091,7 +1087,7 @@ function zhu-test-3dmark-disco-steelnomad {
         zhu-mount-linuxqa || return -1
         
         which rsync >/dev/null || sudo apt install -y rsync
-        rsync -ah --progress /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Disco_Steel_Nomad/3dmark-disco-1.0.0-bin.zip ~/Downloads/ || return -1
+        zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Disco_Steel_Nomad/3dmark-disco-1.0.0-bin.zip ~/Downloads/ || return -1
 
         which unzip >/dev/null || sudo apt install -y unzip 
         mkdir -p ~/zhutest-workload.d/3dmark-disco-steelnomad-1.0.0 
@@ -1123,7 +1119,7 @@ function zhu-test-3dmark-pogo-solarbay {
         zhu-mount-linuxqa || return -1
         
         which rsync >/dev/null || sudo apt install -y rsync
-        rsync -ah --progress /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Pogo_Solar_Bay/3dmark-pogo-1.0.5.3-bin.zip ~/Downloads/ || return -1
+        zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Pogo_Solar_Bay/3dmark-pogo-1.0.5.3-bin.zip ~/Downloads/ || return -1
 
         which unzip >/dev/null || sudo apt install -y unzip 
         mkdir -p ~/zhutest-workload.d/3dmark-pogo-solarbay-1.0.5.3
@@ -1214,12 +1210,8 @@ function zhu-test-unigine-superposition {
 
 function zhu-viewperf-install {
     if [[ ! -e ~/zhutest-workload.d/viewperf2020/viewperf/bin/viewperf ]]; then
-        if ! mountpoint -q /mnt/linuxqa; then
-            mount-linuxqa 
-        fi
-
         which rsync >/dev/null || sudo apt install -y rsync 
-        rsync -ah --progress /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3.tar.gz ~/Downloads/ || return -1
+        zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3.tar.gz ~/Downloads/ || return -1
         
         pushd ~/Downloads >/dev/null
         tar -zxvf viewperf2020v3.tar.gz
