@@ -453,6 +453,8 @@ function zhu-mount-linuxqa {
     [[ -z $(ls /mnt/data 2>/dev/null) ]] && sudo mount linuxqa:/storage/data /mnt/data && echo "Mounted /mnt/data" 
     [[ -z $(ls /mnt/builds 2>/dev/null) ]] && sudo mount linuxqa:/storage3/builds /mnt/builds && echo "Mounted /mnt/builds" 
     [[ -z $(ls /mnt/dvsbuilds 2>/dev/null) ]] && sudo mount linuxqa:/storage5/dvsbuilds /mnt/dvsbuilds && echo "Mounted /mnt/dvsbuilds" 
+
+    return 
 }
 
 function zhu-fetch-from-linuxqa {
