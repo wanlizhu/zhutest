@@ -148,9 +148,9 @@ function zhu-send-files {
 
 function zhu-validate-display {
     if [[ $(ls /tmp/.X11-unix | wc -l) == 0 ]]; then
-        if [[ -e /mnt/nvtest/nvt.sh ]]; then
+        if [[ -e /mnt/linuxqa/nvt.sh ]]; then
             export NVTEST_IGNORE_DMESG_REGEXES='.*'
-            /mnt/nvtest/nvt.sh 3840x2160__runcmd --cmd 'sleep 1000000000' &
+            /mnt/linuxqa/nvt.sh 3840x2160__runcmd --cmd 'sleep 1000000000' &
         else
             echo TODO
         fi
