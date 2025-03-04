@@ -144,56 +144,6 @@ function zhu-send-files {
     sshpass -p $password scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ${files//$'\n'/ } $username@$hostname:/$([[ $clientos == macos ]] && echo Users || echo home)/$username/Downloads/
 }
 
-function zhu-viewperf-install {
-    if [[ ! -e ~/zhutest-workload.d/viewperf2020/viewperf/bin/viewperf ]]; then
-        if ! mountpoint -q /mnt/linuxqa; then
-            mount-linuxqa 
-        fi
-
-        which rsync >/dev/null || sudo apt install -y rsync 
-        rsync -ah --progress /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3.tar.gz ~/Downloads/ || return -1
-        
-        pushd ~/Downloads >/dev/null
-        tar -zxvf viewperf2020v3.tar.gz
-        mv viewperf2020 ~/zhutest-workload.d/viewperf2020
-        popd >/dev/null
-    fi
-
-    if [[ -z $(which xmllint) ]]; then
-        sudo apt install -y libxml2 libxml2-utils
-    fi
-}
-
-function zhu-test-viewperf-maya-subtest5 {
-    [[ -z $DISPLAY ]] && export DISPLAY=:0 
-    zhu-viewperf-install
-    pushd ~/zhutest-workload.d/viewperf2020 >/dev/null
-    mkdir -p results/maya-06
-
-    if [[ ! -e viewsets/maya/config/subtest5.xml ]]; then
-        cat <<EOF > viewsets/maya/config/subtest5.xml
-<?xml version="1.0" standalone="yes"?>
-<!DOCTYPE SPECGWPG>
-<SPECGWPG Name="SPECviewperf" Version="v2.0" Results="results.xml" Log="log.txt">
-    <Viewset Name="maya-06" Library="maya" Directory="maya" Threads="1" Options="" Version="2.0">
-        <Window Resolution="3840x2160" Height="2120" Width="3800" X="10" Y="20"/>
-        <Window Resolution="1920x1080" Height="1060" Width="1900" X="10" Y="20"/>
-        <Test Name="Maya_05" Index="5" Weight="12.5" Seconds="15" Options="" Description="Sven space, smooth-shaded with hardware texture mode">
-            <Grab Name="SvenSpace_ShadedTex.png" Frames="1" X="0" Y="0"   />
-        </Test>
-    </Viewset>
-</SPECGWPG>
-EOF
-    fi
-
-    ./viewperf/bin/viewperf viewsets/maya/config/subtest5.xml -resolution 1920x1080 && {
-        cat results/maya-06/results.xml | grep FPS | xmllint --xpath 'string(//Test/@FPS)' - >> /tmp/fps.log 
-        echo "Viewperf Maya-06/subtest5 result FPS: $(cat /tmp/fps.log | tail -1)"
-    }
-
-    popd >/dev/null
-}
-
 function zhu-install-perf {
     if ! zhu-is-installed linux-tools-$(uname -r); then 
         sudo apt install -y linux-tools-$(uname -r) linux-tools-generic >/dev/null 2>&1
@@ -554,7 +504,7 @@ function zhu-build-nvidia-driver {
     fi
 }
 
-function zhu-lsfunc {
+function zhu-list-functions {
     declare -f | grep 'zhu-' | grep -v declare | grep '()'
 }
 
@@ -999,6 +949,57 @@ function zhu-disable-wayland {
     fi
 }
 
+function zhu-cursor-location-to-active-window {
+    if [[ -z $(which xdotool) ]]; then
+        sudo apt install -y xdotool || return -1
+    fi 
+
+    while true; do
+        eval $(xdotool getmouselocation --shell)
+        cursor_x=$X 
+        cursor_y=$Y 
+
+        window_id=$(xdotool getactivewindow)
+        eval $(xdotool getwindowgeometry --shell $window_id)
+        window_x=$X 
+        window_y=$Y 
+        window_w=$WIDTH 
+        window_h=$HEIGHT 
+
+        client_x=$window_x 
+        client_y=$(xwininfo -id $window_id | grep -oP "(?<=Absolute upper-left Y:).*")
+
+        cursor_x_to_client=$((cursor_x - client_x))
+        cursor_y_to_client=$((cursor_y - client_y))
+
+        echo 
+        echo "Window ID: $window_id"
+        echo "Window name: $(xdotool getwindowname $window_id)"
+        echo "Cursor offset to client area TL: [$cursor_x_to_client, $cursor_y_to_client]"
+        sleep 1
+    done
+}
+
+function zhu-activate-window {
+    rm -rf /tmp/zhu-activate-window
+    while [[ $(xdotool getwindowname $(xdotool getactivewindow) 2>/dev/null) != "$1" ]]; do 
+        echo "Activate window \"$1\"..."
+        sleep 1
+    done 
+    echo "$(xdotool getactivewindow)" > /tmp/zhu-activate-window
+}
+
+function zhu-cursor-click-on-window {
+    if [[ -z $3 ]]; then
+        echo "Usage: zhu-cursor-click-on-window <window name> <relative x> <relative y>"
+        return -1
+    fi
+
+    zhu-activate-window "$1"
+    window_id=$(cat /tmp/zhu-activate-window)
+    xdotool mousemove --window $window_id $2 $3 click 1
+}
+
 function zhu-test-3dmark-attan-wildlife {
     if [[ ! -e ~/zhutest-workload.d/3dmark-attan-wildlife-1.1.2.1 ]]; then
         zhu-mount-linuxqa || return -1
@@ -1091,9 +1092,7 @@ function zhu-test-3dmark-pogo-solarbay {
 
 function zhu-test-unigine-heaven {
     if [[ ! -e ~/zhutest-workload.d/unigine-heaven-1.6.5 ]]; then
-        if [[ ! -d ~/.phoronix-test-suite/installed-tests/pts/unigine-heaven-1.6.5 ]]; then
-            phoronix-test-suite install pts/unigine-heaven-1.6.5 || return -1
-        fi
+        phoronix-test-suite install pts/unigine-heaven-1.6.5 || return -1
         pushd ~/.phoronix-test-suite/installed-tests/pts/unigine-heaven-1.6.5 >/dev/null 
         mkdir -p ~/zhutest-workload.d/unigine-heaven-1.6.5
         rsync -ah --progress ./Unigine_Heaven-4.0/ ~/zhutest-workload.d/unigine-heaven-1.6.5 || return -1
@@ -1104,64 +1103,133 @@ function zhu-test-unigine-heaven {
         zhu-install-fex || return -1
     fi
 
-    if [[ -z $(which xdotool) ]]; then
-        sudo apt install -y xdotool 
-    fi
-
-    pushd ~/zhutest-workload.d/unigine-heaven-1.6.5/bin >/dev/null 
-    LD_LIBRARY_PATH=./x64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} ./browser_x64 -config ../data/launcher/launcher.xml &
-    sleep 2
-    zhu-cursor-click-on-window "Unigine Heaven Benchmark 4.0 (Basic Edition)" 643 415
-return 
-    which jp >/dev/null || sudo apt install -y jq 
-    result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT" and .resultType == "") | .value' result.json)
-    echo "3DMark - Solar Bay - Vulkan raytracing"
-    echo "Typed result: $result FPS"
+    pushd ~/zhutest-workload.d/unigine-heaven-1.6.5 >/dev/null 
+    LD_LIBRARY_PATH=bin/:bin/x64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} ./bin/heaven_x64 -data_path ../ -sound_app null -engine_config ../data/heaven_4.0.cfg -system_script heaven/unigine.cpp -video_mode -1 -extern_define PHORONIX,RELEASE -video_width 1920 -video_height 1080 -video_fullscreen 1 -video_app opengl > /tmp/unigine-heaven.log 
+    cat /tmp/unigine-heaven.log | grep "FPS:"
     popd >/dev/null 
 }
 
-function zhu-cursor-location-to-active-window {
-    if [[ -z $(which xdotool) ]]; then
-        sudo apt install -y xdotool || return -1
+function zhu-test-unigine-vally {
+    if [[ ! -e ~/zhutest-workload.d/unigine-valley-1.1.8 ]]; then
+        phoronix-test-suite install pts/unigine-valley-1.1.8 || return -1
+        pushd ~/.phoronix-test-suite/installed-tests/pts/unigine-valley-1.1.8 >/dev/null 
+        mkdir -p ~/zhutest-workload.d/unigine-valley-1.1.8
+        rsync -ah --progress ./Unigine_Valley-1.0/ ~/zhutest-workload.d/unigine-valley-1.1.8 || return -1
+        popd >/dev/null
     fi 
 
-    while true; do
-        eval $(xdotool getmouselocation --shell)
-        cursor_x=$X 
-        cursor_y=$Y 
+    if [[ $(uname -m) == "aarch64" ]]; then
+        zhu-install-fex || return -1
+    fi
 
-        window_id=$(xdotool getactivewindow)
-        eval $(xdotool getwindowgeometry --shell $window_id)
-        window_x=$X 
-        window_y=$Y 
-        window_w=$WIDTH 
-        window_h=$HEIGHT 
+    pushd ~/zhutest-workload.d/unigine-valley-1.1.8  >/dev/null 
+    LD_LIBRARY_PATH=bin/:bin/x64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} ./bin/valley_x64 -data_path ../ -sound_app null -engine_config ../data/valley_1.0.cfg -system_script valley/unigine.cpp -video_mode -1 -extern_define PHORONIX,RELEASE -video_width 1920 -video_height 1080 -video_fullscreen 1 -video_app opengl > /tmp/unigine-valley.log 
+    cat /tmp/unigine-valley.log | grep "FPS:"
+    popd >/dev/null 
+}
 
-        client_x=$window_x 
-        client_y=$(xwininfo -id $window_id | grep -oP "(?<=Absolute upper-left Y:).*")
+function zhu-test-unigine-superposition {
+    if [[ ! -e ~/zhutest-workload.d/unigine-super-1.0.7 ]]; then
+        phoronix-test-suite install pts/unigine-super-1.0.7 || return -1
+        pushd ~/.phoronix-test-suite/installed-tests/pts/unigine-super-1.0.7 >/dev/null 
+        mkdir -p ~/zhutest-workload.d/unigine-super-1.0.7
+        rsync -ah --progress ./Unigine_Superposition-1.0/ ~/zhutest-workload.d/unigine-super-1.0.7 || return -1
+        popd >/dev/null
+    fi 
 
-        cursor_x_to_client=$((cursor_x - client_x))
-        cursor_y_to_client=$((cursor_y - client_y))
+    if [[ $(uname -m) == "aarch64" ]]; then
+        zhu-install-fex || return -1
+    fi
 
+    pushd ~/zhutest-workload.d/unigine-super-1.0.7  >/dev/null 
+    ./bin/superposition -sound_app openal  -system_script superposition/system_script.cpp  -data_path ../ -engine_config ../data/superposition/unigine.cfg  -video_mode -1 -project_name Superposition  -video_resizable 1  -console_command "config_readonly 1 && world_load superposition/superposition" -mode 2 -preset 0 -video_width 1920 -video_height 1080 -video_fullscreen 1 -shaders_quality 2 -textures_quality 2 -video_app opengl 
+    cat ~/.Superposition/automation/log*.txt > /tmp/unigine-super.log 
+    cat /tmp/unigine-super.log | grep "^FPS:"
+    popd >/dev/null 
+}
+
+function zhu-viewperf-install {
+    if [[ ! -e ~/zhutest-workload.d/viewperf2020/viewperf/bin/viewperf ]]; then
+        if ! mountpoint -q /mnt/linuxqa; then
+            mount-linuxqa 
+        fi
+
+        which rsync >/dev/null || sudo apt install -y rsync 
+        rsync -ah --progress /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3.tar.gz ~/Downloads/ || return -1
+        
+        pushd ~/Downloads >/dev/null
+        tar -zxvf viewperf2020v3.tar.gz
+        mv viewperf2020 ~/zhutest-workload.d/viewperf2020
+        popd >/dev/null
+    fi
+
+    if [[ -z $(which xmllint) ]]; then
+        sudo apt install -y libxml2 libxml2-utils
+    fi
+}
+
+function zhu-test-viewperf {
+    [[ -z $DISPLAY ]] && export DISPLAY=:0 
+    zhu-viewperf-install
+
+    # Start all viewsets in viewperf GUI
+    ~/zhutest-workload.d/viewperf2020/RunViewperf 
+    zhu-cursor-click-on-window "SPECviewperf 2020 v3.0" 441 550
+    window_id=$(cat /tmp/zhu-activate-window)
+
+    # Wait all viewsets to complete
+    while [[ ! -z $(pidof viewperf) ]]; do
+        sleep 5
+    done 
+
+    # Close the configuration window
+    xdotool mousemove --window $window_id 620 21 click 1
+
+    # Find the result directory 
+    result_dir=$(find ~/Documents/SPECresults/SPECviewperf2020 -mindepth 1 -maxdepth 1 -type d -printf "%T@ %p\n" | sort -n | tail -n 1 | awk '{print $2}')
+    sed -i '1s/^.*$/Compositor,FPS/' "$result_dir/resultCSV.csv"
+    mapfile -d '' csv_parts < <(awk 'BEGIN {RS="(\n\n|\n[[:space:]]*\n)"; ORS="\0"} {print}' "$result_dir/resultCSV.csv")
+    for i in "${!csv_parts[@]}"; do 
+        echo "${csv_parts[i]}" | column -s, -t
         echo 
-        echo "Window ID: $window_id"
-        echo "Window name: $(xdotool getwindowname $window_id)"
-        echo "Cursor offset to client area TL: [$cursor_x_to_client, $cursor_y_to_client]"
-        sleep 1
     done
 }
 
-function zhu-cursor-click-on-window {
-    if [[ -z $3 ]]; then
-        echo "Usage: zhu-cursor-click-on-window <window name> <relative x> <relative y>"
-        return -1
+function zhu-test-viewperf-maya-subtest5 {
+    [[ -z $DISPLAY ]] && export DISPLAY=:0 
+    zhu-viewperf-install
+
+    pushd ~/zhutest-workload.d/viewperf2020 >/dev/null
+    mkdir -p results/maya-06
+
+    if [[ ! -e viewsets/maya/config/subtest5.xml ]]; then
+        cat <<EOF > viewsets/maya/config/subtest5.xml
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE SPECGWPG>
+<SPECGWPG Name="SPECviewperf" Version="v2.0" Results="results.xml" Log="log.txt">
+    <Viewset Name="maya-06" Library="maya" Directory="maya" Threads="1" Options="" Version="2.0">
+        <Window Resolution="3840x2160" Height="2120" Width="3800" X="10" Y="20"/>
+        <Window Resolution="1920x1080" Height="1060" Width="1900" X="10" Y="20"/>
+        <Test Name="Maya_05" Index="5" Weight="12.5" Seconds="15" Options="" Description="Sven space, smooth-shaded with hardware texture mode">
+            <Grab Name="SvenSpace_ShadedTex.png" Frames="1" X="0" Y="0"   />
+        </Test>
+    </Viewset>
+</SPECGWPG>
+EOF
     fi
 
-    while [[ $(xdotool getwindowname $(xdotool getactivewindow) 2>/dev/null) != "$1" ]]; do 
-        echo "Activate window \"$1\"..."
-        sleep 1
-    done 
+    ./viewperf/bin/viewperf viewsets/maya/config/subtest5.xml -resolution 1920x1080 && {
+        cat results/maya-06/results.xml | grep FPS | xmllint --xpath 'string(//Test/@FPS)' - >> /tmp/fps.log 
+        echo "Viewperf Maya-06/subtest5 result FPS: $(cat /tmp/fps.log | tail -1)"
+    }
 
-    xdotool mousemove --window $(xdotool getactivewindow) $2 $3 && 
-    xdotool click 1
+    popd >/dev/null
+}
+
+function zhu-list-steam-games {
+    echo 
+}
+
+function zhu-test-sottr {
+    echo 
 }
