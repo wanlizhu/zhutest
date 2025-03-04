@@ -170,6 +170,15 @@ function zhu-validate-display {
     fi
 }
 
+function zhu-set-env {
+    for kv in "$@"; do 
+        k=$(echo "$kv" | awk -F'=' '{print $1}')
+        v=$(echo "$kv" | awk -F'=' '{print $2}')
+        export $k=$v 
+        echo "export $k=$v"
+    done
+}
+
 function zhu-install-perf {
     if ! zhu-is-installed linux-tools-$(uname -r); then 
         sudo apt install -y linux-tools-$(uname -r) linux-tools-generic >/dev/null 2>&1
