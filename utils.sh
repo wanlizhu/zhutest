@@ -180,6 +180,16 @@ function zhu-set-env {
     done
 }
 
+function zhu-install-pts {
+    [[ -z $(which curl) ]] && sudo apt install -y curl 
+    latest_url=$(curl -s -L -o /dev/null -w "%{url_effective}\n"  https://github.com/phoronix-test-suite/phoronix-test-suite/releases/latest/)
+    latest_tag=$(echo "$latest_url" | awk -F'/' '{print $NF}')
+    pushd ~/Downloads >/dev/null 
+    wget --no-check-certificate  https://github.com/phoronix-test-suite/phoronix-test-suite/releases/download/$latest_tag/phoronix-test-suite-${latest_tag:1}.tar.gz || return -1
+    sudo dpkg -i ./phoronix-test-suite-${latest_tag:1}.tar.gz
+    popd >/dev/null 
+}
+
 function zhu-install-lsgpus {
     if [[ -z $(which lsgpus) ]]; then
         zhu-fetch-from-linuxqa /mnt/nvtest/bin/Linux_amd64/lsgpus /usr/local/bin/
