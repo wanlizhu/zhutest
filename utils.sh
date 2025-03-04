@@ -1000,15 +1000,15 @@ function zhu-disable-wayland {
 }
 
 function zhu-test-3dmark-attan-wildlife {
-    if [[ ! -e ~/zhutest-workload.d/3dmark-attan-extreme-1.1.2.1-workload-bin ]]; then
+    if [[ ! -e ~/zhutest-workload.d/3dmark-attan-wildlife-1.1.2.1 ]]; then
         zhu-mount-linuxqa || return -1
         
         which rsync >/dev/null || sudo apt install -y rsync
         rsync -ah --progress /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Attan_Wild_Life/3dmark-attan-extreme-1.1.2.1-workload-bin.zip ~/Downloads/ || return -1
 
         which unzip >/dev/null || sudo apt install -y unzip 
-        mkdir -p ~/zhutest-workload.d/3dmark-attan-extreme-1.1.2.1-workload-bin 
-        pushd ~/zhutest-workload.d/3dmark-attan-extreme-1.1.2.1-workload-bin >/dev/null || return -1
+        mkdir -p ~/zhutest-workload.d/3dmark-attan-wildlife-1.1.2.1 
+        pushd ~/zhutest-workload.d/3dmark-attan-wildlife-1.1.2.1 >/dev/null || return -1
         unzip ~/Downloads/3dmark-attan-extreme-1.1.2.1-workload-bin.zip || return -1
         popd >/dev/null 
     fi
@@ -1017,13 +1017,150 @@ function zhu-test-3dmark-attan-wildlife {
         zhu-install-fex || return -1
     fi
 
-    pushd ~/zhutest-workload.d/3dmark-attan-extreme-1.1.2.1-workload-bin >/dev/null 
+    pushd ~/zhutest-workload.d/3dmark-attan-wildlife-1.1.2.1 >/dev/null 
     rm -rf result.json
     chmod +x run_linux_x64.sh 
     ./run_linux_x64.sh
 
     which jp >/dev/null || sudo apt install -y jq 
     result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT") | .value' result.json)
+    echo "3DMark - Wildlife - Vulkan rasterization"
     echo "Typed result: $result FPS"
     popd >/dev/null 
+}
+
+function zhu-test-3dmark-disco-steelnomad {
+    if [[ ! -e ~/zhutest-workload.d/3dmark-disco-steelnomad-1.0.0 ]]; then
+        zhu-mount-linuxqa || return -1
+        
+        which rsync >/dev/null || sudo apt install -y rsync
+        rsync -ah --progress /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Disco_Steel_Nomad/3dmark-disco-1.0.0-bin.zip ~/Downloads/ || return -1
+
+        which unzip >/dev/null || sudo apt install -y unzip 
+        mkdir -p ~/zhutest-workload.d/3dmark-disco-steelnomad-1.0.0 
+        pushd ~/zhutest-workload.d/3dmark-disco-steelnomad-1.0.0 >/dev/null || return -1
+        unzip ~/Downloads/3dmark-disco-1.0.0-bin.zip || return -1
+        popd >/dev/null 
+    fi
+
+    if [[ $(uname -m) == "aarch64" ]]; then
+        zhu-install-fex || return -1
+    fi
+
+    pushd ~/zhutest-workload.d/3dmark-disco-steelnomad-1.0.0 >/dev/null 
+    rm -rf result_vulkan.json
+    chmod +x run_workload_linux_vulkan.sh
+    ./run_workload_linux_vulkan.sh
+
+    which jp >/dev/null || sudo apt install -y jq 
+    result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT") | .value' result_vulkan.json)
+    echo "3DMark - Steel Nomad - Modern Vulkan rasterization"
+    echo "Typed result: $result FPS"
+    popd >/dev/null 
+}
+
+function zhu-test-3dmark-pogo-solarbay {
+    if [[ ! -e ~/zhutest-workload.d/3dmark-pogo-solarbay-1.0.5.3 ]]; then
+        zhu-mount-linuxqa || return -1
+        
+        which rsync >/dev/null || sudo apt install -y rsync
+        rsync -ah --progress /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Pogo_Solar_Bay/3dmark-pogo-1.0.5.3-bin.zip ~/Downloads/ || return -1
+
+        which unzip >/dev/null || sudo apt install -y unzip 
+        mkdir -p ~/zhutest-workload.d/3dmark-pogo-solarbay-1.0.5.3
+        pushd ~/zhutest-workload.d/3dmark-pogo-solarbay-1.0.5.3 >/dev/null || return -1
+        unzip ~/Downloads/3dmark-pogo-1.0.5.3-bin.zip || return -1
+        popd >/dev/null 
+    fi
+
+    if [[ $(uname -m) == "aarch64" ]]; then
+        zhu-install-fex || return -1
+    fi
+
+    pushd ~/zhutest-workload.d/3dmark-pogo-solarbay-1.0.5.3 >/dev/null 
+    rm -rf result.json
+    chmod +x run_dev_player_linux_x64.sh
+    ./run_dev_player_linux_x64.sh
+
+    which jp >/dev/null || sudo apt install -y jq 
+    result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT" and .resultType == "") | .value' result.json)
+    echo "3DMark - Solar Bay - Vulkan raytracing"
+    echo "Typed result: $result FPS"
+    popd >/dev/null 
+}
+
+function zhu-test-unigine-heaven {
+    if [[ ! -e ~/zhutest-workload.d/unigine-heaven-1.6.5 ]]; then
+        if [[ ! -d ~/.phoronix-test-suite/installed-tests/pts/unigine-heaven-1.6.5 ]]; then
+            phoronix-test-suite install pts/unigine-heaven-1.6.5 || return -1
+        fi
+        pushd ~/.phoronix-test-suite/installed-tests/pts/unigine-heaven-1.6.5 >/dev/null 
+        mkdir -p ~/zhutest-workload.d/unigine-heaven-1.6.5
+        rsync -ah --progress ./Unigine_Heaven-4.0/ ~/zhutest-workload.d/unigine-heaven-1.6.5 || return -1
+        popd >/dev/null
+    fi
+
+    if [[ $(uname -m) == "aarch64" ]]; then
+        zhu-install-fex || return -1
+    fi
+
+    if [[ -z $(which xdotool) ]]; then
+        sudo apt install -y xdotool 
+    fi
+
+    pushd ~/zhutest-workload.d/unigine-heaven-1.6.5/bin >/dev/null 
+    LD_LIBRARY_PATH=./x64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} ./browser_x64 -config ../data/launcher/launcher.xml &
+    sleep 2
+    zhu-cursor-click-on-window "Unigine Heaven Benchmark 4.0 (Basic Edition)" 643 415
+return 
+    which jp >/dev/null || sudo apt install -y jq 
+    result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT" and .resultType == "") | .value' result.json)
+    echo "3DMark - Solar Bay - Vulkan raytracing"
+    echo "Typed result: $result FPS"
+    popd >/dev/null 
+}
+
+function zhu-cursor-location-to-active-window {
+    if [[ -z $(which xdotool) ]]; then
+        sudo apt install -y xdotool || return -1
+    fi 
+
+    while true; do
+        eval $(xdotool getmouselocation --shell)
+        cursor_x=$X 
+        cursor_y=$Y 
+
+        window_id=$(xdotool getactivewindow)
+        eval $(xdotool getwindowgeometry --shell $window_id)
+        window_x=$X 
+        window_y=$Y 
+        window_w=$WIDTH 
+        window_h=$HEIGHT 
+
+        cursor_x_to_window=$((cursor_x - window_x))
+        cursor_y_to_window=$((cursor_y - window_y))
+
+        echo 
+        echo "Window ID: $window_id"
+        echo "Window name: $(xdotool getwindowname $window_id)"
+        echo "Window size: $window_w x $window_h"
+        echo "Window offset: [$window_x, $window_y]"
+        echo "Cursor offset to Window: [$cursor_x_to_window, $cursor_y_to_window]"
+        sleep 1
+    done
+}
+
+function zhu-cursor-click-on-window {
+    if [[ -z $3 ]]; then
+        echo "Usage: zhu-cursor-click-on-window <window name> <relative x> <relative y>"
+        return -1
+    fi
+
+    while [[ $(xdotool getwindowname $(xdotool getactivewindow) 2>/dev/null) != "$1" ]]; do 
+        echo "Activate window \"$1\"..."
+        sleep 1
+    done 
+
+    xdotool mousemove --window $(xdotool getactivewindow) $2 $3 && 
+    xdotool click 1
 }
