@@ -179,6 +179,13 @@ function zhu-set-env {
     done
 }
 
+function zhu-install-lsgpus {
+    if [[ -z $(which lsgpus) ]]; then
+        zhu-mount-linuxqa || return -1
+        sudo cp -v /mnt/nvtest/bin/Linux_amd64/lsgpus /usr/local/bin/
+    fi
+}
+
 function zhu-install-perf {
     if ! zhu-is-installed linux-tools-$(uname -r); then 
         sudo apt install -y linux-tools-$(uname -r) linux-tools-generic >/dev/null 2>&1
