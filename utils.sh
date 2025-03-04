@@ -1154,15 +1154,35 @@ function zhu-test-3dmark-pogo-solarbay {
     popd >/dev/null 
 }
 
+function zhu-fetch-from-data-server {
+    if [[ -z $(which sshpass) ]]; then
+        sudo apt install -y sshpass
+    fi
+    if [[ ! -e ~/.zhurc.data.server ]]; then
+        read -p "Data server IP: " ip
+        read -e -i wanliz -p "Data server username: " user
+        read -s -p "Data server password: " passwd
+        echo "$user@$ip $passwd" > ~/.zhurc.data.server
+    fi
+
+    remote=$(cat ~/.zhurc.data.server | awk '{print $1}')
+    passwd=$(cat ~/.zhurc.data.server | awk '{print $2}')
+
+    sshpass -p "$passwd" rsync -ah --progress $remote:"$1" "$2"
+}
+
 function zhu-test-unigine-heaven {
     zhu-validate-display || return -1
 
     if [[ ! -e ~/zhutest-workload.d/unigine-heaven-1.6.5 ]]; then
-        phoronix-test-suite install pts/unigine-heaven-1.6.5 || return -1
-        pushd ~/.phoronix-test-suite/installed-tests/pts/unigine-heaven-1.6.5 >/dev/null 
-        mkdir -p ~/zhutest-workload.d/unigine-heaven-1.6.5
-        rsync -ah --progress ./Unigine_Heaven-4.0/ ~/zhutest-workload.d/unigine-heaven-1.6.5 || return -1
-        popd >/dev/null
+        phoronix-test-suite install pts/unigine-heaven-1.6.5 && {
+            pushd ~/.phoronix-test-suite/installed-tests/pts/unigine-heaven-1.6.5 >/dev/null 
+            mkdir -p ~/zhutest-workload.d/unigine-heaven-1.6.5
+            rsync -ah --progress ./Unigine_Heaven-4.0/ ~/zhutest-workload.d/unigine-heaven-1.6.5 || return -1
+            popd >/dev/null
+        } || {
+            zhu-fetch-from-data-server ~/.phoronix-test-suite/installed-tests/pts/unigine-heaven-1.6.5/Unigine_Heaven-4.0/ ~/zhutest-workload.d/unigine-heaven-1.6.5 || return -1
+        }
     fi
 
     if [[ $(uname -m) == "aarch64" ]]; then
@@ -1179,11 +1199,14 @@ function zhu-test-unigine-vally {
     zhu-validate-display || return -1
 
     if [[ ! -e ~/zhutest-workload.d/unigine-valley-1.1.8 ]]; then
-        phoronix-test-suite install pts/unigine-valley-1.1.8 || return -1
-        pushd ~/.phoronix-test-suite/installed-tests/pts/unigine-valley-1.1.8 >/dev/null 
-        mkdir -p ~/zhutest-workload.d/unigine-valley-1.1.8
-        rsync -ah --progress ./Unigine_Valley-1.0/ ~/zhutest-workload.d/unigine-valley-1.1.8 || return -1
-        popd >/dev/null
+        phoronix-test-suite install pts/unigine-valley-1.1.8 && {
+            pushd ~/.phoronix-test-suite/installed-tests/pts/unigine-valley-1.1.8 >/dev/null 
+            mkdir -p ~/zhutest-workload.d/unigine-valley-1.1.8
+            rsync -ah --progress ./Unigine_Valley-1.0/ ~/zhutest-workload.d/unigine-valley-1.1.8 || return -1
+            popd >/dev/null
+        } || {
+            zhu-fetch-from-data-server ~/.phoronix-test-suite/installed-tests/pts/unigine-valley-1.1.8/Unigine_Valley-1.0/ ~/zhutest-workload.d/unigine-valley-1.1.8 || return -1
+        }
     fi 
 
     if [[ $(uname -m) == "aarch64" ]]; then
@@ -1200,11 +1223,14 @@ function zhu-test-unigine-superposition {
     zhu-validate-display || return -1
 
     if [[ ! -e ~/zhutest-workload.d/unigine-super-1.0.7 ]]; then
-        phoronix-test-suite install pts/unigine-super-1.0.7 || return -1
-        pushd ~/.phoronix-test-suite/installed-tests/pts/unigine-super-1.0.7 >/dev/null 
-        mkdir -p ~/zhutest-workload.d/unigine-super-1.0.7
-        rsync -ah --progress ./Unigine_Superposition-1.0/ ~/zhutest-workload.d/unigine-super-1.0.7 || return -1
-        popd >/dev/null
+        phoronix-test-suite install pts/unigine-super-1.0.7 && {
+            pushd ~/.phoronix-test-suite/installed-tests/pts/unigine-super-1.0.7 >/dev/null 
+            mkdir -p ~/zhutest-workload.d/unigine-super-1.0.7
+            rsync -ah --progress ./Unigine_Superposition-1.0/ ~/zhutest-workload.d/unigine-super-1.0.7 || return -1
+            popd >/dev/null
+        } || {
+            zhu-fetch-from-data-server ~/.phoronix-test-suite/installed-tests/pts/unigine-super-1.0.7/Unigine_Superposition-1.0/ ~/zhutest-workload.d/unigine-super-1.0.7 || return -1
+        }
     fi 
 
     if [[ $(uname -m) == "aarch64" ]]; then
