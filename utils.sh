@@ -1175,8 +1175,8 @@ function zhu-test-unigine-heaven {
     zhu-validate-display || return -1
 
     if [[ ! -e ~/zhutest-workload.d/unigine-heaven-1.6.5 ]]; then
-        phoronix-test-suite install pts/unigine-heaven-1.6.5 && {
-            pushd ~/.phoronix-test-suite/installed-tests/pts/unigine-heaven-1.6.5 >/dev/null 
+        phoronix-test-suite install pts/unigine-heaven-1.6.5 
+        pushd ~/.phoronix-test-suite/installed-tests/pts/unigine-heaven-1.6.5 >/dev/null && {
             mkdir -p ~/zhutest-workload.d/unigine-heaven-1.6.5
             rsync -ah --progress ./Unigine_Heaven-4.0/ ~/zhutest-workload.d/unigine-heaven-1.6.5 || return -1
             popd >/dev/null
@@ -1199,8 +1199,8 @@ function zhu-test-unigine-vally {
     zhu-validate-display || return -1
 
     if [[ ! -e ~/zhutest-workload.d/unigine-valley-1.1.8 ]]; then
-        phoronix-test-suite install pts/unigine-valley-1.1.8 && {
-            pushd ~/.phoronix-test-suite/installed-tests/pts/unigine-valley-1.1.8 >/dev/null 
+        phoronix-test-suite install pts/unigine-valley-1.1.8
+        pushd ~/.phoronix-test-suite/installed-tests/pts/unigine-valley-1.1.8 >/dev/null && { 
             mkdir -p ~/zhutest-workload.d/unigine-valley-1.1.8
             rsync -ah --progress ./Unigine_Valley-1.0/ ~/zhutest-workload.d/unigine-valley-1.1.8 || return -1
             popd >/dev/null
@@ -1223,8 +1223,8 @@ function zhu-test-unigine-superposition {
     zhu-validate-display || return -1
 
     if [[ ! -e ~/zhutest-workload.d/unigine-super-1.0.7 ]]; then
-        phoronix-test-suite install pts/unigine-super-1.0.7 && {
-            pushd ~/.phoronix-test-suite/installed-tests/pts/unigine-super-1.0.7 >/dev/null 
+        phoronix-test-suite install pts/unigine-super-1.0.7 
+        pushd ~/.phoronix-test-suite/installed-tests/pts/unigine-super-1.0.7 >/dev/null && { 
             mkdir -p ~/zhutest-workload.d/unigine-super-1.0.7
             rsync -ah --progress ./Unigine_Superposition-1.0/ ~/zhutest-workload.d/unigine-super-1.0.7 || return -1
             popd >/dev/null
