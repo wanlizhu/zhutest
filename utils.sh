@@ -450,13 +450,21 @@ function zhu-mount-linuxqa {
 
     sudo mkdir -p /mnt/linuxqa /mnt/data /mnt/builds /mnt/dvsbuilds
     
-    [[ -z $(ls /mnt/linuxqa 2>/dev/null) ]] && sudo mount linuxqa:/storage/people /mnt/linuxqa && echo "Mounted /mnt/linuxqa" || echo "Failed to mount /mnt/linuxqa"
+    [[ -z $(ls /mnt/linuxqa 2>/dev/null) ]] && {
+        sudo mount linuxqa:/storage/people /mnt/linuxqa && echo "Mounted /mnt/linuxqa" || echo "Failed to mount /mnt/linuxqa"
+    }
     
-    [[ -z $(ls /mnt/data 2>/dev/null) ]] && sudo mount linuxqa:/storage/data /mnt/data && echo "Mounted /mnt/data" || echo "Failed to mount /mnt/data"
+    [[ -z $(ls /mnt/data 2>/dev/null) ]] && {
+        sudo mount linuxqa:/storage/data /mnt/data && echo "Mounted /mnt/data" || echo "Failed to mount /mnt/data"
+    }
     
-    [[ -z $(ls /mnt/builds 2>/dev/null) ]] && sudo mount linuxqa:/storage3/builds /mnt/builds && echo "Mounted /mnt/builds" || echo "Failed to mount /mnt/builds" 
+    [[ -z $(ls /mnt/builds 2>/dev/null) ]] && {
+        sudo mount linuxqa:/storage3/builds /mnt/builds && echo "Mounted /mnt/builds" || echo "Failed to mount /mnt/builds"
+    } 
     
-    [[ -z $(ls /mnt/dvsbuilds 2>/dev/null) ]] && sudo mount linuxqa:/storage5/dvsbuilds /mnt/dvsbuilds && echo "Mounted /mnt/dvsbuilds" || echo "Failed to mount /mnt/dvsbuilds"
+    [[ -z $(ls /mnt/dvsbuilds 2>/dev/null) ]] && {
+        sudo mount linuxqa:/storage5/dvsbuilds /mnt/dvsbuilds && echo "Mounted /mnt/dvsbuilds" || echo "Failed to mount /mnt/dvsbuilds"
+    }
 }
 
 function zhu-sync {
