@@ -174,7 +174,7 @@ function zhu-set-env {
     for kv in "$@"; do 
         k=$(echo "$kv" | awk -F'=' '{print $1}')
         v=$(echo "$kv" | awk -F'=' '{print $2}')
-        export $k=$v 
+        export $k="$v" 
         echo "export $k=$v"
     done
 }
