@@ -1137,15 +1137,16 @@ function zhu-cursor-location-to-active-window {
         window_w=$WIDTH 
         window_h=$HEIGHT 
 
-        cursor_x_to_window=$((cursor_x - window_x))
-        cursor_y_to_window=$((cursor_y - window_y))
+        client_x=$window_x 
+        client_y=$(($(xwininfo -id $window_id | grep -oP "(?<=Absolute upper-left Y:).*") - $(xprop -root _NET_WORKAREA | awk -F, '{print $2}' | tr -d ' ')))
+
+        cursor_x_to_client=$((cursor_x - client_x))
+        cursor_y_to_client=$((cursor_y - client_y))
 
         echo 
         echo "Window ID: $window_id"
         echo "Window name: $(xdotool getwindowname $window_id)"
-        echo "Window size: $window_w x $window_h"
-        echo "Window offset: [$window_x, $window_y]"
-        echo "Cursor offset to Window: [$cursor_x_to_window, $cursor_y_to_window]"
+        echo "Cursor offset to client area TL: [$cursor_x_to_client, $cursor_y_to_client]"
         sleep 1
     done
 }
