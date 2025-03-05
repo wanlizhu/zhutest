@@ -1516,8 +1516,7 @@ WantedBy=multi-user.target
         export DISPLAY=:$dp 
 
         /usr/bin/vncserver -kill :$dp 
-        #screen -dmS vncserver /usr/bin/vncserver $vncserver_args :$dp
-        /usr/bin/vncserver $vncserver_args :$dp 
+        screen -dmS vncserver /usr/bin/vncserver $vncserver_args :$dp
     fi
 }
 
@@ -1583,7 +1582,7 @@ WantedBy=multi-user.target
         echo "x11vnc.service is running and scheduled as auto-start!"
     else
         zhu-check-xauthority || return -1
-        /usr/bin/x11vnc $x11vnc_args
+        screen -dmS x11vncserver /usr/bin/x11vnc $x11vnc_args
     fi
 }
 
