@@ -1085,7 +1085,7 @@ function zhu-test-3dmark-attan-wildlife {
     pushd ~/zhutest-workload.d/3dmark-attan-wildlife-1.1.2.1 >/dev/null 
     rm -rf result.json
     chmod +x run_linux_x64.sh 
-    ./run_linux_x64.sh
+    ./run_linux_x64.sh || return -1
 
     which jp >/dev/null || sudo apt install -y jq 
     result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT") | .value' result.json)
@@ -1115,7 +1115,7 @@ function zhu-test-3dmark-disco-steelnomad {
     pushd ~/zhutest-workload.d/3dmark-disco-steelnomad-1.0.0 >/dev/null 
     rm -rf result_vulkan.json
     chmod +x run_workload_linux_vulkan.sh
-    ./run_workload_linux_vulkan.sh
+    ./run_workload_linux_vulkan.sh || return -1
 
     which jp >/dev/null || sudo apt install -y jq 
     result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT") | .value' result_vulkan.json)
@@ -1145,7 +1145,7 @@ function zhu-test-3dmark-pogo-solarbay {
     pushd ~/zhutest-workload.d/3dmark-pogo-solarbay-1.0.5.3 >/dev/null 
     rm -rf result.json
     chmod +x run_dev_player_linux_x64.sh
-    ./run_dev_player_linux_x64.sh
+    ./run_dev_player_linux_x64.sh || return -1
 
     which jp >/dev/null || sudo apt install -y jq 
     result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT" and .resultType == "") | .value' result.json)
@@ -1190,7 +1190,7 @@ function zhu-test-unigine-heaven {
     fi
 
     pushd ~/zhutest-workload.d/unigine-heaven-1.6.5 >/dev/null 
-    LD_LIBRARY_PATH=bin/:bin/x64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} ./bin/heaven_x64 -data_path ../ -sound_app null -engine_config ../data/heaven_4.0.cfg -system_script heaven/unigine.cpp -video_mode -1 -extern_define PHORONIX,RELEASE -video_width 1920 -video_height 1080 -video_fullscreen 1 -video_app opengl > /tmp/unigine-heaven.log 
+    LD_LIBRARY_PATH=bin/:bin/x64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} ./bin/heaven_x64 -data_path ../ -sound_app null -engine_config ../data/heaven_4.0.cfg -system_script heaven/unigine.cpp -video_mode -1 -extern_define PHORONIX,RELEASE -video_width 1920 -video_height 1080 -video_fullscreen 1 -video_app opengl > /tmp/unigine-heaven.log  || return -1
     cat /tmp/unigine-heaven.log | grep "FPS:"
     popd >/dev/null 
 }
@@ -1215,7 +1215,7 @@ function zhu-test-unigine-vally {
 
     pushd ~/zhutest-workload.d/unigine-valley-1.1.8  >/dev/null 
     LD_LIBRARY_PATH=bin/:bin/x64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} ./bin/valley_x64 -data_path ../ -sound_app null -engine_config ../data/valley_1.0.cfg -system_script valley/unigine.cpp -video_mode -1 -extern_define PHORONIX,RELEASE -video_width 1920 -video_height 1080 -video_fullscreen 1 -video_app opengl > /tmp/unigine-valley.log 
-    cat /tmp/unigine-valley.log | grep "FPS:"
+    cat /tmp/unigine-valley.log | grep "FPS:"  || return -1
     popd >/dev/null 
 }
 
@@ -1240,7 +1240,7 @@ function zhu-test-unigine-superposition {
     pushd ~/zhutest-workload.d/unigine-super-1.0.7  >/dev/null 
     ./bin/superposition -sound_app openal  -system_script superposition/system_script.cpp  -data_path ../ -engine_config ../data/superposition/unigine.cfg  -video_mode -1 -project_name Superposition  -video_resizable 1  -console_command "config_readonly 1 && world_load superposition/superposition" -mode 2 -preset 0 -video_width 1920 -video_height 1080 -video_fullscreen 1 -shaders_quality 2 -textures_quality 2 -video_app opengl 
     cat ~/.Superposition/automation/log*.txt > /tmp/unigine-super.log 
-    cat /tmp/unigine-super.log | grep "^FPS:"
+    cat /tmp/unigine-super.log | grep "^FPS:"  || return -1
     popd >/dev/null 
 }
 
@@ -1344,4 +1344,30 @@ function zhu-list-steam-games {
     done 
 
     column -s, -t /tmp/steam-games.list
+}
+
+function zhu-install-nvidia-dso-in-fex-rootfs {
+    amd64_libs="$HOME/.fex-emu/RootFS/Ubuntu_24_04/lib/x86_64-linux-gnu"
+    for dso in *.so.575.25; do 
+        cp -vf ./$dso $amd64_libs/$dso 
+        pushd $amd64_libs >/dev/null 
+        ln -sf $dso $(echo $dso | cut -d'.' -f1-2).0
+        ln -sf $dso $(echo $dso | cut -d'.' -f1-2).1
+        ln -sf $dso $(echo $dso | cut -d'.' -f1-2).2
+        popd >/dev/null 
+    done
+
+    pushd 32 >/dev/null 
+    i386_libs="$HOME/.fex-emu/RootFS/Ubuntu_24_04/lib/i386-linux-gnu"
+    for dso in *.so.575.25; do 
+        cp -vf ./$dso $i386_libs/$dso 
+        pushd $i386_libs >/dev/null 
+        ln -sf $dso $(echo $dso | cut -d'.' -f1-2).0
+        ln -sf $dso $(echo $dso | cut -d'.' -f1-2).1
+        ln -sf $dso $(echo $dso | cut -d'.' -f1-2).2
+        popd >/dev/null 
+    done
+    popd >/dev/null 
+
+    cp -vf ./nvidia_icd.json "$HOME/.fex-emu/RootFS/Ubuntu_24_04/etc/vulkan/icd.d/nvidia_icd.json"
 }
