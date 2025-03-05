@@ -1483,6 +1483,8 @@ WantedBy=multi-user.target
         sudo systemctl enable vncserver@$dp.service
         sudo systemctl start vncserver@$dp.service
     else
+        [ -d /tmp/.X11-unix ] && (echo "Active X displays:"; ls /tmp/.X11-unix | grep -oP 'X\d+' | sed 's/X/:/' | tr '\n' ' '; echo) || echo "No active X displays found"
+        
         read -p "Start virtual desktop on display 0 or 1: " dp
         /usr/bin/vncserver -kill :$dp 
         screen -dmS vncserver /usr/bin/vncserver $vncserver_args :$dp 
