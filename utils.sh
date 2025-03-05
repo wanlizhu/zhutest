@@ -1397,6 +1397,20 @@ function zhu-install-nvidia-dso-in-fex-rootfs {
     cp -vf ./nvidia_icd.json "$HOME/.fex-emu/RootFS/Ubuntu_24_04/etc/vulkan/icd.d/nvidia_icd.json"
 }
 
+function zhu-check-xauthority {
+    if [[ ! -e ~/.Xauthority ]]; then  
+        active_auth=$(ps aux | grep '[X]org' | grep -oP '(?<=-auth )[^ ]+')
+        if [[ -e $active_auth ]]; then
+            sudo cp $active_auth ~/.Xauthority
+            sudo chmod 644 ~/.Xauthority
+        fi 
+    fi
+
+    if [[ -z $XAUTHORITY && -e ~/.Xauthority ]]; then
+        export XAUTHORITY=~/.Xauthority
+    fi
+}
+
 function zhu-startx-with-openbox {
     if [[ ! -z $(which Xorg) ]]; then
         read -p "Kill running X server ($(pidof Xorg))? (yes/no): " ans
@@ -1425,7 +1439,8 @@ function zhu-startx-with-openbox {
         chmod +x ~/.xinitrc
     fi
 
-    screen -dmS xsession startx 
+    #screen -dmS xsession startx 
+    startx 
 }
 
 function zhu-start-vnc-server-for-headless-system {
@@ -1439,7 +1454,15 @@ function zhu-start-vnc-server-for-headless-system {
         sudo apt install -y screen 
     fi
 
-    sudo apt install -y tigervnc-standalone-server tigervnc-common xfce4-session
+    if [[ -z $(dpkg -l | grep tigervnc-standalone-server) ]]; then
+        sudo apt install -y tigervnc-standalone-server
+        sudo apt install -y tigervnc-common
+    fi 
+
+    if [[ -z $(dpkg -l | grep xfce4-session) ]]; then
+        xfce4-session
+    fi 
+
     vncpasswd 
     mkdir -p ~/.vnc
     echo "#!/bin/sh
@@ -1473,11 +1496,15 @@ WantedBy=multi-user.target
         sudo systemctl enable vncserver@$dp.service
         sudo systemctl start vncserver@$dp.service
     else
-        [ -d /tmp/.X11-unix ] && (echo "Active X displays:"; ls /tmp/.X11-unix | grep -oP 'X\d+' | sed 's/X/:/' | tr '\n' ' '; echo) || echo "No active X displays found"
+        zhu-check-xauthority
 
+        [ -d /tmp/.X11-unix ] && (echo "Active X displays:"; ls /tmp/.X11-unix | grep -oP 'X\d+' | sed 's/X/:/' | tr '\n' ' '; echo) || echo "No active X displays found"
         read -p "Start virtual desktop on display 0 or 1: " dp
+        export DISPLAY=:$dp 
+
         /usr/bin/vncserver -kill :$dp 
-        screen -dmS vncserver /usr/bin/vncserver $vncserver_args :$dp 
+        #screen -dmS vncserver /usr/bin/vncserver $vncserver_args :$dp
+        /usr/bin/vncserver $vncserver_args :$dp 
     fi
 }
 
@@ -1516,7 +1543,10 @@ function zhu-start-vnc-server-for-physical-display {
         sleep 3
     done
 
-    sudo apt install -y x11vnc
+    if [[ -z $(dpkg -l | grep x11vnc ]]; then
+        sudo apt install -y x11vnc
+    fi 
+
     x11vnc -storepasswd
     x11vnc_args="-auth guess -forever --loop -noxdamage -repeat -rfbauth $HOME/.vnc/passwd -rfbport 5900 -display :0 -shared"
 
@@ -1539,7 +1569,8 @@ WantedBy=multi-user.target
         sudo systemctl start x11vnc.service 
         echo "x11vnc.service is running and scheduled as auto-start!"
     else
-        /usr/bin/x11vnc $x11vnc_args &
+        zhu-check-xauthority
+        /usr/bin/x11vnc $x11vnc_args
     fi
 }
 
