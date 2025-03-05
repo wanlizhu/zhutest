@@ -1402,7 +1402,8 @@ function zhu-check-xauthority {
         active_auth=$(ps aux | grep '[X]org' | grep -oP '(?<=-auth )[^ ]+')
         if [[ ! -z $active_auth ]]; then
             sudo cp $active_auth ~/.Xauthority
-            sudo chmod 644 ~/.Xauthority
+            sudo chown $USER:$(id -gn) ~/.Xauthority
+            chmod 666 ~/.Xauthority
         fi 
     fi
 
