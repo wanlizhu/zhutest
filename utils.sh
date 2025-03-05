@@ -1398,13 +1398,6 @@ function zhu-install-nvidia-dso-in-fex-rootfs {
 }
 
 function zhu-check-xauthority {
-    if [[ -e ~/.Xauthority ]]; then 
-        read -e -i yes -p "Remove ~/.Xauthority? (yes/no): " ans
-        if [[ $ans == yes ]]; then
-            rm -rf ~/.Xauthority
-        fi
-    fi
-
     if [[ ! -e ~/.Xauthority ]]; then  
         active_auth=$(ps aux | grep '[X]org' | grep -oP '(?<=-auth )[^ ]+')
         if [[ ! -z $active_auth ]]; then
