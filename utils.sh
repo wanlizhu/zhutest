@@ -1546,7 +1546,7 @@ WantedBy=multi-user.target
 function zhu-start-vnc-server {
     echo "[1] Tiger VNC (creats virtual desktop for headless system)"
     echo "[2] X11 VNC (mirrors physical display)"
-    read -p "Which VNC server to install? : " selection
+    read -p "Which VNC server to start? : " selection
 
     if [[ $selection == 1 ]]; then
         zhu-start-vnc-server-for-headless-system
