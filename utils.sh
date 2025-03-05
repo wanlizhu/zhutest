@@ -1181,7 +1181,7 @@ function zhu-test-unigine-heaven {
             rsync -ah --progress ./Unigine_Heaven-4.0/ ~/zhutest-workload.d/unigine-heaven-1.6.5 || return -1
             popd >/dev/null
         } || {
-            zhu-fetch-from-data-server ~/.phoronix-test-suite/installed-tests/pts/unigine-heaven-1.6.5/Unigine_Heaven-4.0/ ~/zhutest-workload.d/unigine-heaven-1.6.5 || return -1
+            zhu-fetch-from-data-server /home/wanliz/.phoronix-test-suite/installed-tests/pts/unigine-heaven-1.6.5/Unigine_Heaven-4.0/ ~/zhutest-workload.d/unigine-heaven-1.6.5 || return -1
         }
     fi
 
@@ -1205,7 +1205,7 @@ function zhu-test-unigine-vally {
             rsync -ah --progress ./Unigine_Valley-1.0/ ~/zhutest-workload.d/unigine-valley-1.1.8 || return -1
             popd >/dev/null
         } || {
-            zhu-fetch-from-data-server ~/.phoronix-test-suite/installed-tests/pts/unigine-valley-1.1.8/Unigine_Valley-1.0/ ~/zhutest-workload.d/unigine-valley-1.1.8 || return -1
+            zhu-fetch-from-data-server /home/wanliz/.phoronix-test-suite/installed-tests/pts/unigine-valley-1.1.8/Unigine_Valley-1.0/ ~/zhutest-workload.d/unigine-valley-1.1.8 || return -1
         }
     fi 
 
@@ -1229,7 +1229,7 @@ function zhu-test-unigine-superposition {
             rsync -ah --progress ./Unigine_Superposition-1.0/ ~/zhutest-workload.d/unigine-super-1.0.7 || return -1
             popd >/dev/null
         } || {
-            zhu-fetch-from-data-server ~/.phoronix-test-suite/installed-tests/pts/unigine-super-1.0.7/Unigine_Superposition-1.0/ ~/zhutest-workload.d/unigine-super-1.0.7 || return -1
+            zhu-fetch-from-data-server /home/wanliz/.phoronix-test-suite/installed-tests/pts/unigine-super-1.0.7/Unigine_Superposition-1.0/ ~/zhutest-workload.d/unigine-super-1.0.7 || return -1
         }
     fi 
 
