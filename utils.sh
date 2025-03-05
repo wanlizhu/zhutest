@@ -983,16 +983,6 @@ function zhu-install-fex {
     fi
 }
 
-function zhu-run-x64-on-arm64 {
-    if [[ -z $1 ]]; then
-        echo "Usage: zhu-run-x86-on-arm <program> [args...]"
-        return -1
-    fi
-
-    zhu-install-fex || return -1
-    FEXInterpreter --rootfs=/opt/fex-rootfs "$@"
-}
-
 function zhu-disable-wayland {
     if [[ $XDG_SESSION_TYPE == "tty" ]]; then
         # Config gdm3
@@ -1438,7 +1428,7 @@ function zhu-startx-with-openbox {
     screen -dmS xsession startx 
 }
 
-function zhu-install-vnc-server-for-headless-system {
+function zhu-start-vnc-server-for-headless-system {
     if [[ ! -z $(sudo ss -tulpn | grep 590) ]]; then
         sudo ss -tulpn | grep 590
         echo "VNC server is already running..."
@@ -1484,14 +1474,14 @@ WantedBy=multi-user.target
         sudo systemctl start vncserver@$dp.service
     else
         [ -d /tmp/.X11-unix ] && (echo "Active X displays:"; ls /tmp/.X11-unix | grep -oP 'X\d+' | sed 's/X/:/' | tr '\n' ' '; echo) || echo "No active X displays found"
-        
+
         read -p "Start virtual desktop on display 0 or 1: " dp
         /usr/bin/vncserver -kill :$dp 
         screen -dmS vncserver /usr/bin/vncserver $vncserver_args :$dp 
     fi
 }
 
-function zhu-install-vnc-server-for-physical-display {
+function zhu-start-vnc-server-for-physical-display {
     if [[ ! -z $(sudo ss -tulpn | grep 590) ]]; then
         sudo ss -tulpn | grep 590
         echo "VNC server is already running..."
@@ -1553,14 +1543,14 @@ WantedBy=multi-user.target
     fi
 }
 
-function zhu-install-vnc-server {
+function zhu-start-vnc-server {
     echo "[1] Tiger VNC (creats virtual desktop for headless system)"
     echo "[2] X11 VNC (mirrors physical display)"
     read -p "Which VNC server to install? : " selection
 
     if [[ $selection == 1 ]]; then
-        zhu-install-vnc-server-for-headless-system
+        zhu-start-vnc-server-for-headless-system
     elif [[ $selection == 2 ]]; then
-        zhu-install-vnc-server-for-physical-display
+        zhu-start-vnc-server-for-physical-display
     fi
 }
