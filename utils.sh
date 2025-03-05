@@ -1409,6 +1409,18 @@ function zhu-check-xauthority {
     if [[ -z $XAUTHORITY && -e ~/.Xauthority ]]; then
         export XAUTHORITY=~/.Xauthority
     fi
+
+    if [[ -z $(which glxgears) ]]; then
+        sudo apt install -y mesa-utils 
+    fi
+
+    glxgears & 
+    sleep 1
+    if [[ -z $(pidof glxgears) ]]; then
+        echo "$XAUTHORITY is invalid!"
+        return -1
+    fi
+    kill -INT $(pidof glxgears)
 }
 
 function zhu-startx-with-openbox {
@@ -1496,7 +1508,7 @@ WantedBy=multi-user.target
         sudo systemctl enable vncserver@$dp.service
         sudo systemctl start vncserver@$dp.service
     else
-        zhu-check-xauthority
+        zhu-check-xauthority || return -1
 
         [ -d /tmp/.X11-unix ] && (echo "Active X displays:"; ls /tmp/.X11-unix | grep -oP 'X\d+' | sed 's/X/:/' | tr '\n' ' '; echo) || echo "No active X displays found"
         read -p "Start virtual desktop on display 0 or 1: " dp
@@ -1569,7 +1581,7 @@ WantedBy=multi-user.target
         sudo systemctl start x11vnc.service 
         echo "x11vnc.service is running and scheduled as auto-start!"
     else
-        zhu-check-xauthority
+        zhu-check-xauthority || return -1
         /usr/bin/x11vnc $x11vnc_args
     fi
 }
