@@ -1400,7 +1400,7 @@ function zhu-install-nvidia-dso-in-fex-rootfs {
 function zhu-check-xauthority {
     if [[ ! -e ~/.Xauthority ]]; then  
         active_auth=$(ps aux | grep '[X]org' | grep -oP '(?<=-auth )[^ ]+')
-        if [[ -e $active_auth ]]; then
+        if [[ ! -z $active_auth ]]; then
             sudo cp $active_auth ~/.Xauthority
             sudo chmod 644 ~/.Xauthority
         fi 
