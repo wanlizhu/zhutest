@@ -1266,8 +1266,8 @@ function zhu-test-viewperf-no-gui {
 
     pushd ~/zhutest-workload.d/viewperf2020 >/dev/null 
     echo 
-    #mkdir -p results/catia-06 
-    #./viewperf/bin/viewperf viewsets/catia/config/catia.xml -resolution 1920x1080 && cat #results/catia-06/results.xml || echo "Failed to run viewsets/catia"
+    mkdir -p results/catia-06 
+    ./viewperf/bin/viewperf viewsets/catia/config/catia.xml -resolution 1920x1080 && cat results/catia-06/results.xml || echo "Failed to run viewsets/catia"
 
     echo 
     mkdir -p results/creo-03
@@ -1405,4 +1405,160 @@ function zhu-install-nvidia-dso-in-fex-rootfs {
     popd >/dev/null 
 
     cp -vf ./nvidia_icd.json "$HOME/.fex-emu/RootFS/Ubuntu_24_04/etc/vulkan/icd.d/nvidia_icd.json"
+}
+
+function zhu-startx-with-openbox {
+    if [[ ! -z $(which Xorg) ]]; then
+        read -p "Kill running X server ($(pidof Xorg))? (yes/no): " ans
+        if [[ $ans == yes ]]; then
+            sudo kill -INT $(pidof Xorg)
+            sleep 2
+        else
+            return -1
+        fi
+    fi
+
+    sudo apt install -y xorg openbox 
+    if [[ -z $(which screen) ]]; then
+        sudo apt install -y screen 
+    fi
+
+    if [[ -e ~/.xinitrc ]]; then
+        read -p "Remove existing ~/.xinitrc? (yes/no): " ans
+        if [[ $ans == yes ]]; then
+            sudo rm -rf ~/.xinitrc
+        fi
+    fi
+
+    if [[ ! -e ~/.xinitrc ]]; then
+        echo "exec openbox-session" > ~/.xinitrc 
+        chmod +x ~/.xinitrc
+    fi
+
+    screen -dmS xsession startx 
+}
+
+function zhu-install-vnc-server-for-headless-system {
+    if [[ ! -z $(sudo ss -tulpn | grep 590) ]]; then
+        sudo ss -tulpn | grep 590
+        echo "VNC server is already running..."
+        return 
+    fi  
+
+    if [[ -z $(which screen) ]]; then
+        sudo apt install -y screen 
+    fi
+
+    sudo apt install -y tigervnc-standalone-server tigervnc-common xfce4-session
+    vncpasswd 
+    mkdir -p ~/.vnc
+    echo "#!/bin/sh
+unset SESSION_MANAGER
+unset DBUS_SESSION_BUS_ADDRESS
+export XKL_XMODMAP_DISABLE=1
+exec /usr/bin/xfce4-session
+" > ~/.vnc/xstartup
+    chmod +x ~/.vnc/xstartup
+    vncserver_args="-localhost no -geometry 3840x2160 -depth 24"
+
+    read -p "Autostart on boot? (yes/no): " autostart
+    if [[ $autostart == yes ]]; then
+        echo "[Unit]
+Description=TigerVNC server
+After=syslog.target network.target
+
+[Service]
+Type=forking
+User=$USER
+WorkingDirectory=$HOME
+ExecStartPre=-/usr/bin/vncserver -kill :%i > /dev/null 2>&1
+ExecStart=/usr/bin/vncserver $vncserver_args :%i
+ExecStop=/usr/bin/vncserver -kill :%i
+
+[Install]
+WantedBy=multi-user.target
+" > /etc/systemd/system/vncserver@.service
+        read -p "Autostart virtual desktop on display 0 or 1: " dp
+        sudo systemctl daemon-reload
+        sudo systemctl enable vncserver@$dp.service
+        sudo systemctl start vncserver@$dp.service
+    else
+        read -p "Start virtual desktop on display 0 or 1: " dp
+        /usr/bin/vncserver -kill :$dp 
+        screen -dmS vncserver /usr/bin/vncserver $vncserver_args :$dp 
+    fi
+}
+
+function zhu-install-vnc-server-for-physical-display {
+    if [[ ! -z $(sudo ss -tulpn | grep 590) ]]; then
+        sudo ss -tulpn | grep 590
+        echo "VNC server is already running..."
+        return 
+    fi  
+
+    if [[ -z $(pidof Xorg) ]]; then
+        echo "Xorg is not running, a running X server is required for x11vnc!"
+        echo "[1] Start Xorg with openbox"
+        echo "[2] Start Xorg without a session"
+        read -p "Select: " selection
+
+        if [[ -z $(which screen) ]]; then
+            sudo apt install -y screen 
+        fi
+
+        if [[ $selection == 1 ]]; then
+            zhu-startx-with-openbox || return -1
+        elif [[ $selection == 2 ]]; then
+            if [[ $UID == 0 ]]; then
+                screen -dmS xsession X :0
+            else
+                sudo screen -dmS xsession X :0
+            fi
+        else
+            return -1
+        fi
+    fi
+
+    while [[ -z $(pidof Xorg) ]]; do 
+        echo "[$(date)] Wait for Xorg to start up..."
+        sleep 3
+    done
+
+    sudo apt install -y x11vnc
+    x11vnc -storepasswd
+    x11vnc_args="-auth guess -forever --loop -noxdamage -repeat -rfbauth $HOME/.vnc/passwd -rfbport 5900 -display :0 -shared"
+
+    read -p "Autostart on boot? (yes/no): " autostart
+    if [[ $autostart == yes ]]; then
+        echo "[Unit]
+Description=x11vnc service
+After=display-manager.service
+
+[Service]
+ExecStart=/usr/bin/x11vnc $x11vnc_args 
+User=$USER
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
+" | sudo tee /etc/systemd/system/x11vnc.service
+        sudo systemctl enable x11vnc.service 
+        sudo systemctl start x11vnc.service 
+        echo "x11vnc.service is running and scheduled as auto-start!"
+    else
+        /usr/bin/x11vnc $x11vnc_args &
+    fi
+}
+
+function zhu-install-vnc-server {
+    echo "[1] Tiger VNC (creats virtual desktop for headless system)"
+    echo "[2] X11 VNC (mirrors physical display)"
+    read -p "Which VNC server to install? : " selection
+
+    if [[ $selection == 1 ]]; then
+        zhu-install-vnc-server-for-headless-system
+    elif [[ $selection == 2 ]]; then
+        zhu-install-vnc-server-for-physical-display
+    fi
 }
