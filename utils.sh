@@ -1543,7 +1543,7 @@ function zhu-start-vnc-server-for-physical-display {
         sleep 3
     done
 
-    if [[ -z $(dpkg -l | grep x11vnc ]]; then
+    if [[ -z $(dpkg -l | grep x11vnc) ]]; then
         sudo apt install -y x11vnc
     fi 
 
