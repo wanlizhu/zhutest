@@ -1260,6 +1260,41 @@ function zhu-viewperf-install {
     fi
 }
 
+function zhu-test-viewperf-no-gui {
+    zhu-validate-display || return -1
+    zhu-viewperf-install || return -1
+
+    pushd ~/zhutest-workload.d/viewperf2020 >/dev/null 
+    echo 
+    mkdir -p results/catia-06 
+    ./viewperf/bin/viewperf viewsets/catia/config/catia.xml -resolution 1920x1080 && cat results/catia-06/results.xml || echo "Failed to run viewsets/catia"
+
+    echo 
+    mkdir -p results/creo-03
+    ./viewperf/bin/viewperf viewsets/creo/config/creo.xml -resolution 1920x1080 && cat results/creo-03/results.xml || echo "Failed to run viewsets/creo"
+
+    echo 
+    mkdir -p results/energy-03
+    ./viewperf/bin/viewperf viewsets/energy/config/energy.xml -resolution 1920x1080 && cat results/energy-03/results.xml || echo "Failed to run viewsets/energy"
+
+    echo 
+    mkdir -p results/maya-06 
+    ./viewperf/bin/viewperf viewsets/maya/config/maya.xml -resolution 1920x1080 && cat results/maya-06/results.xml || echo "Failed to run viewsets/maya"
+
+    echo 
+    mkdir -p results/medical-03
+    ./viewperf/bin/viewperf viewsets/medical/config/medical.xml -resolution 1920x1080 && cat results/medical-03/results.xml || echo "Failed to run viewsets/medical"
+
+    echo 
+    mkdir -p results/snx-04
+    ./viewperf/bin/viewperf viewsets/snx/config/snx.xml -resolution 1920x1080 && cat results/snx-04/results.xml || echo "Failed to run viewsets/snx"
+
+    echo 
+    mkdir -p results/solidworks-07
+    ./viewperf/bin/viewperf viewsets/sw/config/sw.xml -resolution 1920x1080 && cat results/solidworks-07/results.xml || echo "Failed to run viewsets/sw"
+    popd >/dev/null 
+}
+
 function zhu-test-viewperf {
     zhu-validate-display || return -1
     zhu-viewperf-install || return -1
