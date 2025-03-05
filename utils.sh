@@ -1266,8 +1266,8 @@ function zhu-test-viewperf-no-gui {
 
     pushd ~/zhutest-workload.d/viewperf2020 >/dev/null 
     echo 
-    mkdir -p results/catia-06 
-    ./viewperf/bin/viewperf viewsets/catia/config/catia.xml -resolution 1920x1080 && cat results/catia-06/results.xml || echo "Failed to run viewsets/catia"
+    #mkdir -p results/catia-06 
+    #./viewperf/bin/viewperf viewsets/catia/config/catia.xml -resolution 1920x1080 && cat #results/catia-06/results.xml || echo "Failed to run viewsets/catia"
 
     echo 
     mkdir -p results/creo-03
