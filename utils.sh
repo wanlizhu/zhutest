@@ -1398,6 +1398,13 @@ function zhu-install-nvidia-dso-in-fex-rootfs {
 }
 
 function zhu-check-xauthority {
+    if [[ -e ~/.Xauthority ]]; then 
+        read -e -i yes -p "Remove ~/.Xauthority? (yes/no): " ans
+        if [[ $ans == yes ]]; then
+            rm -rf ~/.Xauthority
+        fi
+    fi
+
     if [[ ! -e ~/.Xauthority ]]; then  
         active_auth=$(ps aux | grep '[X]org' | grep -oP '(?<=-auth )[^ ]+')
         if [[ ! -z $active_auth ]]; then
@@ -1487,7 +1494,7 @@ exec /usr/bin/xfce4-session
     chmod +x ~/.vnc/xstartup
     vncserver_args="-localhost no -geometry 3840x2160 -depth 24"
 
-    read -p "Autostart on boot? (yes/no): " autostart
+    read -e -i no -p "Autostart on boot? (yes/no): " autostart
     if [[ $autostart == yes ]]; then
         echo "[Unit]
 Description=TigerVNC server
@@ -1563,7 +1570,7 @@ function zhu-start-vnc-server-for-physical-display {
     x11vnc -storepasswd
     x11vnc_args="-auth guess -forever --loop -noxdamage -repeat -rfbauth $HOME/.vnc/passwd -rfbport 5900 -display :0 -shared"
 
-    read -p "Autostart on boot? (yes/no): " autostart
+    read -e -i no -p "Autostart on boot? (yes/no): " autostart
     if [[ $autostart == yes ]]; then
         echo "[Unit]
 Description=x11vnc service
