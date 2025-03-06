@@ -1706,7 +1706,7 @@ WantedBy=multi-user.target
 }
 
 function zhu-start-vnc-server {
-    echo "[1] Tiger VNC (virtual desktop for headless system, rendering in llvmpipe, no Xorg running)"
+    echo "[1] Tiger VNC (virtual desktop for headless system, rendering in llvmpipe, not using GPU, not running Xorg)"
     echo "[2] X11 VNC (mirrors physical display)"
     read -p "Which VNC server to start? : " selection
 
