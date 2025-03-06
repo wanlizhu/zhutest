@@ -1581,7 +1581,7 @@ function zhu-start-vnc-server-for-headless-system {
     fi 
 
     if [[ -z $(dpkg -l | grep xfce4-session) ]]; then
-        xfce4-session
+        sudo apt install -y xfce4-session
     fi 
 
     mkdir -p ~/.vnc
