@@ -1077,7 +1077,7 @@ function zhu-test-3dmark-attan-wildlife {
     chmod +x run_linux_x64.sh 
     ./run_linux_x64.sh || return -1
 
-    which jp >/dev/null || sudo apt install -y jq 
+    which jq >/dev/null || sudo apt install -y jq 
     result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT") | .value' result.json)
     echo "3DMark - Wildlife - Vulkan rasterization"
     echo "Typed result: $result FPS"
@@ -1107,7 +1107,7 @@ function zhu-test-3dmark-disco-steelnomad {
     chmod +x run_workload_linux_vulkan.sh
     ./run_workload_linux_vulkan.sh || return -1
 
-    which jp >/dev/null || sudo apt install -y jq 
+    which jq >/dev/null || sudo apt install -y jq 
     result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT") | .value' result_vulkan.json)
     echo "3DMark - Steel Nomad - Modern Vulkan rasterization"
     echo "Typed result: $result FPS"
@@ -1137,7 +1137,7 @@ function zhu-test-3dmark-pogo-solarbay {
     chmod +x run_dev_player_linux_x64.sh
     ./run_dev_player_linux_x64.sh || return -1
 
-    which jp >/dev/null || sudo apt install -y jq 
+    which jq >/dev/null || sudo apt install -y jq 
     result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT" and .resultType == "") | .value' result.json)
     echo "3DMark - Solar Bay - Vulkan raytracing"
     echo "Typed result: $result FPS"
@@ -1148,6 +1148,7 @@ function zhu-fetch-from-data-server {
     if [[ -z $(which sshpass) ]]; then
         sudo apt install -y sshpass
     fi
+
     if [[ ! -e ~/.zhurc.data.server ]]; then
         read -p "Data server IP: " ip
         read -e -i wanliz -p "Data server username: " user
@@ -1159,6 +1160,40 @@ function zhu-fetch-from-data-server {
     passwd=$(cat ~/.zhurc.data.server | awk '{print $2}')
 
     sshpass -p "$passwd" rsync -ah --progress $remote:"$1" "$2"
+}
+
+function zhu-fex-fetch-packages {
+    [[ -z $(which jq) ]] && sudo apt install -y jq 
+    rootfs="~/.fex-emu/$(jq -r '.Config.RootFS' ~/.fex-emu/Config.json)"
+
+    if [[ ! -e ~/.zhurc.data.server ]]; then
+        read -p "Data server IP: " ip
+        read -e -i wanliz -p "Data server username: " user
+        read -s -p "Data server password: " passwd
+        echo "$user@$ip $passwd" > ~/.zhurc.data.server
+    fi
+
+    remote=$(cat ~/.zhurc.data.server | awk '{print $1}')
+    passwd=$(cat ~/.zhurc.data.server | awk '{print $2}')
+
+    sshpass -p "$passwd" ssh $remote "dpkg -L $1" >/tmp/dpkg.log || return -1
+    count=0
+    while IFS= read -r line; do
+        if [[ ! -d $line ]]; then
+            echo "$line"
+            $((count++))
+        fi 
+    done < /tmp/dpkg.log
+    read -e -i yes -p "Fetch these $count files into $rootfs? (yes/no): " ans
+    if [[ $ans != yes ]]; then
+        return -1
+    fi 
+
+    while IFS= read -r line; do
+        if [[ ! -d $line ]]; then
+            sshpass -p "$passwd" rsync -ah --progress $remote:$line $rootfs$line 
+        fi 
+    done < /tmp/dpkg.log 
 }
 
 function zhu-test-unigine-heaven {
@@ -1371,7 +1406,7 @@ function zhu-list-steam-games {
     column -s, -t /tmp/steam-games.list
 }
 
-function zhu-install-nvidia-dso-in-fex-rootfs {
+function zhu-fex-install-nvidia-dso {
     amd64_libs="$HOME/.fex-emu/RootFS/Ubuntu_24_04/lib/x86_64-linux-gnu"
     for dso in *.so.575.25; do 
         cp -vf ./$dso $amd64_libs/$dso 
