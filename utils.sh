@@ -1677,8 +1677,10 @@ function zhu-start-vnc-server-for-physical-display {
     fi
 
     while [[ -z $(pidof Xorg) ]]; do 
-        echo "[$(date)] Wait for Xorg to start up..."
         sleep 3
+        if [[ -z $(pidof Xorg) ]]; then
+            echo "[$(date)] Wait for Xorg to start up..."
+        fi 
     done
 
     if [[ -z $(dpkg -l | grep x11vnc) ]]; then
