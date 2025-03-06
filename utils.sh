@@ -1596,6 +1596,7 @@ exec /usr/bin/xfce4-session
     vncserver_args="-localhost no -geometry 3840x2160 -depth 24"
 
     read -e -i no -p "Autostart on boot? (yes/no): " autostart
+    read -p "Start virtual desktop on display 0 or 1: " dp
     if [[ $autostart == yes ]]; then
         echo "[Unit]
 Description=TigerVNC server
@@ -1612,7 +1613,6 @@ ExecStop=/usr/bin/vncserver -kill :%i
 [Install]
 WantedBy=multi-user.target
 " > /etc/systemd/system/vncserver@.service
-        read -p "Autostart virtual desktop on display 0 or 1: " dp
         sudo systemctl daemon-reload
         sudo systemctl enable vncserver@$dp.service
         sudo systemctl start vncserver@$dp.service
