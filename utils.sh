@@ -1557,9 +1557,10 @@ function zhu-startx-with-openbox {
     fi
 
     screen -dmS xsession startx 
-    sleep 2
+    sleep 3
 
     if [[ -z $(pidof Xorg) ]]; then
+        sleep 5
         echo "Failed to start Xorg with openbox!"
         return -1
     else
