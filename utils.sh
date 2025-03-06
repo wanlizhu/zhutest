@@ -1492,12 +1492,12 @@ function zhu-startx-with-openbox {
 }
 
 function zhu-check-vncserver {
-    sudo ss -tulpn | grep 590
+    sudo ss -tulpn | grep-E "5900|5901|5902"
 }
 
 function zhu-start-vnc-server-for-headless-system {
-    if [[ ! -z $(sudo ss -tulpn | grep 590) ]]; then
-        sudo ss -tulpn | grep 590
+    if [[ ! -z $(zhu-check-vncserver) ]]; then
+        zhu-check-vncserver
         echo "VNC server is already running..."
         return 
     fi  
@@ -1560,8 +1560,8 @@ WantedBy=multi-user.target
 }
 
 function zhu-start-vnc-server-for-physical-display {
-    if [[ ! -z $(sudo ss -tulpn | grep 590) ]]; then
-        sudo ss -tulpn | grep 590
+    if [[ ! -z $(zhu-check-vncserver) ]]; then
+        zhu-check-vncserver
         echo "VNC server is already running..."
         return 
     fi  
