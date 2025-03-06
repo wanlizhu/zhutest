@@ -1621,7 +1621,9 @@ WantedBy=multi-user.target
         #zhu-check-xauthority || return -1
         export DISPLAY=:$dp 
         /usr/bin/tigervncserver -kill :$dp >/dev/null 2>&1
-        screen -dmS tigervncserver /usr/bin/tigervncserver $vncserver_args :$dp
+        screen -dmS tigervncserver /usr/bin/tigervncserver $vncserver_args :$dp 
+        sleep 1
+        /usr/bin/tigervncserver -list 
     fi
 }
 
