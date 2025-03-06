@@ -1454,6 +1454,13 @@ function zhu-check-xauthority {
     sleep 1
     if [[ -z $(pidof glxgears) ]]; then
         echo "$XAUTHORITY is invalid!"
+        if [[ $1 == retry ]]; then
+            return -1
+        fi
+        if [[ ! -z $(glxgears 2>&1 | grep Invalid) ]]; then
+            rm -rf ~/.Xauthority
+            zhu-check-xauthority retry || return -1
+        fi
         return -1
     fi
     kill -INT $(pidof glxgears)
