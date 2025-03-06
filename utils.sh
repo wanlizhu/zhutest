@@ -1499,7 +1499,7 @@ function zhu-check-xauthority {
         echo "X server is not running"
         return -1
     fi
-    
+
     if [[ ! -e ~/.Xauthority ]]; then  
         active_auth=$(ps aux | grep '[X]org' | grep -oP '(?<=-auth )[^ ]+')
         if [[ -z $active_auth ]]; then
@@ -1584,7 +1584,7 @@ function zhu-start-vnc-server-for-headless-system {
         xfce4-session
     fi 
 
-    vncpasswd 
+    vncpasswd -user 
     mkdir -p ~/.vnc
     echo "#!/bin/sh
 unset SESSION_MANAGER
