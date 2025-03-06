@@ -1162,6 +1162,12 @@ function zhu-fetch-from-data-server {
     sshpass -p "$passwd" rsync -ah --progress $remote:"$1" "$2"
 }
 
+function zhu-rebuild-dpkg-database {
+    sudo rm -rf /var/lib/dpkg/*
+    sudo apt-get install --reinstall dpkg
+    sudo apt update && sudo apt upgrade -y
+}
+
 function zhu-fex-run {
     [[ -z $(which jq) ]] && sudo apt install -y jq 
     rootfs="$HOME/.fex-emu/RootFS/$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)"
