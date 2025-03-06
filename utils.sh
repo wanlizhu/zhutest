@@ -1584,19 +1584,20 @@ function zhu-start-vnc-server-for-headless-system {
         xfce4-session
     fi 
 
-    vncpasswd -user 
     mkdir -p ~/.vnc
+    tigervncpasswd
+    
     echo "#!/bin/sh
 unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
-export XKL_XMODMAP_DISABLE=1
 exec /usr/bin/xfce4-session
 " > ~/.vnc/xstartup
     chmod +x ~/.vnc/xstartup
-    vncserver_args="-localhost no -geometry 3840x2160 -depth 24"
+
+    read -p "Start virtual desktop on display 0 or 1: " dp
+    vncserver_args="-localhost no :$dp -geometry 3840x2160 -depth 24"
 
     read -e -i no -p "Autostart on boot? (yes/no): " autostart
-    read -p "Start virtual desktop on display 0 or 1: " dp
     if [[ $autostart == yes ]]; then
         echo "[Unit]
 Description=TigerVNC server
@@ -1606,24 +1607,21 @@ After=syslog.target network.target
 Type=forking
 User=$USER
 WorkingDirectory=$HOME
-ExecStartPre=-/usr/bin/vncserver -kill :%i > /dev/null 2>&1
-ExecStart=/usr/bin/vncserver $vncserver_args :%i
-ExecStop=/usr/bin/vncserver -kill :%i
+ExecStartPre=-/usr/bin/tigervncserver -kill :%i > /dev/null 2>&1
+ExecStart=/usr/bin/tigervncserver $vncserver_args :%i
+ExecStop=/usr/bin/tigervncserver -kill :%i
 
 [Install]
 WantedBy=multi-user.target
-" > /etc/systemd/system/vncserver@.service
+" > /etc/systemd/system/tigervncserver@.service
         sudo systemctl daemon-reload
-        sudo systemctl enable vncserver@$dp.service
-        sudo systemctl start vncserver@$dp.service
+        sudo systemctl enable tigervncserver@$dp.service
+        sudo systemctl start tigervncserver@$dp.service
     else
         #zhu-check-xauthority || return -1
-
-        [ -d /tmp/.X11-unix ] && (echo "Active X displays:"; ls /tmp/.X11-unix | grep -oP 'X\d+' | sed 's/X/:/' | tr '\n' ' '; echo) || echo "No active X displays found"
         export DISPLAY=:$dp 
-
-        /usr/bin/vncserver -kill :$dp 
-        screen -dmS vncserver /usr/bin/vncserver $vncserver_args :$dp
+        /usr/bin/tigervncserver -kill :$dp 
+        screen -dmS tigervncserver /usr/bin/tigervncserver $vncserver_args :$dp
     fi
 }
 
