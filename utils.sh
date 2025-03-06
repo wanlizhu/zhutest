@@ -1291,7 +1291,7 @@ function zhu-test-unigine-superposition {
     popd >/dev/null 
 }
 
-function zhu-install-viewperf-amd64 {
+function zhu-install-viewperf {
     if [[ $(uname -m) != "x86_64" ]]; then
         read -p "Install amd64 based viewperf on $(uname -m) host? (ctrl-c to cancel): " _
     fi
@@ -1322,7 +1322,7 @@ function zhu-test-viewperf-no-gui {
     zhu-validate-display || return -1
 
     if [[ $(uname -m) == x86_64 ]]; then
-        zhu-install-viewperf-amd64 || return -1
+        zhu-install-viewperf || return -1
     elif [[ $(uname -m) == aarch64 ]]; then
         zhu-install-viewperf-aarch64 || return -1
     else
@@ -1330,41 +1330,48 @@ function zhu-test-viewperf-no-gui {
     fi
 
     pushd ~/zhutest-workload.d/viewperf2020 >/dev/null 
-    echo 
-    mkdir -p results/catia-06 
-    ./viewperf/bin/viewperf viewsets/catia/config/catia.xml -resolution 1920x1080 && cat results/catia-06/results.xml || echo "Failed to run viewsets/catia"
+    if [[ -z "$1" || "$1" == *"catia"* ]]; then
+        mkdir -p results/catia-06 
+        ./viewperf/bin/viewperf viewsets/catia/config/catia.xml -resolution 1920x1080 && cat results/catia-06/results.xml || echo "Failed to run viewsets/catia"
+    fi 
 
-    echo 
-    mkdir -p results/creo-03
-    ./viewperf/bin/viewperf viewsets/creo/config/creo.xml -resolution 1920x1080 && cat results/creo-03/results.xml || echo "Failed to run viewsets/creo"
+    if [[ -z "$1" || "$1" == *"creo"* ]]; then
+        mkdir -p results/creo-03
+        ./viewperf/bin/viewperf viewsets/creo/config/creo.xml -resolution 1920x1080 && cat results/creo-03/results.xml || echo "Failed to run viewsets/creo"
+    fi 
 
-    echo 
-    mkdir -p results/energy-03
-    ./viewperf/bin/viewperf viewsets/energy/config/energy.xml -resolution 1920x1080 && cat results/energy-03/results.xml || echo "Failed to run viewsets/energy"
+    if [[ -z "$1" || "$1" == *"energy"* ]]; then
+        mkdir -p results/energy-03
+        ./viewperf/bin/viewperf viewsets/energy/config/energy.xml -resolution 1920x1080 && cat results/energy-03/results.xml || echo "Failed to run viewsets/energy"
+    fi 
 
-    echo 
-    mkdir -p results/maya-06 
-    ./viewperf/bin/viewperf viewsets/maya/config/maya.xml -resolution 1920x1080 && cat results/maya-06/results.xml || echo "Failed to run viewsets/maya"
+    if [[ -z "$1" || "$1" == *"maya"* ]]; then
+        mkdir -p results/maya-06 
+        ./viewperf/bin/viewperf viewsets/maya/config/maya.xml -resolution 1920x1080 && cat results/maya-06/results.xml || echo "Failed to run viewsets/maya"
+    fi 
 
-    echo 
-    mkdir -p results/medical-03
-    ./viewperf/bin/viewperf viewsets/medical/config/medical.xml -resolution 1920x1080 && cat results/medical-03/results.xml || echo "Failed to run viewsets/medical"
+    if [[ -z "$1" || "$1" == *"medical"* ]]; then
+        mkdir -p results/medical-03
+        ./viewperf/bin/viewperf viewsets/medical/config/medical.xml -resolution 1920x1080 && cat results/medical-03/results.xml || echo "Failed to run viewsets/medical"
+    fi 
 
-    echo 
-    mkdir -p results/snx-04
-    ./viewperf/bin/viewperf viewsets/snx/config/snx.xml -resolution 1920x1080 && cat results/snx-04/results.xml || echo "Failed to run viewsets/snx"
+    if [[ -z "$1" || "$1" == *"snx"* ]]; then
+        mkdir -p results/snx-04
+        ./viewperf/bin/viewperf viewsets/snx/config/snx.xml -resolution 1920x1080 && cat results/snx-04/results.xml || echo "Failed to run viewsets/snx"
+    fi 
 
-    echo 
-    mkdir -p results/solidworks-07
-    ./viewperf/bin/viewperf viewsets/sw/config/sw.xml -resolution 1920x1080 && cat results/solidworks-07/results.xml || echo "Failed to run viewsets/sw"
+    if [[ -z "$1" || "$1" == *"sw"* ]]; then
+        mkdir -p results/solidworks-07
+        ./viewperf/bin/viewperf viewsets/sw/config/sw.xml -resolution 1920x1080 && cat results/solidworks-07/results.xml || echo "Failed to run viewsets/sw"
+    fi 
     popd >/dev/null 
 }
 
-function zhu-test-viewperf {
+function zhu-test-viewperf-in-gui {
     zhu-validate-display || return -1
    
     if [[ $(uname -m) == x86_64 ]]; then
-        zhu-install-viewperf-amd64 || return -1
+        zhu-install-viewperf || return -1
     elif [[ $(uname -m) == aarch64 ]]; then
         zhu-install-viewperf-aarch64 || return -1
     else
@@ -1396,7 +1403,14 @@ function zhu-test-viewperf {
 
 function zhu-test-viewperf-maya-subtest5 {
     zhu-validate-display || return -1
-    zhu-install-viewperf-amd64 || return -1
+    
+    if [[ $(uname -m) == x86_64 ]]; then
+        zhu-install-viewperf || return -1
+    elif [[ $(uname -m) == aarch64 ]]; then
+        zhu-install-viewperf-aarch64 || return -1
+    else
+        return -1
+    fi
 
     pushd ~/zhutest-workload.d/viewperf2020 >/dev/null
     mkdir -p results/maya-06
