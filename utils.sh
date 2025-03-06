@@ -1580,8 +1580,17 @@ function zhu-start-vnc-server-for-headless-system {
         sudo apt install -y tigervnc-common
     fi 
 
-    if [[ -z $(dpkg -l | grep xfce4-session) ]]; then
-        sudo apt install -y xfce4-session
+    echo "[1] xfce4"
+    read -e -i 1 -p "What session to start in virtual desktop: " ans
+
+    if [[ $ans == 1 ]]; then
+        desktop_session=/usr/bin/xfce4-session
+        if [[ -z $(dpkg -l | grep xfce4-session) ]]; then
+            sudo apt install -y xfce4-session
+        fi 
+    else
+        echo "Invalid input!"
+        return -1
     fi 
 
     mkdir -p ~/.vnc
@@ -1590,7 +1599,7 @@ function zhu-start-vnc-server-for-headless-system {
     echo "#!/bin/sh
 unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
-exec /usr/bin/xfce4-session
+exec $desktop_session
 " > ~/.vnc/xstartup
     chmod +x ~/.vnc/xstartup
 
@@ -1697,7 +1706,7 @@ WantedBy=multi-user.target
 }
 
 function zhu-start-vnc-server {
-    echo "[1] Tiger VNC (creats virtual desktop for headless system)"
+    echo "[1] Tiger VNC (virtual desktop for headless system, rendering in llvmpipe, no Xorg running)"
     echo "[2] X11 VNC (mirrors physical display)"
     read -p "Which VNC server to start? : " selection
 
