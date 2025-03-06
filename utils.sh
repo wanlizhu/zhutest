@@ -24,12 +24,12 @@ if [[ $USER == wanliz ]]; then
         fi
     fi 
 
-    if [[ -z $(grep "nsight-systems-internal/current/host-linux-x64" ~/.bashrc) ]]; then
+    if [[ ! -z $(grep "nsight-systems-internal/current/host-linux-x64" ~/.bashrc) ]]; then
         echo "Append Nsight systems to \$PATH"
         echo "export PATH=\"~/nsight-systems-internal/current/host-linux-x64:\$PATH\"" >> ~/.bashrc
     fi
 
-    if [[ -z $(grep "nsight-graphics-internal/current/host/linux-desktop-nomad-x64" ~/.bashrc) ]]; then
+    if [[ ! -z $(grep "nsight-graphics-internal/current/host/linux-desktop-nomad-x64" ~/.bashrc) ]]; then
         echo "Append Nsight graphics to \$PATH"
         echo "export PATH=\"~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64:\$PATH\"" >> ~/.bashrc
     fi
