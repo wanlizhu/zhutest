@@ -1491,6 +1491,10 @@ function zhu-startx-with-openbox {
     startx 
 }
 
+function zhu-check-vncserver {
+    sudo ss -tulpn | grep 590
+}
+
 function zhu-start-vnc-server-for-headless-system {
     if [[ ! -z $(sudo ss -tulpn | grep 590) ]]; then
         sudo ss -tulpn | grep 590
@@ -1564,8 +1568,9 @@ function zhu-start-vnc-server-for-physical-display {
 
     if [[ -z $(pidof Xorg) ]]; then
         echo "Xorg is not running, a running X server is required for x11vnc!"
-        echo "[1] Start Xorg with openbox"
-        echo "[2] Start Xorg without a session"
+        echo "[1] Start Xorg without a session"
+        echo "[2] Start Xorg with openbox"
+        echo "[3] Start Xorg with display-manager"
         read -p "Select: " selection
 
         if [[ -z $(which screen) ]]; then
@@ -1573,13 +1578,15 @@ function zhu-start-vnc-server-for-physical-display {
         fi
 
         if [[ $selection == 1 ]]; then
-            zhu-startx-with-openbox || return -1
-        elif [[ $selection == 2 ]]; then
             if [[ $UID == 0 ]]; then
                 screen -dmS xsession X :0
             else
                 sudo screen -dmS xsession X :0
             fi
+        elif [[ $selection == 2 ]]; then
+            zhu-startx-with-openbox || return -1
+        elif [[ $selection == 3 ]]; then
+            sudo systemctl start display-manager || return -1
         else
             return -1
         fi
