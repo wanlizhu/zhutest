@@ -1617,10 +1617,9 @@ WantedBy=multi-user.target
         sudo systemctl enable vncserver@$dp.service
         sudo systemctl start vncserver@$dp.service
     else
-        zhu-check-xauthority || return -1
+        #zhu-check-xauthority || return -1
 
         [ -d /tmp/.X11-unix ] && (echo "Active X displays:"; ls /tmp/.X11-unix | grep -oP 'X\d+' | sed 's/X/:/' | tr '\n' ' '; echo) || echo "No active X displays found"
-        read -p "Start virtual desktop on display 0 or 1: " dp
         export DISPLAY=:$dp 
 
         /usr/bin/vncserver -kill :$dp 
