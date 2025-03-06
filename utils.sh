@@ -1162,6 +1162,14 @@ function zhu-fetch-from-data-server {
     sshpass -p "$passwd" rsync -ah --progress $remote:"$1" "$2"
 }
 
+function zhu-fex-run {
+    [[ -z $(which jq) ]] && sudo apt install -y jq 
+    rootfs="~/.fex-emu/$(jq -r '.Config.RootFS' ~/.fex-emu/Config.json)"
+    if [[ -d $rootfs ]]; then 
+        sudo chroot $rootfs /bin/bash -c "$@"
+    fi 
+}
+
 function zhu-fex-fetch-packages {
     [[ -z $(which jq) ]] && sudo apt install -y jq 
     rootfs="~/.fex-emu/$(jq -r '.Config.RootFS' ~/.fex-emu/Config.json)"
