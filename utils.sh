@@ -1495,9 +1495,16 @@ function zhu-fex-install-nvidia-dso {
 }
 
 function zhu-check-xauthority {
+    if [[ -z $(pidof Xorg) ]]; then
+        echo "X server is not running"
+        return -1
+    fi
+    
     if [[ ! -e ~/.Xauthority ]]; then  
         active_auth=$(ps aux | grep '[X]org' | grep -oP '(?<=-auth )[^ ]+')
-        if [[ ! -z $active_auth ]]; then
+        if [[ -z $active_auth ]]; then
+            echo "\"ps aux | grep '[X]org'\" returns no auth path"
+        else
             sudo cp $active_auth ~/.Xauthority
             sudo chown $USER:$(id -gn) ~/.Xauthority
             chmod 666 ~/.Xauthority
