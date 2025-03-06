@@ -1556,6 +1556,8 @@ function zhu-startx-with-openbox {
         chmod +x ~/.xinitrc
     fi
 
+    sudo sed -i 's/console/anybody/g' /etc/X11/Xwrapper.config
+    
     read -e -i yes -p "Start X in detached screen? (yes/no): " ans
     if [[ $ans == yes ]]; then
         screen -dmS xsession startx
