@@ -463,12 +463,19 @@ function zhu-mount-linuxqa {
     }
 
     sudo mkdir -p /mnt/linuxqa /mnt/data /mnt/builds /mnt/dvsbuilds
-    sudo mount linuxqa.nvidia.com:/storage/people /mnt/linuxqa && echo "Mounted /mnt/linuxqa" 
-    sudo mount linuxqa.nvidia.com:/storage/data /mnt/data && echo "Mounted /mnt/data" 
-    sudo mount linuxqa.nvidia.com:/storage3/builds /mnt/builds && echo "Mounted /mnt/builds" 
-    sudo mount linuxqa.nvidia.com:/storage5/dvsbuilds /mnt/dvsbuilds && echo "Mounted /mnt/dvsbuilds" 
-
-    return 0
+    
+    if ! mountpoint -q /mnt/linuxqa; then
+        sudo mount linuxqa.nvidia.com:/storage/people /mnt/linuxqa && echo "Mounted /mnt/linuxqa" 
+    fi 
+    if ! mountpoint -q /mnt/data; then
+        sudo mount linuxqa.nvidia.com:/storage/data /mnt/data && echo "Mounted /mnt/data" 
+    fi 
+    if ! mountpoint -q /mnt/builds; then
+        sudo mount linuxqa.nvidia.com:/storage3/builds /mnt/builds && echo "Mounted /mnt/builds" 
+    fi 
+    if ! mountpoint -q /mnt/dvsbuilds; then
+        sudo mount linuxqa.nvidia.com:/storage5/dvsbuilds /mnt/dvsbuilds && echo "Mounted /mnt/dvsbuilds" 
+    fi 
 }
 
 function zhu-fetch-from-linuxqa {
