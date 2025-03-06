@@ -1166,7 +1166,7 @@ function zhu-fex-run {
     [[ -z $(which jq) ]] && sudo apt install -y jq 
     rootfs="$HOME/.fex-emu/RootFS/$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)"
     if [[ -d $rootfs ]]; then 
-        sudo chroot $rootfs /bin/bash -c "$@"
+        sudo chroot $rootfs /usr/bin/bash -c "$@"
     fi 
 }
 
