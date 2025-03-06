@@ -472,8 +472,9 @@ function zhu-mount-linuxqa {
 }
 
 function zhu-fetch-from-linuxqa {
-    zhu-mount-linuxqa || return -1
     [[ -z $(which curl) ]] && sudo apt install -y curl
+    
+    zhu-mount-linuxqa 
 
     if [[ -z $(ls /mnt/linuxqa) && -d "$2" ]]; then
         pushd "$2" >/dev/null 
