@@ -1529,7 +1529,7 @@ function zhu-check-xauthority {
 }
 
 function zhu-startx-with-openbox {
-    if [[ ! -z $(which Xorg) ]]; then
+    if [[ ! -z $(pidof Xorg) ]]; then
         read -p "Kill running X server ($(pidof Xorg))? (yes/no): " ans
         if [[ $ans == yes ]]; then
             sudo kill -INT $(pidof Xorg)
