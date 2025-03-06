@@ -1283,7 +1283,11 @@ function zhu-test-unigine-superposition {
     popd >/dev/null 
 }
 
-function zhu-viewperf-install {
+function zhu-install-viewperf-amd64 {
+    if [[ $(uname -m) != "x86_64" ]]; then
+        read -p "Install amd64 based viewperf on $(uname -m) host? (ctrl-c to cancel): " _
+    fi
+
     if [[ ! -e ~/zhutest-workload.d/viewperf2020/viewperf/bin/viewperf ]]; then
         which rsync >/dev/null || sudo apt install -y rsync 
         zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3.tar.gz ~/Downloads/ || return -1
@@ -1299,9 +1303,23 @@ function zhu-viewperf-install {
     fi
 }
 
+function zhu-install-viewperf-aarch64 {
+    if [[ $(uname -m) != "aarch64" ]]; then
+        read -p "Install aarch64 based viewperf on $(uname -m) host? (ctrl-c to cancel): " _
+    fi
+    echo 
+}
+
 function zhu-test-viewperf-no-gui {
     zhu-validate-display || return -1
-    zhu-viewperf-install || return -1
+
+    if [[ $(uname -m) == x86_64 ]]; then
+        zhu-install-viewperf-amd64 || return -1
+    elif [[ $(uname -m) == aarch64 ]]; then
+        zhu-install-viewperf-aarch64 || return -1
+    else
+        return -1
+    fi
 
     pushd ~/zhutest-workload.d/viewperf2020 >/dev/null 
     echo 
@@ -1336,7 +1354,14 @@ function zhu-test-viewperf-no-gui {
 
 function zhu-test-viewperf {
     zhu-validate-display || return -1
-    zhu-viewperf-install || return -1
+   
+    if [[ $(uname -m) == x86_64 ]]; then
+        zhu-install-viewperf-amd64 || return -1
+    elif [[ $(uname -m) == aarch64 ]]; then
+        zhu-install-viewperf-aarch64 || return -1
+    else
+        return -1
+    fi
 
     # Start all viewsets in viewperf GUI
     ~/zhutest-workload.d/viewperf2020/RunViewperf 
@@ -1363,7 +1388,7 @@ function zhu-test-viewperf {
 
 function zhu-test-viewperf-maya-subtest5 {
     zhu-validate-display || return -1
-    zhu-viewperf-install || return -1
+    zhu-install-viewperf-amd64 || return -1
 
     pushd ~/zhutest-workload.d/viewperf2020 >/dev/null
     mkdir -p results/maya-06
