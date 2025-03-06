@@ -1302,6 +1302,7 @@ function zhu-install-viewperf {
         
         pushd ~/Downloads >/dev/null
         tar -zxvf viewperf2020v3.tar.gz
+        mkdir -p ~/zhutest-workload.d
         mv viewperf2020 ~/zhutest-workload.d/viewperf2020
         popd >/dev/null
     fi
@@ -1318,7 +1319,7 @@ function zhu-install-viewperf-aarch64 {
     echo 
 }
 
-function zhu-test-viewperf-no-gui {
+function zhu-test-viewperf {
     zhu-validate-display || return -1
 
     if [[ $(uname -m) == x86_64 ]]; then
