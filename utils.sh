@@ -1492,7 +1492,7 @@ function zhu-startx-with-openbox {
 }
 
 function zhu-check-vncserver {
-    sudo ss -tulpn | grep-E "5900|5901|5902"
+    sudo ss -tulpn | grep -E "5900|5901|5902"
 }
 
 function zhu-start-vnc-server-for-headless-system {
