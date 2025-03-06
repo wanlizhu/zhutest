@@ -1556,8 +1556,15 @@ function zhu-startx-with-openbox {
         chmod +x ~/.xinitrc
     fi
 
-    #screen -dmS xsession startx 
-    startx 
+    screen -dmS xsession startx 
+    sleep 2
+
+    if [[ -z $(pidof Xorg) ]]; then
+        echo "Failed to start Xorg with openbox!"
+        return -1
+    else
+        echo "Xorg ($(pidof Xorg)) is running with openbox"
+    fi
 }
 
 function zhu-check-vncserver {
