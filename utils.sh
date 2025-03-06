@@ -457,23 +457,23 @@ function zhu-mount-linuxqa {
         sudo apt install -y python-is-python3
     fi
 
-    showmount -e linuxqa >/dev/null || {
+    showmount -e linuxqa.nvidia.com >/dev/null || {
         echo "No access to linuxqa"
         return -1
     }
 
     sudo mkdir -p /mnt/linuxqa /mnt/data /mnt/builds /mnt/dvsbuilds
-    [[ -z $(ls /mnt/linuxqa 2>/dev/null) ]] && sudo mount linuxqa:/storage/people /mnt/linuxqa && echo "Mounted /mnt/linuxqa" 
-    [[ -z $(ls /mnt/data 2>/dev/null) ]] && sudo mount linuxqa:/storage/data /mnt/data && echo "Mounted /mnt/data" 
-    [[ -z $(ls /mnt/builds 2>/dev/null) ]] && sudo mount linuxqa:/storage3/builds /mnt/builds && echo "Mounted /mnt/builds" 
-    [[ -z $(ls /mnt/dvsbuilds 2>/dev/null) ]] && sudo mount linuxqa:/storage5/dvsbuilds /mnt/dvsbuilds && echo "Mounted /mnt/dvsbuilds" 
+    sudo mount linuxqa.nvidia.com:/storage/people /mnt/linuxqa && echo "Mounted /mnt/linuxqa" 
+    sudo mount linuxqa.nvidia.com:/storage/data /mnt/data && echo "Mounted /mnt/data" 
+    sudo mount linuxqa.nvidia.com:/storage3/builds /mnt/builds && echo "Mounted /mnt/builds" 
+    sudo mount linuxqa.nvidia.com:/storage5/dvsbuilds /mnt/dvsbuilds && echo "Mounted /mnt/dvsbuilds" 
 
     return 0
 }
 
 function zhu-fetch-from-linuxqa {
     [[ -z $(which curl) ]] && sudo apt install -y curl
-    
+
     zhu-mount-linuxqa 
 
     if [[ -z $(ls /mnt/linuxqa) && -d "$2" ]]; then
