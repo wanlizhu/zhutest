@@ -1556,7 +1556,12 @@ function zhu-startx-with-openbox {
         chmod +x ~/.xinitrc
     fi
 
-    screen -dmS xsession startx 
+    read -e -i yes -p "Start X in detached screen? (yes/no): " ans
+    if [[ $ans == yes ]]; then
+        screen -dmS xsession startx
+    else
+        startx &
+    fi
     sleep 3
 
     if [[ -z $(pidof Xorg) ]]; then
