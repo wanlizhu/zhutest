@@ -2,7 +2,14 @@
 export __GL_SYNC_TO_VBLANK=0
 export vblank_mode=0
 export __GL_DEBUG_BYPASS_ASSERT=c 
-[[ -z $DISPLAY ]] && export DISPLAY=:0
+
+if [[ -z $DISPLAY ]]; then
+    if [[ -e /tmp/.X11-unix/X0 ]]; then 
+        export DISPLAY=:0
+    elif [[ -e /tmp/.X11-unix/X1 ]]; then 
+        export DISPLAY=:1
+    fi
+fi
 
 if [[ $USER == wanliz ]]; then
     export P4CLIENT=wanliz-p4sw-bugfix_main
