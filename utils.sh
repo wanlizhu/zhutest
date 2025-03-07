@@ -148,12 +148,7 @@ function zhu-send-files {
 
 function zhu-validate-display {
     if [[ $(ls /tmp/.X11-unix | wc -l) == 0 ]]; then
-        if [[ -e /mnt/linuxqa/nvt.sh ]]; then
-            export NVTEST_IGNORE_DMESG_REGEXES='.*'
-            /mnt/linuxqa/nvt.sh 3840x2160__runcmd --cmd 'sleep 1000000000' &
-        else
-            echo TODO
-        fi
+        echo TODO
 
         while [[ -z $(pidof Xorg) ]]; do 
             echo "Wait for Xorg to start..."
@@ -1557,7 +1552,7 @@ function zhu-startx-with-openbox {
     fi
 
     sudo sed -i 's/console/anybody/g' /etc/X11/Xwrapper.config
-    
+
     read -e -i yes -p "Start X in detached screen? (yes/no): " ans
     if [[ $ans == yes ]]; then
         screen -dmS xsession startx
