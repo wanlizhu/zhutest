@@ -3,15 +3,18 @@ export __GL_SYNC_TO_VBLANK=0
 export vblank_mode=0
 export __GL_DEBUG_BYPASS_ASSERT=c 
 
-if [[ -z $DISPLAY ]]; then
+if [[ $DISPLAY == *"localhost"* ]]; then
+    # When X11 forwarding is enabled
+    if [[ $(realpath $XAUTHORITY) != $(realpath ~/.Xauthority)]]; then 
+        export XAUTHORITY=~/.Xauthority
+        echo "X11 forwarding is enabled after retry!"
+    fi 
+elif [[ -z $DISPLAY ]]; then
     if [[ -e /tmp/.X11-unix/X0 ]]; then 
         export DISPLAY=:0
     elif [[ -e /tmp/.X11-unix/X1 ]]; then 
         export DISPLAY=:1
     fi
-elif [[ $DISPLAY == *"localhost"* ]]; then
-    # When X11 forwarding is enabled
-    export XAUTHORITY=~/.Xauthority
 fi
 
 if [[ $USER == wanliz ]]; then
