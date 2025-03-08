@@ -1738,8 +1738,12 @@ function zhu-start-vnc-server {
 
 function zhu-enable-x11-forwarding {
     if sudo grep -Eq "^X11Forwarding\s+yes" /etc/ssh/sshd_config; then
-        echo "X11 forwarding is already enabled!"
-        return
+        if sudo grep -Eq "^ForwardX11\s+yes" /etc/ssh/sshd_config; then
+            if sudo grep -Eq "^ForwardX11Trusted\s+yes" /etc/ssh/sshd_config; then
+                echo "X11 forwarding is already enabled!"
+                return
+            fi 
+        fi 
     fi
 
     if ! dpkg -l | grep -q xauth; then
@@ -1747,6 +1751,8 @@ function zhu-enable-x11-forwarding {
     fi
 
     sudo sed -i '/^#*X11Forwarding[[:space:]]/cX11Forwarding yes' /etc/ssh/sshd_config
+    sudo sed -i '/^#*ForwardX11[[:space:]]/cForwardX11 yes' /etc/ssh/sshd_config
+    sudo sed -i '/^#*ForwardX11Trusted[[:space:]]/cForwardX11Trusted yes' /etc/ssh/sshd_config
     sudo systemctl restart ssh
     echo "X11 forwarding enabled!"
 }
