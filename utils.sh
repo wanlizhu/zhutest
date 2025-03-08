@@ -1735,3 +1735,29 @@ function zhu-start-vnc-server {
         zhu-start-vnc-server-for-physical-display
     fi
 }
+
+function zhu-enable-x11-forwarding {
+    if sudo grep -Eq "^X11Forwarding\s+yes" /etc/ssh/sshd_config; then
+        echo "X11 forwarding is already enabled!"
+        return
+    fi
+
+    if ! dpkg -l | grep -q xauth; then
+        sudo apt install -y xauth 
+    fi
+
+    sudo sed -i '/^#*X11Forwarding[[:space:]]/cX11Forwarding yes' /etc/ssh/sshd_config
+    sudo systemctl restart ssh
+    echo "X11 forwarding enabled!"
+}
+
+function zhu-ssh-regen-xauthority {
+    if [[ -z $DISPLAY ]]; then
+        echo "\$DISPLAY is NULL!"
+        return -1
+    fi
+
+    rm ~/.Xauthority
+    xauth generate $DISPLAY . trusted || return -1
+    export XAUTHORITY=~/.Xauthority
+}
