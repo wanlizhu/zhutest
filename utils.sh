@@ -13,12 +13,18 @@ fi
 
 if [[ $DISPLAY == *"localhost"* ]]; then
     # When X11 forwarding is enabled
-        if [[ $(realpath $XAUTHORITY) != $(realpath ~/.Xauthority) ]]; then 
-            export XAUTHORITY=~/.Xauthority
-            echo "Reset \$XAUTHORITY to ~/.Xauthority!"
-        fi 
-        export XAUTHORITY=~/.Xauthority
+    export XAUTHORITY=~/.Xauthority
 fi 
+
+if [[ -z $XAUTHORITY ]]; then
+    if [[ -e ~/.zhurc.xauth ]]; then
+        source ~/.zhurc.xauth
+    fi
+fi
+
+if [[ $XDG_SESSION_TYPE == x11 ]]; then
+    xhost + >/dev/null 2>&1
+fi
 
 if [[ $USER == wanliz ]]; then
     export P4CLIENT=wanliz-p4sw-bugfix_main
@@ -40,14 +46,12 @@ if [[ $USER == wanliz ]]; then
         fi
     fi 
 
-    if [[ -z $(grep "nsight-systems-internal/current/host-linux-x64" ~/.bashrc) && -d ~/nsight-systems-internal/current/host-linux-x64 ]]; then
-        echo "Append Nsight systems to \$PATH"
-        echo "export PATH=\"~/nsight-systems-internal/current/host-linux-x64:\$PATH\"" >> ~/.bashrc
+    if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-systems-internal"; then
+        export PATH="~/nsight-systems-internal/current/host-linux-x64:$PATH" 
     fi
 
-    if [[ -z $(grep "nsight-graphics-internal/current/host/linux-desktop-nomad-x64" ~/.bashrc) && -d ~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64 ]]; then
-        echo "Append Nsight graphics to \$PATH"
-        echo "export PATH=\"~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64:\$PATH\"" >> ~/.bashrc
+    if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-graphics-internal"; then
+        export PATH="~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64:$PATH"
     fi
 fi
 
@@ -1498,43 +1502,50 @@ function zhu-fex-install-nvidia-dso {
 }
 
 function zhu-check-xauthority {
-    # X11 forwarding is enabled
-    if [[ $DISPLAY == *"localhost"* ]]; then
-        export XAUTHORITY=~/.Xauthority
-        chmod 600 ~/.Xauthority
-    else # Run on remote display
-        if [[ -z $(pidof Xorg) ]]; then
-            echo "X server is not running"
+    # Call via SSH session
+    if [[ $XDG_SESSION_TYPE == tty ]]; then
+        # When X11 forwarding is enabled
+        if [[ $DISPLAY == *"localhost"* ]]; then
+            export XAUTHORITY=~/.Xauthority
+            chmod 600 ~/.Xauthority
+        else # When X11 forwarding is NOT enabled
+            if [[ -z $(pidof Xorg) ]]; then
+                echo "X server is not running"
+                return -1
+            fi
+
+            if [[ ! -e ~/.Xauthority ]]; then  
+                active_auth=$(ps aux | grep '[X]org' | grep -oP '(?<=-auth )[^ ]+')
+                if [[ -z $active_auth ]]; then
+                    echo "\"ps aux | grep '[X]org'\" returns no auth path"
+                else
+                    sudo cp $active_auth ~/.Xauthority
+                    sudo chown $USER:$(id -gn) ~/.Xauthority
+                    chmod 600 ~/.Xauthority
+                fi 
+            fi
+
+            if [[ -z $XAUTHORITY && -e ~/.Xauthority ]]; then
+                export XAUTHORITY=~/.Xauthority
+            fi
+        fi
+
+        if [[ -z $(which glxgears) ]]; then
+            sudo apt install -y mesa-utils 
+        fi
+
+        glxgears & 
+        sleep 1
+        if [[ -z $(pidof glxgears) ]]; then
+            echo "$XAUTHORITY is invalid!"
             return -1
         fi
-
-        if [[ ! -e ~/.Xauthority ]]; then  
-            active_auth=$(ps aux | grep '[X]org' | grep -oP '(?<=-auth )[^ ]+')
-            if [[ -z $active_auth ]]; then
-                echo "\"ps aux | grep '[X]org'\" returns no auth path"
-            else
-                sudo cp $active_auth ~/.Xauthority
-                sudo chown $USER:$(id -gn) ~/.Xauthority
-                chmod 600 ~/.Xauthority
-            fi 
-        fi
-
-        if [[ -z $XAUTHORITY && -e ~/.Xauthority ]]; then
-            export XAUTHORITY=~/.Xauthority
-        fi
-    fi
-
-    if [[ -z $(which glxgears) ]]; then
-        sudo apt install -y mesa-utils 
-    fi
-
-    glxgears & 
-    sleep 1
-    if [[ -z $(pidof glxgears) ]]; then
-        echo "$XAUTHORITY is invalid!"
-        return -1
-    fi
-    kill -INT $(pidof glxgears)
+        kill -INT $(pidof glxgears)
+    elif [[ $XDG_SESSION_TYPE == x11 ]]; then # Call via local display
+        rm -rf ~/.zhurc.xauth
+        echo "export XAUTHORITY=$XAUTHORITY" > ~/.zhurc.xauth
+        xhost +
+    fi 
 }
 
 function zhu-startx-with-openbox {
