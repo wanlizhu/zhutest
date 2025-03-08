@@ -1299,18 +1299,20 @@ function zhu-test-unigine-superposition {
 }
 
 function zhu-install-viewperf {
-    if [[ $(uname -m) != "x86_64" ]]; then
-        read -p "Install amd64 based viewperf on $(uname -m) host? (ctrl-c to cancel): " _
-    fi
-
     if [[ ! -e ~/zhutest-workload.d/viewperf2020/viewperf/bin/viewperf ]]; then
         which rsync >/dev/null || sudo apt install -y rsync 
-        zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3.tar.gz ~/Downloads/ || return -1
-        
         pushd ~/Downloads >/dev/null
-        tar -zxvf viewperf2020v3.tar.gz
-        mkdir -p ~/zhutest-workload.d
-        mv viewperf2020 ~/zhutest-workload.d/viewperf2020
+        if [[ $(uname -m) == "x86_64" ]]; then
+            zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3.tar.gz ~/Downloads/ || return -1
+            tar -zxvf viewperf2020v3.tar.gz
+            mkdir -p ~/zhutest-workload.d
+            mv viewperf2020 ~/zhutest-workload.d/viewperf2020
+        elif [[ $(uname -m) == "aarch64" ]]; then
+            zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3-aarch64-rev2.tar.gz ~/Downloads/ || return -1
+            tar -zxvf viewperf2020v3-aarch64-rev2.tar.gz
+            mkdir -p ~/zhutest-workload.d
+            mv viewperf2020 ~/zhutest-workload.d/viewperf2020
+        fi
         popd >/dev/null
     fi
 
@@ -1319,23 +1321,9 @@ function zhu-install-viewperf {
     fi
 }
 
-function zhu-install-viewperf-aarch64 {
-    if [[ $(uname -m) != "aarch64" ]]; then
-        read -p "Install aarch64 based viewperf on $(uname -m) host? (ctrl-c to cancel): " _
-    fi
-    echo 
-}
-
 function zhu-test-viewperf {
     zhu-validate-display || return -1
-
-    if [[ $(uname -m) == x86_64 ]]; then
-        zhu-install-viewperf || return -1
-    elif [[ $(uname -m) == aarch64 ]]; then
-        zhu-install-viewperf-aarch64 || return -1
-    else
-        return -1
-    fi
+    zhu-install-viewperf || return -1 
 
     pushd ~/zhutest-workload.d/viewperf2020 >/dev/null 
     if [[ -z "$1" || "$1" == *"catia"* ]]; then
@@ -1377,14 +1365,7 @@ function zhu-test-viewperf {
 
 function zhu-test-viewperf-in-gui {
     zhu-validate-display || return -1
-   
-    if [[ $(uname -m) == x86_64 ]]; then
-        zhu-install-viewperf || return -1
-    elif [[ $(uname -m) == aarch64 ]]; then
-        zhu-install-viewperf-aarch64 || return -1
-    else
-        return -1
-    fi
+    zhu-install-viewperf || return -1 
 
     # Start all viewsets in viewperf GUI
     ~/zhutest-workload.d/viewperf2020/RunViewperf 
@@ -1411,14 +1392,7 @@ function zhu-test-viewperf-in-gui {
 
 function zhu-test-viewperf-maya-subtest5 {
     zhu-validate-display || return -1
-    
-    if [[ $(uname -m) == x86_64 ]]; then
-        zhu-install-viewperf || return -1
-    elif [[ $(uname -m) == aarch64 ]]; then
-        zhu-install-viewperf-aarch64 || return -1
-    else
-        return -1
-    fi
+    zhu-install-viewperf || return -1 
 
     pushd ~/zhutest-workload.d/viewperf2020 >/dev/null
     mkdir -p results/maya-06
@@ -1773,4 +1747,30 @@ function zhu-enable-x11-forwarding {
     sudo sed -i '/^#*ForwardX11Trusted[[:space:]]/cForwardX11Trusted yes' /etc/ssh/sshd_config
     sudo systemctl restart ssh
     echo "X11 forwarding enabled!"
+}
+
+function zhu-install-quake2rtx {
+    if [[ ! -d ~/zhutest-workload.d/quake2rtx-1.6.0 ]]; then
+        pushd ~/Downloads >/dev/null 
+        if [[ $(uname -m) == "x86_64" ]]; then
+            zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/q2rtx/builds/1.6.0-701cf31/q2rtx-1.6.0.tar.gz ~/Downloads/ || return -1
+            tar -zxvf q2rtx-1.6.0.tar.gz 
+            mkdir -p ~/zhutest-workload.d
+            mv q2rtx ~/zhutest-workload.d/quake2rtx-1.6.0
+        elif [[ $(uname -m) == "aarch64" ]]; then
+            zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/q2rtx/builds/1.6.0-701cf31/q2rtx-1.6.0-aarch64.tar.gz ~/Downloads/ || return -1
+            tar -zxvf q2rtx-1.6.0-aarch64.tar.gz 
+            mkdir -p ~/zhutest-workload.d
+            mv q2rtx ~/zhutest-workload.d/quake2rtx-1.6.0
+        fi
+        popd >/dev/null 
+    fi
+}
+
+function zhu-test-quake2rtx {
+    zhu-install-quake2rtx || return -1
+    rm -rf ~/.quake2rtx
+    pushd ~/zhutest-workload.d/quake2rtx-1.6.0 >/dev/null 
+
+    popd >/dev/null 
 }
