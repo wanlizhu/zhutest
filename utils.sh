@@ -3,19 +3,25 @@ export __GL_SYNC_TO_VBLANK=0
 export vblank_mode=0
 export __GL_DEBUG_BYPASS_ASSERT=c 
 
-if [[ $DISPLAY == *"localhost"* ]]; then
-    # When X11 forwarding is enabled
-    if [[ $(realpath $XAUTHORITY) != $(realpath ~/.Xauthority) ]]; then 
-        export XAUTHORITY=~/.Xauthority
-        echo "X11 forwarding is enabled after retry!"
-    fi 
-elif [[ -z $DISPLAY ]]; then
+if [[ -z $DISPLAY ]]; then
     if [[ -e /tmp/.X11-unix/X0 ]]; then 
         export DISPLAY=:0
     elif [[ -e /tmp/.X11-unix/X1 ]]; then 
         export DISPLAY=:1
     fi
 fi
+
+if [[ $DISPLAY == *"localhost"* ]]; then
+    # When X11 forwarding is enabled
+        if [[ $(realpath $XAUTHORITY) != $(realpath ~/.Xauthority) ]]; then 
+            export XAUTHORITY=~/.Xauthority
+            echo "Reset \$XAUTHORITY to ~/.Xauthority!"
+        fi 
+fi 
+
+if [[ -z $XAUTHORITY ]]; then 
+    export XAUTHORITY=~/.Xauthority
+fi 
 
 if [[ $USER == wanliz ]]; then
     export P4CLIENT=wanliz-p4sw-bugfix_main
@@ -45,14 +51,6 @@ if [[ $USER == wanliz ]]; then
     if [[ -z $(grep "nsight-graphics-internal/current/host/linux-desktop-nomad-x64" ~/.bashrc) && -d ~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64 ]]; then
         echo "Append Nsight graphics to \$PATH"
         echo "export PATH=\"~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64:\$PATH\"" >> ~/.bashrc
-    fi
-
-    if [[ -z $(grep "export XAUTHORITY=" ~/.bashrc) ]]; then
-        if [[ $XDG_SESSION_TYPE == x11 ]]; then
-            echo "Enable remote users to run GUI applications"
-            echo "export XAUTHORITY=$XAUTHORITY" >> ~/.bashrc
-            echo "xhost +si:localuser:\$USER >/dev/null" >> ~/.bashrc
-        fi
     fi
 fi
 
