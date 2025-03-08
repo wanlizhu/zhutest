@@ -9,6 +9,9 @@ if [[ -z $DISPLAY ]]; then
     elif [[ -e /tmp/.X11-unix/X1 ]]; then 
         export DISPLAY=:1
     fi
+elif [[ $DISPLAY == *"localhost"* ]]; then
+    # When X11 forwarding is enabled
+    export XAUTHORITY=~/.Xauthority
 fi
 
 if [[ $USER == wanliz ]]; then
@@ -1497,24 +1500,30 @@ function zhu-fex-install-nvidia-dso {
 }
 
 function zhu-check-xauthority {
-    if [[ -z $(pidof Xorg) ]]; then
-        echo "X server is not running"
-        return -1
-    fi
-
-    if [[ ! -e ~/.Xauthority ]]; then  
-        active_auth=$(ps aux | grep '[X]org' | grep -oP '(?<=-auth )[^ ]+')
-        if [[ -z $active_auth ]]; then
-            echo "\"ps aux | grep '[X]org'\" returns no auth path"
-        else
-            sudo cp $active_auth ~/.Xauthority
-            sudo chown $USER:$(id -gn) ~/.Xauthority
-            chmod 666 ~/.Xauthority
-        fi 
-    fi
-
-    if [[ -z $XAUTHORITY && -e ~/.Xauthority ]]; then
+    # X11 forwarding is enabled
+    if [[ $DISPLAY == *"localhost"* ]]; then
         export XAUTHORITY=~/.Xauthority
+        chmod 600 ~/.Xauthority
+    else # Run on remote display
+        if [[ -z $(pidof Xorg) ]]; then
+            echo "X server is not running"
+            return -1
+        fi
+
+        if [[ ! -e ~/.Xauthority ]]; then  
+            active_auth=$(ps aux | grep '[X]org' | grep -oP '(?<=-auth )[^ ]+')
+            if [[ -z $active_auth ]]; then
+                echo "\"ps aux | grep '[X]org'\" returns no auth path"
+            else
+                sudo cp $active_auth ~/.Xauthority
+                sudo chown $USER:$(id -gn) ~/.Xauthority
+                chmod 600 ~/.Xauthority
+            fi 
+        fi
+
+        if [[ -z $XAUTHORITY && -e ~/.Xauthority ]]; then
+            export XAUTHORITY=~/.Xauthority
+        fi
     fi
 
     if [[ -z $(which glxgears) ]]; then
@@ -1755,15 +1764,4 @@ function zhu-enable-x11-forwarding {
     sudo sed -i '/^#*ForwardX11Trusted[[:space:]]/cForwardX11Trusted yes' /etc/ssh/sshd_config
     sudo systemctl restart ssh
     echo "X11 forwarding enabled!"
-}
-
-function zhu-ssh-regen-xauthority {
-    if [[ -z $DISPLAY ]]; then
-        echo "\$DISPLAY is NULL!"
-        return -1
-    fi
-
-    rm -rf ~/.Xauthority
-    xauth generate $DISPLAY . trusted || return -1
-    export XAUTHORITY=~/.Xauthority
 }
