@@ -1757,7 +1757,7 @@ function zhu-ssh-regen-xauthority {
         return -1
     fi
 
-    rm ~/.Xauthority
+    rm -rf ~/.Xauthority
     xauth generate $DISPLAY . trusted || return -1
     export XAUTHORITY=~/.Xauthority
 }
