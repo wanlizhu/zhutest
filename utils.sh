@@ -17,10 +17,7 @@ if [[ $DISPLAY == *"localhost"* ]]; then
             export XAUTHORITY=~/.Xauthority
             echo "Reset \$XAUTHORITY to ~/.Xauthority!"
         fi 
-fi 
-
-if [[ -z $XAUTHORITY ]]; then 
-    export XAUTHORITY=~/.Xauthority
+        export XAUTHORITY=~/.Xauthority
 fi 
 
 if [[ $USER == wanliz ]]; then
