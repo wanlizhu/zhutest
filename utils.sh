@@ -5,7 +5,7 @@ export __GL_DEBUG_BYPASS_ASSERT=c
 
 if [[ $DISPLAY == *"localhost"* ]]; then
     # When X11 forwarding is enabled
-    if [[ $(realpath $XAUTHORITY) != $(realpath ~/.Xauthority)]]; then 
+    if [[ $(realpath $XAUTHORITY) != $(realpath ~/.Xauthority) ]]; then 
         export XAUTHORITY=~/.Xauthority
         echo "X11 forwarding is enabled after retry!"
     fi 
