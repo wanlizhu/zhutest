@@ -1767,6 +1767,37 @@ function zhu-install-quake2rtx {
     fi
 }
 
+function zhu-share-folder-via-nfs {
+    if [[ ! -d "$1" ]]; then
+        echo "Folder $1 doesn't exist!"
+        return -1
+    fi
+
+    if [[ -z $(dpkg -l | grep "^ii  openbox ") ]]; then
+        sudo apt install -y nfs-kernel-server
+    fi
+
+    if [[ -e /etc/exports ]]; then 
+        if sudo grep -q "$1" /etc/exports; then
+            echo "Found \"$1\" in /etc/exports"
+            echo "Aborting!"
+            return 
+        else
+            echo "$1 *(rw,sync,no_subtree_check)" | sudo tee -a /etc/exports
+        fi
+    else
+        echo "$1 *(rw,sync,no_subtree_check)" | sudo tee /etc/exports
+    fi
+
+    sudo cat /etc/exportfs
+    read -p "Press [ENTER] to continue: " _
+
+    sudo exportfs -a
+    sudo systemctl restart nfs-kernel-server
+    sudo systemctl enable nfs-kernel-server 
+    sudo exportfs -v
+}
+
 function zhu-test-quake2rtx {
     zhu-install-quake2rtx || return -1
     rm -rf ~/.quake2rtx
