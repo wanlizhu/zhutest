@@ -1203,11 +1203,16 @@ function zhu-fex-sudo {
 
     ubuntu=$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)
     rootfs="$HOME/.fex-emu/RootFS/$ubuntu"
-    
-    if [[ -e $rootfs$1 ]]; then
-        sudo FEX_ROOTFS=$rootfs FEXInterpreter $rootfs$@
+    program=$1
+    shift  
+
+    if [[ ! -z $program && -e $rootfs$program ]]; then
+        sudo FEX_ROOTFS=$rootfs FEXInterpreter $rootfs$program "$@"
+    elif [[ ! -z $program && ! "$program" =~ "/" ]]; then
+        program=$(find $rootfs -type f -name $program)
+        sudo FEX_ROOTFS=$rootfs FEXInterpreter $rootfs$program "$@"
     else
-        echo "$1 doesn't exist in $rootfs"
+        echo "$program doesn't exist in $rootfs"
         return -1
     fi
 }
