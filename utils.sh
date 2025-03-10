@@ -986,16 +986,29 @@ function zhu-enable-cpu-cores-all {
 }
 
 function zhu-install-fex {
-    if [[ -z $(which FEXInterpreter) ]]; then
-        sudo apt update
-        sudo apt install -y python3 python3-venv ninja-build \
-            libepoxy-dev libsdl2-dev libssl-dev libglib2.0-dev \
-            libpixman-1-dev libslirp-dev debootstrap git
-        git clone --depth 1 https://github.com/FEX-Emu/FEX.git ~/FEX.git
-        pushd ~/FEX.git >/dev/null 
-        ./Scripts/InstallFEX.py 
-        popd >/dev/null 
+    if [[ ! -z $(which FEXInterpreter) ]]; then
+        return
     fi
+
+    sudo apt update
+    sudo apt install -y python3 python3-venv python3-pip \
+        libepoxy-dev libstdc++-12-dev libsdl2-dev libssl-dev libglib2.0-dev \
+        libpixman-1-dev libslirp-dev debootstrap git nasm \
+        ninja-build build-essential clang lld \
+        xxhash libxxhash-dev \
+        qtbase5-dev qt5-qmake qml-module-qtquick-controls qml-module-qtquick-controls2 qml-module-qtquick-dialogs qml-module-qtquick-layouts qtdeclarative5-dev qtquickcontrols2-5-dev
+    git clone --recursive https://github.com/FEX-Emu/FEX.git ~/FEX.git || return -1
+    ## FEX installed by this script can't be executed by root
+    ## Build and install locally if you want root to use it 
+    #~/FEX.git/Scripts/InstallFEX.py 
+
+    mkdir ~/FEX.git/build 
+    pushd ~/FEX.git/build >/dev/null 
+    cmake -GNinja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release .. &&
+    ninja -j$(nproc) &&
+    sudo ninja install &&
+    FEXRootFSFetcher &&
+    popd >/dev/null 
 }
 
 function zhu-disable-wayland {
