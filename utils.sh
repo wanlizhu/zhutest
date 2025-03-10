@@ -508,6 +508,14 @@ function zhu-sync {
         git config --global user.name 'Wanli Zhu'
     fi
 
+    if grep -q '://github.com/wanlizhu' .git/config; then
+        read -e -i yes -p "Inject login credential into URL of $(dirname $(pwd))? (yes/no): " ans
+        if [[ $ans == yes ]]; then
+            github_token=$(zhu-decrypt 'U2FsdGVkX19LlJjrMCdfxGhU6d+rsxF4IhqaohiteKeVwM0WHGsCPL1z3kHo/xoH07+Qgf5yi9genmTamuF01g==')
+            sed -i "s|://github.com/wanlizhu|://wanlizhu:$github_token@github.com/wanlizhu|g" .git/config
+        fi
+    fi
+
     if git diff --quiet && git diff --cached --quiet; then # No local changes
         git pull
     else
@@ -625,12 +633,12 @@ function zhu-opengl-gpufps {
 }
 
 function zhu-encrypt {
-    read -s -p "Password: " passwd 
+    read -s -p "Zhu Encrypt Password: " passwd 
     echo -n "$1" | openssl enc -aes-256-cbc -pbkdf2 -iter 10000 -salt -base64 -A -pass "pass:${passwd}" 
 }
 
 function zhu-decrypt {
-    read -s -p "Password: " passwd 
+    read -s -p "Zhu Decrypt Password: " passwd 
     echo -n "$1" | openssl enc -d -aes-256-cbc -pbkdf2 -iter 10000 -salt -base64 -A -pass "pass:${passwd}" 
 }
 
