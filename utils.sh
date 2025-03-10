@@ -509,7 +509,7 @@ function zhu-sync {
     fi
 
     if grep -q '://github.com/wanlizhu' .git/config; then
-        read -e -i yes -p "Inject login credential into URL of $(dirname $(pwd))? (yes/no): " ans
+        read -e -i yes -p "Inject login credential into URL (yes/no): " ans
         if [[ $ans == yes ]]; then
             github_token=$(zhu-decrypt 'U2FsdGVkX19LlJjrMCdfxGhU6d+rsxF4IhqaohiteKeVwM0WHGsCPL1z3kHo/xoH07+Qgf5yi9genmTamuF01g==')
             sed -i "s|://github.com/wanlizhu|://wanlizhu:$github_token@github.com/wanlizhu|g" .git/config
@@ -1010,7 +1010,7 @@ function zhu-install-fex {
         libepoxy-dev libstdc++-12-dev libsdl2-dev libssl-dev libglib2.0-dev \
         libpixman-1-dev libslirp-dev debootstrap git nasm \
         ninja-build build-essential clang lld \
-        xxhash libxxhash-dev \
+        xxhash libxxhash-dev patchelf\
         qtbase5-dev qt5-qmake qml-module-qtquick-controls qml-module-qtquick-controls2 qml-module-qtquick-dialogs qml-module-qtquick-layouts qtdeclarative5-dev qtquickcontrols2-5-dev
     git clone --recursive https://github.com/FEX-Emu/FEX.git ~/FEX.git || return -1
     ## FEX installed by this script can't be executed by root
@@ -1218,24 +1218,40 @@ function zhu-fex-sudo {
 
     ubuntu=$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)
     rootfs="$HOME/.fex-emu/RootFS/$ubuntu"
-    program=$1
-    shift  
 
-    if [[ ! -z $program && -e $rootfs$program ]]; then
-        program=$rootfs$program
-    elif [[ ! -z $program && ! "$program" =~ "/" ]]; then
-        program=$(find $rootfs/usr/bin -type f -executable -name $program)
+    if [[ -z $1 ]]; then
+        read -p "chroot to $rootfs? (yes/no): " ans
+        if [[ $ans == yes ]]; then
+            pushd $rootfs >/dev/null 
+            if [[ ! -e ./chroot.py ]]; then
+                wget https://raw.githubusercontent.com/FEX-Emu/RootFS/refs/heads/main/Scripts/chroot.py 
+                chmod +x ./chroot.py 
+            fi
+            if [[ -z $(which patchelf) ]]; then
+                sudo apt install -y patchelf
+            fi
+            ./chroot.py chroot 
+            popd >/dev/null 
+        fi
     else
-        program=''
-    fi
+        program=$1
+        shift  
+        if [[ ! -z $program && -e $rootfs$program ]]; then
+            program=$rootfs$program
+        elif [[ ! -z $program && ! "$program" =~ "/" ]]; then
+            program=$(find $rootfs/usr/bin -type f -executable -name $program)
+        else
+            program=''
+        fi
 
-    if [[ -e $program ]]; then
-        echo "FEX_ROOTFS=$rootfs FEXInterpreter $program $@"
-        read -p "Press [ENTER] to continue: " _
-        sudo FEX_ROOTFS=$rootfs FEXInterpreter $program "$@"
-    else
-        echo "$program doesn't exist in $rootfs"
-        return -1
+        if [[ -e $program ]]; then
+            echo "FEX_ROOTFS=$rootfs FEXInterpreter $program $@"
+            read -p "Press [ENTER] to continue: " _
+            sudo FEX_ROOTFS=$rootfs FEXInterpreter $program "$@"
+        else
+            echo "$program doesn't exist in $rootfs"
+            return -1
+        fi
     fi
 }
 
