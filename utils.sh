@@ -507,6 +507,9 @@ function zhu-sync {
     if [[ -z $(git config --global user.name) ]]; then
         git config --global user.name 'Wanli Zhu'
     fi
+    if [[ -z $(git config --global pull.rebase) ]]; then
+        git config --global pull.rebase false # merge
+    fi
 
     if grep -q '://github.com/wanlizhu' .git/config; then
         read -e -i yes -p "Inject login credential into URL (yes/no): " ans
@@ -1217,11 +1220,13 @@ function zhu-install-vscode {
         return -1
     fi
 
-    sudo apt-get install wget gpg
-    wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/packages.microsoft.gpg
-    sudo install -D -o root -g root -m 644 /tmp/packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
-    echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
-    rm -f /tmp/packages.microsoft.gpg
+    if [[ ! -e /etc/apt/sources.list.d/vscode.list ]]; then 
+        sudo apt-get install wget gpg
+        wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/packages.microsoft.gpg
+        sudo install -D -o root -g root -m 644 /tmp/packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+        echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
+        rm -f /tmp/packages.microsoft.gpg
+    fi 
 
     sudo apt install apt-transport-https
     sudo apt update
