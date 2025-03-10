@@ -509,10 +509,15 @@ function zhu-sync {
     fi
 
     if grep -q '://github.com/wanlizhu' .git/config; then
-        read -e -i yes -p "Inject login credential into URL of $(dirname $(pwd))? (yes/no): " ans
+        read -e -i yes -p "Inject login credential into URL (yes/no): " ans
         if [[ $ans == yes ]]; then
             github_token=$(zhu-decrypt 'U2FsdGVkX19LlJjrMCdfxGhU6d+rsxF4IhqaohiteKeVwM0WHGsCPL1z3kHo/xoH07+Qgf5yi9genmTamuF01g==')
-            sed -i "s|://github.com/wanlizhu|://wanlizhu:$github_token@github.com/wanlizhu|g" .git/config
+            if [[ $(uname -o) == Darwin ]]; then
+                # macOS uses BSD sed
+                sed -i "" "s|://github.com/wanlizhu|://wanlizhu:$github_token@github.com/wanlizhu|g" .git/config
+            else # Linux uses GNU sed
+                sed -i "s|://github.com/wanlizhu|://wanlizhu:$github_token@github.com/wanlizhu|g" .git/config
+            fi 
         fi
     fi
 
@@ -1010,7 +1015,7 @@ function zhu-install-fex {
         libepoxy-dev libstdc++-12-dev libsdl2-dev libssl-dev libglib2.0-dev \
         libpixman-1-dev libslirp-dev debootstrap git nasm \
         ninja-build build-essential clang lld \
-        xxhash libxxhash-dev \
+        xxhash libxxhash-dev patchelf\
         qtbase5-dev qt5-qmake qml-module-qtquick-controls qml-module-qtquick-controls2 qml-module-qtquick-dialogs qml-module-qtquick-layouts qtdeclarative5-dev qtquickcontrols2-5-dev
     git clone --recursive https://github.com/FEX-Emu/FEX.git ~/FEX.git || return -1
     ## FEX installed by this script can't be executed by root
@@ -1205,10 +1210,76 @@ function zhu-fetch-from-data-server {
     sshpass -p "$passwd" rsync -ah --progress $remote:"$1" "$2"
 }
 
+function zhu-install-vscode {
+    if [[ ! -z $(which code) ]]; then
+        which code
+        echo "vscode has already installed!"
+        return -1
+    fi
+
+    sudo apt-get install wget gpg
+    wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/packages.microsoft.gpg
+    sudo install -D -o root -g root -m 644 /tmp/packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+    echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
+    rm -f /tmp/packages.microsoft.gpg
+
+    sudo apt install apt-transport-https
+    sudo apt update
+    sudo apt install code # or code-insiders
+}
+
 function zhu-rebuild-dpkg-database {
     sudo rm -rf /var/lib/dpkg/*
     sudo apt-get install --reinstall dpkg
     sudo apt update && sudo apt upgrade -y
+}
+
+function zhu-fex-chroot {
+    if [[ -z $(which jq) ]]; then
+        sudo apt install -y jq 
+    fi 
+
+    ubuntu=$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)
+    rootfs="$HOME/.fex-emu/RootFS/$ubuntu"
+
+    pushd $rootfs >/dev/null 
+    if [[ ! -e ./chroot.py ]]; then
+        wget https://raw.githubusercontent.com/FEX-Emu/RootFS/refs/heads/main/Scripts/chroot.py 
+        chmod +x ./chroot.py 
+    fi
+    if [[ -z $(which patchelf) ]]; then
+        sudo apt install -y patchelf
+    fi
+    if [[ $(systemctl is-active apparmor) == active ]]; then
+        sudo systemctl stop apparmor
+        sudo systemctl disable apparmor
+        sudo apt purge apparmor
+    fi 
+    ./chroot.py chroot 
+    popd >/dev/null 
+}
+
+function zhu-fex-chroot-config {
+    uname -m >/dev/null 2>&1
+    if [[ $(uname -m) != "x86_64" ]]; then
+        echo "Run this function in FEX started by chroot!"
+        return -1
+    fi
+    if [[ -e /.zhurc.chroot.config.success ]]; then
+        echo "This rootfs has been configured at $(cat /.zhurc.chroot.config.success)"
+        read -e -i yes -p "Force re-configure? (yes/no): " ans
+        if [[ $ans == yes ]]; then
+            rm -rf /.zhurc.chroot.config.success
+        fi
+    fi 
+
+    if [[ -e /.zhurc.chroot.config.success ]]; then
+        return 
+    fi
+
+    # TODO append apt source and /etc/resolv.conf from host
+    # TODO install sudo, bsdutils, dbus-x11, vim
+    # TODO reinstall passwd adduser, util-linux, mount, bubblewrap
 }
 
 function zhu-fex-sudo {
@@ -1218,24 +1289,31 @@ function zhu-fex-sudo {
 
     ubuntu=$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)
     rootfs="$HOME/.fex-emu/RootFS/$ubuntu"
-    program=$1
-    shift  
 
-    if [[ ! -z $program && -e $rootfs$program ]]; then
-        program=$rootfs$program
-    elif [[ ! -z $program && ! "$program" =~ "/" ]]; then
-        program=$(find $rootfs/usr/bin -type f -executable -name $program)
+    if [[ -z $1 ]]; then
+        read -p "chroot to $rootfs? (yes/no): " ans
+        if [[ $ans == yes ]]; then
+            zhu-fex-chroot 
+        fi
     else
-        program=''
-    fi
+        program=$1
+        shift  
+        if [[ ! -z $program && -e $rootfs$program ]]; then
+            program=$rootfs$program
+        elif [[ ! -z $program && ! "$program" =~ "/" ]]; then
+            program=$(find $rootfs/usr/bin -type f -executable -name $program)
+        else
+            program=''
+        fi
 
-    if [[ -e $program ]]; then
-        echo "FEX_ROOTFS=$rootfs FEXInterpreter $program $@"
-        read -p "Press [ENTER] to continue: " _
-        sudo FEX_ROOTFS=$rootfs FEXInterpreter $program "$@"
-    else
-        echo "$program doesn't exist in $rootfs"
-        return -1
+        if [[ -e $program ]]; then
+            echo "FEX_ROOTFS=$rootfs FEXInterpreter $program $@"
+            read -p "Press [ENTER] to continue: " _
+            sudo FEX_ROOTFS=$rootfs FEXInterpreter $program "$@"
+        else
+            echo "$program doesn't exist in $rootfs"
+            return -1
+        fi
     fi
 }
 
