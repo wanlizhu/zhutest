@@ -512,7 +512,12 @@ function zhu-sync {
         read -e -i yes -p "Inject login credential into URL (yes/no): " ans
         if [[ $ans == yes ]]; then
             github_token=$(zhu-decrypt 'U2FsdGVkX19LlJjrMCdfxGhU6d+rsxF4IhqaohiteKeVwM0WHGsCPL1z3kHo/xoH07+Qgf5yi9genmTamuF01g==')
-            sed -i "s|://github.com/wanlizhu|://wanlizhu:$github_token@github.com/wanlizhu|g" .git/config
+            if [[ $(uname -o) == Darwin ]]; then
+                # macOS uses BSD sed
+                sed -i "" "s|://github.com/wanlizhu|://wanlizhu:$github_token@github.com/wanlizhu|g" .git/config
+            else # Linux uses GNU sed
+                sed -i "s|://github.com/wanlizhu|://wanlizhu:$github_token@github.com/wanlizhu|g" .git/config
+            fi 
         fi
     fi
 
