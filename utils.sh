@@ -501,6 +501,13 @@ function zhu-fetch-from-linuxqa {
 
 function zhu-sync {
     pushd ~/zhutest >/dev/null
+    if [[ -z $(git config --global user.email) ]]; then
+        git config --global user.email $(zhu-decrypt 'U2FsdGVkX19KUswOw0hyRRQtNQ6m7bcXF3aactpxMAXPGCn773g12rgFZ1BH6EIm')
+    fi
+    if [[ -z $(git config --global user.name) ]]; then
+        git config --global user.name 'Wanli Zhu'
+    fi
+
     if git diff --quiet && git diff --cached --quiet; then # No local changes
         git pull
     else
