@@ -1207,9 +1207,16 @@ function zhu-fex-sudo {
     shift  
 
     if [[ ! -z $program && -e $rootfs$program ]]; then
-        sudo FEX_ROOTFS=$rootfs FEXInterpreter $rootfs$program "$@"
+        program=$rootfs$program
     elif [[ ! -z $program && ! "$program" =~ "/" ]]; then
         program=$(find $rootfs/usr/bin -type f -executable -name $program)
+    else
+        program=''
+    fi
+
+    if [[ -e $program ]]; then
+        echo "FEX_ROOTFS=$rootfs FEXInterpreter $program $@"
+        read -p "Press [ENTER] to continue: " _
         sudo FEX_ROOTFS=$rootfs FEXInterpreter $program "$@"
     else
         echo "$program doesn't exist in $rootfs"
