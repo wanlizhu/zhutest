@@ -1196,12 +1196,20 @@ function zhu-rebuild-dpkg-database {
     sudo apt update && sudo apt upgrade -y
 }
 
-function zhu-fex-run {
-    [[ -z $(which jq) ]] && sudo apt install -y jq 
-    rootfs="$HOME/.fex-emu/RootFS/$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)"
-    if [[ -d $rootfs ]]; then 
-        sudo chroot $rootfs /usr/bin/bash -c "$@"
+function zhu-fex-sudo {
+    if [[ -z $(which jq) ]]; then
+        sudo apt install -y jq 
     fi 
+
+    ubuntu=$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)
+    rootfs="$HOME/.fex-emu/RootFS/$ubuntu"
+    
+    if [[ -e $rootfs$1 ]]; then
+        sudo FEX_ROOTFS=$rootfs FEXInterpreter $rootfs$@
+    else
+        echo "$1 doesn't exist in $rootfs"
+        return -1
+    fi
 }
 
 function zhu-fex-fetch-packages {
