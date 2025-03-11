@@ -1320,6 +1320,7 @@ function zhu-chroot-in-fex {
             if [[ $ans == yes ]]; then
                 rm -rf ./chroot.py  
                 cp -f  ~/zhutest/src/chroot.py .
+                chmod +x ./chroot.py
             fi
         fi
     fi
