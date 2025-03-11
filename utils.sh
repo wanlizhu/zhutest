@@ -1239,6 +1239,11 @@ function zhu-rebuild-dpkg-database {
     sudo apt update && sudo apt upgrade -y
 }
 
+function zhu-bypass-steam-client-checks {
+   # TODO https://gitlab.com/Mr_Goldberg/goldberg_emulator
+   echo "https://gitlab.com/Mr_Goldberg/goldberg_emulator"
+}
+
 function zhu-fex-chroot {
     if [[ -z $(which jq) ]]; then
         sudo apt install -y jq 
@@ -1252,14 +1257,30 @@ function zhu-fex-chroot {
         wget https://raw.githubusercontent.com/FEX-Emu/RootFS/refs/heads/main/Scripts/chroot.py 
         chmod +x ./chroot.py 
     fi
+
     if [[ -z $(which patchelf) ]]; then
         sudo apt install -y patchelf
     fi
+
     if [[ $(systemctl is-active apparmor) == active ]]; then
         sudo systemctl stop apparmor
         sudo systemctl disable apparmor
         sudo apt purge apparmor
     fi 
+
+    while IFS= read -r line; do 
+        if ! grep -q "$line" $rootfs/etc/resolv.conf; then
+            echo "line" >> $rootfs/etc/resolv.conf
+        fi
+    done < /etc/resolv.conf
+
+    if [[ -e /etc/apt/sources.list.d/ubuntu.sources ]]; then
+        mkdir -p $rootfs/etc/apt/sources.list.d
+        echo "" >> $rootfs/etc/apt/sources.list.d/ubuntu.sources
+        echo "# Imported from native arm64 filesystem" >> $rootfs/etc/apt/sources.list.d/ubuntu.sources
+        cat /etc/apt/sources.list.d/ubuntu.sources >> $rootfs/etc/apt/sources.list.d/ubuntu.sources
+    fi 
+
     ./chroot.py chroot 
     popd >/dev/null 
 }
@@ -1270,6 +1291,11 @@ function zhu-fex-chroot-config {
         echo "Run this function in FEX started by chroot!"
         return -1
     fi
+    if [[ $UID != 0 ]]; then
+        echo "Must run as root!"
+        return -1
+    fi
+
     if [[ -e /.zhurc.chroot.config.success ]]; then
         echo "This rootfs has been configured at $(cat /.zhurc.chroot.config.success)"
         read -e -i yes -p "Force re-configure? (yes/no): " ans
@@ -1282,9 +1308,26 @@ function zhu-fex-chroot-config {
         return 
     fi
 
-    # TODO append apt source and /etc/resolv.conf from host
-    # TODO install sudo, bsdutils, dbus-x11, vim
-    # TODO reinstall passwd adduser, util-linux, mount, bubblewrap
+    apt install -y sudo
+    apt install -y bsdutils
+    apt install -y dbus-x11
+    apt install -y vim 
+    apt install -y libprotobuf-dev 
+
+    apt reinstall -y passwd
+    apt reinstall -y util-linux
+    apt reinstall -y mount
+    apt reinstall -y bubblewrap
+
+    if [[ ! -d /home/wanliz ]]; then 
+        echo "Add new user: wanliz in FEX"
+        adduser wanliz
+    fi 
+
+    read -e -i yes -p "Bypass steam client checks? (yes/no): " ans
+    if [[ $ans == yes ]]; then
+        zhu-bypass-steam-client-checks
+    fi
 }
 
 function zhu-fex-sudo {
@@ -1934,5 +1977,47 @@ function zhu-test-quake2rtx {
     rm -rf ~/.quake2rtx
     pushd ~/zhutest-workload.d/quake2rtx-1.6.0 >/dev/null 
 
+    popd >/dev/null 
+}
+
+function zhu-nvtest-shadow-of-the-tomb-raider {
+    # rsync -avz --progress --partial
+    pushd /root/nvt/tests/dxvk/run_dir >/dev/null || return -1
+    DISPLAY=:0 \
+    DXVK_ENABLE_NVAPI=1 \
+    DXVK_HUD=full \
+    DXVK_LOG_LEVEL=none \
+    DXVK_STATE_CACHE=0 \
+    LD_LIBRARY_PATH=/root/nvt/tests/dxvk/proton-9.0-3e/files/lib64:/root/nvt/tests/dxvk/proton-9.0-3e/files/lib:/mnt/linuxqa/nvtest/pynv_files/vulkan_loader/sdk-1.2.162.0/Linux_amd64:/mnt/linuxqa/nvtest/pynv_files/vkdevicechooser/Linux_amd64 \
+    LIBC_FATAL_STDERR_=1 \
+    NODEVICE_SELECT=1 \
+    PATH=/root/nvt/tests/dxvk/proton-9.0-3e/files/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin \
+    PROTON_VR_RUNTIME=1 \
+    STEAM_COMPAT_DATA_PATH=/root/nvt/tests/dxvk/proton-9.0-3e/prefix \
+    VKD3D_CONFIG=dxr \
+    VKD3D_DEBUG=none \
+    VKD3D_FEATURE_LEVEL=12_2 \
+    VK_ICD_FILENAMES=/etc/vulkan/icd.d/nvidia_icd.json \
+    VK_INSTANCE_LAYERS=VK_LAYER_AEJS_DeviceChooserLayer \
+    VK_LAYER_PATH=/mnt/linuxqa/nvtest/pynv_files/vulkan_loader/sdk-1.2.162.0/Linux_amd64/explicit_layer.d:/mnt/linuxqa/nvtest/pynv_files/vkdevicechooser \
+    VR_OVERRIDE=1 \
+    VULKAN_DEVICE_INDEX=0 \
+    WINEDEBUG=-all \
+    WINEDLLOVERRIDES='steam.exe=b;d3d11=n;d3d10core=n;dxgi=n;d3d11x_42=n;d3d11x_43=n;d3d9=n;nvcuda=b;d3d12=n;d3d12core=n;' \
+    WINEDLLPATH=/root/nvt/tests/dxvk/proton-9.0-3e/files/lib64/wine:/root/nvt/tests/dxvk/proton-9.0-3e/files/lib/wine \
+    WINEESYNC=1 \
+    WINEPREFIX=/root/nvt/tests/dxvk/proton-9.0-3e/prefix/pfx \
+    WINE_DISABLE_FULLSCREEN_HACK=1 \
+    WINE_MONO_OVERRIDES='Microsoft.Xna.Framework.*,Gac=n' \
+    __GL_0x301fd6=0x00000005 \
+    __GL_0xcfcfa1=0x00000008 \
+    __GL_0xfcd802=0x00000001 \
+    __GL_4718b=0x00000008 \
+    __GL_61807119=/root/nvt/log/loadmonitor/00098_run-in-sniper \
+    __GL_SHADER_DISK_CACHE=0 \
+    __GL_SYNC_TO_VBLANK=0 \
+    /root/nvt/tests/dxvk/steam-linux-runtime-12249908/run-in-sniper -- \
+    /root/nvt/tests/dxvk/proton-9.0-3e/files/bin/wine \
+    /root/nvt/tests/dxvk/run_dir/SOTTR.exe 99999999 0 fps_log
     popd >/dev/null 
 }
