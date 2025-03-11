@@ -2056,7 +2056,7 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
 
     if [[ ! -d ~/zhutest-workload.d/root-nvt-tests-sottr-2025-03-11 ]]; then
         if [[ ! -e ~/Downloads/root-nvt-tests-sottr-2025-03-11.tar.gz ]]; then
-            zhu-gtlfs-download 01958659-EC0C-7E0F-9BEA-1A0E969DED5D 
+            zhu-gtlfs-download 019586FB-A06D-7E66-9542-912CC7257F82 
         fi
 
         mkdir -p ~/zhutest-workload.d
