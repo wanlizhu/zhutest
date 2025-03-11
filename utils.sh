@@ -39,7 +39,14 @@ if [[ $USER == wanliz ]]; then
         echo ".vscode" >> $P4IGNORE
     fi
 
-    if [[ $UID != "0" ]]; then
+    if [[ $UID == 0 ]]; then
+        if [[ ! -d /root/zhutest && -d /home/wanliz/zhutest ]]; then
+            ln -sf /home/wanliz/zhutest /root/zhutest
+        fi
+        if [[ ! -d /root/zhutest-workload.d && -d /home/wanliz/zhutest-workload.d ]]; then
+            ln -sf /home/wanliz/zhutest-workload.d /root/zhutest-workload.d
+        fi
+    else
         if ! sudo grep -q "$USER ALL=(ALL) NOPASSWD:ALL" /etc/sudoers; then
             echo "Enable sudo without password"
             echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
