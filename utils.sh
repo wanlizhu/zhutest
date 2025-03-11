@@ -1314,10 +1314,25 @@ function zhu-chroot-in-fex {
     rootfs="$HOME/.fex-emu/RootFS/$ubuntu"
 
     pushd $rootfs >/dev/null 
+    if [[ -e ./chroot.py && -e ~/zhutest/src/chroot.py ]]; then
+        if ! cmp -s ./chroot.py ~/zhutest/src/chroot.py; then
+            read -e -i yes -p "Use ~/zhutest/src/chroot.py? (yes/no): " ans
+            if [[ $ans == yes ]]; then
+                rm -rf ./chroot.py  
+                cp -f  ~/zhutest/src/chroot.py .
+            fi
+        fi
+    fi
+    if [[ ! -e ./chroot.py ]]; then
+        if [[ -e ~/zhutest/src/chroot.py ]]; then
+            cp ~/zhutest/src/chroot.py .
+        else
+            wget https://raw.githubusercontent.com/FEX-Emu/RootFS/refs/heads/main/Scripts/chroot.py 
+        fi 
+    fi
 
-    wget https://raw.githubusercontent.com/FEX-Emu/RootFS/refs/heads/main/Scripts/chroot.py 
     chmod +x ./chroot.py 
-
+    
     if [[ -z $(which patchelf) ]]; then
         sudo apt install -y patchelf
     fi
