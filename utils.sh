@@ -1318,7 +1318,7 @@ function zhu-chroot-in-fex {
         if ! cmp -s ./chroot.py ~/zhutest/src/chroot.py; then
             read -e -i yes -p "Use ~/zhutest/src/chroot.py? (yes/no): " ans
             if [[ $ans == yes ]]; then
-                rm -rf .chroot.py  
+                rm -rf ./chroot.py  
                 cp -f  ~/zhutest/src/chroot.py .
             fi
         fi
