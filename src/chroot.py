@@ -383,7 +383,6 @@ class MountManagerClass:
         ["dev",     ["-t", "devtmpfs", "udev"]],
         ["dev/pts", ["-t", "devpts", "devpts"]],
         ["tmp",     ["--rbind", "/tmp"]],
-        ["run/user",     ["--rbind", "/run/user"]],
     ]
 
     def __init__(self):
