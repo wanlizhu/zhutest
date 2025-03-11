@@ -1243,7 +1243,50 @@ function zhu-bypass-steam-client-checks {
    echo "https://gitlab.com/Mr_Goldberg/goldberg_emulator"
 }
 
-function zhu-fex-chroot {
+function zhu-install-nvidia-driver-in-fex {
+    if [[ -z $(which jq) ]]; then
+        sudo apt install -y jq 
+    fi 
+
+    pushd . >/dev/null 
+    ubuntu=$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)
+    rootfs="$HOME/.fex-emu/RootFS/$ubuntu"
+    version=$(ls /usr/lib/aarch64-linux-gnu/libnvidia-glcore.so.*  | awk -F '.so.' '{print $2}')
+
+    read -e -i yes -p "Install nvidia *.so.$version into $rootfs? (yes/no): " ans
+    if [[ $ans != yes ]]; then
+        return -1
+    fi  
+
+    cd $(dirname $1) 
+    driver=$(realpath $1)
+    chmod +x $driver 
+    $driver -x 
+
+    cp -vf ./nvidia_icd.json $rootfs/etc/vulkan/icd.d/nvidia_icd.json
+
+    cd ${driver%.run}
+    for dso in *.so.$version; do 
+        cp -vf ./$dso $rootfs/lib/x86_64-linux-gnu/$dso 
+        pushd $rootfs/lib/x86_64-linux-gnu >/dev/null 
+        ln -sf $dso $(echo $dso | cut -d'.' -f1-2).0
+        ln -sf $dso $(echo $dso | cut -d'.' -f1-2).1
+        ln -sf $dso $(echo $dso | cut -d'.' -f1-2).2
+        popd >/dev/null 
+    done
+
+    cd 32 
+    for dso in *.so.$version; do 
+        cp -vf ./$dso $rootfs/lib/i386-linux-gnu/$dso 
+        pushd $rootfs/lib/i386-linux-gnu >/dev/null 
+        ln -sf $dso $(echo $dso | cut -d'.' -f1-2).0
+        ln -sf $dso $(echo $dso | cut -d'.' -f1-2).1
+        ln -sf $dso $(echo $dso | cut -d'.' -f1-2).2
+        popd >/dev/null 
+    done
+}
+
+function zhu-chroot-in-fex {
     if [[ -z $(which jq) ]]; then
         sudo apt install -y jq 
     fi 
@@ -1284,7 +1327,7 @@ function zhu-fex-chroot {
     popd >/dev/null 
 }
 
-function zhu-fex-chroot-config {
+function zhu-config-in-fex {
     uname -m >/dev/null 2>&1
     if [[ $(uname -m) != "x86_64" ]]; then
         echo "Run this function in FEX started by chroot!"
@@ -1329,7 +1372,7 @@ function zhu-fex-chroot-config {
     fi
 }
 
-function zhu-fex-sudo {
+function zhu-sudo-in-fex {
     if [[ -z $(which jq) ]]; then
         sudo apt install -y jq 
     fi 
@@ -1340,7 +1383,7 @@ function zhu-fex-sudo {
     if [[ -z $1 ]]; then
         read -p "chroot to $rootfs? (yes/no): " ans
         if [[ $ans == yes ]]; then
-            zhu-fex-chroot 
+            zhu-chroot-in-fex
         fi
     else
         program=$1
@@ -1364,7 +1407,7 @@ function zhu-fex-sudo {
     fi
 }
 
-function zhu-fex-fetch-packages {
+function zhu-fetch-packages-in-fex {
     [[ -z $(which jq) ]] && sudo apt install -y jq 
     rootfs="~/.fex-emu/$(jq -r '.Config.RootFS' ~/.fex-emu/Config.json)"
 
@@ -1620,32 +1663,6 @@ function zhu-list-steam-games {
     done 
 
     column -s, -t /tmp/steam-games.list
-}
-
-function zhu-fex-install-nvidia-dso {
-    amd64_libs="$HOME/.fex-emu/RootFS/Ubuntu_24_04/lib/x86_64-linux-gnu"
-    for dso in *.so.575.25; do 
-        cp -vf ./$dso $amd64_libs/$dso 
-        pushd $amd64_libs >/dev/null 
-        ln -sf $dso $(echo $dso | cut -d'.' -f1-2).0
-        ln -sf $dso $(echo $dso | cut -d'.' -f1-2).1
-        ln -sf $dso $(echo $dso | cut -d'.' -f1-2).2
-        popd >/dev/null 
-    done
-
-    pushd 32 >/dev/null 
-    i386_libs="$HOME/.fex-emu/RootFS/Ubuntu_24_04/lib/i386-linux-gnu"
-    for dso in *.so.575.25; do 
-        cp -vf ./$dso $i386_libs/$dso 
-        pushd $i386_libs >/dev/null 
-        ln -sf $dso $(echo $dso | cut -d'.' -f1-2).0
-        ln -sf $dso $(echo $dso | cut -d'.' -f1-2).1
-        ln -sf $dso $(echo $dso | cut -d'.' -f1-2).2
-        popd >/dev/null 
-    done
-    popd >/dev/null 
-
-    cp -vf ./nvidia_icd.json "$HOME/.fex-emu/RootFS/Ubuntu_24_04/etc/vulkan/icd.d/nvidia_icd.json"
 }
 
 function zhu-check-xauthority {
