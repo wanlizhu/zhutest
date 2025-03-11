@@ -2111,12 +2111,16 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
     __GL_SYNC_TO_VBLANK=0 \
     /root/nvt/tests/dxvk/steam-linux-runtime-12249908/run-in-sniper -- \
     /root/nvt/tests/dxvk/proton-9.0-3e/files/bin/wine \
-    /root/nvt/tests/dxvk/run_dir/SOTTR.exe 99999999 0 fps_log | tee /tmp/nvtest-sottr.log &
+    /root/nvt/tests/dxvk/run_dir/SOTTR.exe 99999999 0 fps_log >/tmp/nvtest-sottr.log &
     
-    gamepid=$!
+    echo "Recording FPS for 30 seconds..."
     sleep 30
-    kill -INT $gamepid
+    kill -INT $(nvidia-smi | grep SOTTR.exe | awk '{print $5}')
+    sleep 3
+    cat /tmp/nvtest-sottr.log | tail -n 100 >/tmp/nvtest-sottr-tail-100.log
     echo "Generated /tmp/nvtest-sottr.log"
+    echo "Total Average FPS: $(awk '{ total += $1; count++ } END { print total/count }' /tmp/nvtest-sottr.log)"
+    echo "Stablized Avg FPS: $(awk '{ total += $1; count++ } END { print total/count }' /tmp/nvtest-sottr-tail-100.log)"
 
     popd >/dev/null 
 }
