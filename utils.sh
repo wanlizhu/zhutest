@@ -63,8 +63,10 @@ elif [[ $UID == 0 ]]; then
         fi
     fi
 
-    if [[ -d /home/wanliz/zhutest-workload.d ]]; then   
-        ln -sf /home/wanliz/zhutest-worload.d /root/zhutest-workload.d
+    if [[ -d /home/wanliz/zhutest-workload.d ]]; then  
+        if [[ ! -d /root/zhutest-workload.d ]]; then 
+            ln -sf /home/wanliz/zhutest-worload.d /root/zhutest-workload.d
+        fi 
     fi
 fi
 
