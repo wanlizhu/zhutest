@@ -1021,10 +1021,9 @@ function zhu-install-fex {
         xxhash libxxhash-dev patchelf\
         qtbase5-dev qt5-qmake qml-module-qtquick-controls qml-module-qtquick-controls2 qml-module-qtquick-dialogs qml-module-qtquick-layouts qtdeclarative5-dev qtquickcontrols2-5-dev
     git clone --recursive https://github.com/FEX-Emu/FEX.git ~/FEX.git || return -1
-    ## FEX installed by this script can't be executed by root
-    ## Build and install locally if you want root to use it 
     #~/FEX.git/Scripts/InstallFEX.py 
 
+    # Has more control over FEX with local build
     mkdir ~/FEX.git/build 
     pushd ~/FEX.git/build >/dev/null 
     cmake -GNinja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release .. &&
@@ -1972,11 +1971,50 @@ function zhu-share-folder-via-nfs {
     sudo exportfs -v
 }
 
+function zhu-gtlfs-upload {
+    if [[ -z $(which gtlfs) ]]; then
+        if [[ $(uname -s) == Linux ]]; then
+            if [[ $(uname -m) == x86_64 ]]; then 
+                sudo wget --no-check-certificate -O /usr/local/bin/gtlfs https://gtlfs.nvidia.com/client/linux
+            elif [[ $(uname -m) == aarch64 ]]; then
+                sudo wget --no-check-certificate -O /usr/local/bin/gtlfs https://gtlfs.nvidia.com/client/gtlfs.arm64
+            fi  
+            sudo chown $USER:$(id -gn) /usr/local/bin/gtlfs
+            chmod +x /usr/local/bin/gtlfs
+        else
+            return -1
+        fi
+    fi
+
+    gtlfs push --username=wanliz "$1"
+}
+
+function zhu-gtlfs-download {
+    if [[ -z $(which gtlfs) ]]; then
+        if [[ $(uname -s) == Linux ]]; then
+            if [[ $(uname -m) == x86_64 ]]; then 
+                sudo wget --no-check-certificate -O /usr/local/bin/gtlfs https://gtlfs.nvidia.com/client/linux
+            elif [[ $(uname -m) == aarch64 ]]; then
+                sudo wget --no-check-certificate -O /usr/local/bin/gtlfs https://gtlfs.nvidia.com/client/gtlfs.arm64
+            fi  
+            sudo chown $USER:$(id -gn) /usr/local/bin/gtlfs
+            chmod +x /usr/local/bin/gtlfs
+        else
+            return -1
+        fi
+    fi
+
+    pushd ~/Downloads >/dev/null 
+    gtlfs pull "$1"
+    popd >/dev/null 
+}
+
 function zhu-test-quake2rtx {
     zhu-install-quake2rtx || return -1
     rm -rf ~/.quake2rtx
     pushd ~/zhutest-workload.d/quake2rtx-1.6.0 >/dev/null 
-    #TODO
+    chmod +x q2rtx.sh
+    ./q2rtx.sh
     popd >/dev/null 
 }
 
@@ -1986,15 +2024,16 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
 
     if [[ ! -d $HOME/zhutest-workload.d/nvtest/sottr ]]; then
         if [[ ! -e $HOME/Downloads/nvtest-sottr-2025-03-11.tar.gz ]]; then
-            echo TODO
+            zhu-gtlfs-download 01958659-EC0C-7E0F-9BEA-1A0E969DED5D 
         fi
 
         tar -zxvf $HOME/Downloads/nvtest-sottr-2025-03-11.tar.gz
-        mkdir -p  $HOME/zhutest-workload.d/nvtest/sottr/ 
-        mv sottr/ $HOME/zhutest-workload.d/nvtest/sottr/
+        mkdir -p  $HOME/zhutest-workload.d/nvtest
+        mv sottr  $HOME/zhutest-workload.d/nvtest
 
         sudo rm -rf /root/.cache/nvidia/GLCache
-        sudo ln -sf $HOME/zhutest-workload.d/nvtest /root/nvt 
+        sudo rm -rf /root/nvt 
+        sudo ln -sf $HOME/zhutest-workload.d/nvtest/sottr /root/nvt 
         sudo chmod 777 /root
         chown -R $USER:$(id -gn) $HOME/zhutest-workload.d/nvtest/sottr
     fi
@@ -2038,7 +2077,7 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
     /root/nvt/tests/dxvk/run_dir/SOTTR.exe 99999999 0 fps_log | tee /tmp/nvtest-sottr.log &
     
     gamepid=$!
-    sleep 10
+    sleep 30
     kill -INT $gamepid
     echo "Generated /tmp/nvtest-sottr.log"
 
