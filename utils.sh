@@ -1376,8 +1376,8 @@ function zhu-config-in-fex {
     apt install -y dbus-x11
     apt install -y vim 
     apt install -y libprotobuf-dev 
-    apt install -y showmount 
-    
+    apt install -y nfs-common 
+
     apt reinstall -y passwd
     apt reinstall -y util-linux
     apt reinstall -y mount
