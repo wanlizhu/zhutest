@@ -56,9 +56,10 @@ if [[ $USER == wanliz ]]; then
 elif [[ $UID == 0 ]]; then
     if [[ ! -d /root/zhutest && -d /home/wanliz/zhutest ]]; then
         ln -sf /home/wanliz/zhutest /root/zhutest
+        git config --global --add safe.directory /home/wanliz/zhutest
     fi
     if [[ ! -d /root/zhutest-workload.d && -d /home/wanliz/zhutest-workload.d ]]; then
-        ln -sf /home/wanliz/zhutest-workload.d /root/zhutest-workload.d
+        ln -sf /home/wanliz/zhutest-worload.d /root/zhutest-workload.d
     fi
 fi
 
