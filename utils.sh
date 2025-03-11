@@ -54,11 +54,16 @@ if [[ $USER == wanliz ]]; then
         export PATH="~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64:$PATH"
     fi
 elif [[ $UID == 0 ]]; then
-    if [[ ! -d /root/zhutest && -d /home/wanliz/zhutest ]]; then
-        ln -sf /home/wanliz/zhutest /root/zhutest
-        git config --global --add safe.directory /home/wanliz/zhutest
+    if [[ -d /home/wanliz/zhutest ]]; then
+        if [[ ! -d /root/zhutest ]]; then
+            ln -sf /home/wanliz/zhutest /root/zhutest
+        fi
+        if [[ $(stat -c "%U" /home/wanliz/zhutest) != $USER ]]; then
+            git config --global --add safe.directory /home/wanliz/zhutest
+        fi
     fi
-    if [[ ! -d /root/zhutest-workload.d && -d /home/wanliz/zhutest-workload.d ]]; then
+
+    if [[ -d /home/wanliz/zhutest-workload.d ]]; then   
         ln -sf /home/wanliz/zhutest-worload.d /root/zhutest-workload.d
     fi
 fi
