@@ -2054,20 +2054,25 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
     pushd . >/dev/null 
     zhu-mount-linuxqa || return -1
 
-    if [[ ! -d $HOME/zhutest-workload.d/nvtest/sottr ]]; then
-        if [[ ! -e $HOME/Downloads/nvtest-sottr-2025-03-11.tar.gz ]]; then
+    if [[ ! -d ~/zhutest-workload.d/root-nvt-tests-sottr-2025-03-11 ]]; then
+        if [[ ! -e ~/Downloads/root-nvt-tests-sottr-2025-03-11.tar.gz ]]; then
             zhu-gtlfs-download 01958659-EC0C-7E0F-9BEA-1A0E969DED5D 
         fi
 
-        tar -zxvf $HOME/Downloads/nvtest-sottr-2025-03-11.tar.gz
-        mkdir -p  $HOME/zhutest-workload.d/nvtest
-        mv sottr  $HOME/zhutest-workload.d/nvtest
+        mkdir -p ~/zhutest-workload.d
+        cd ~/zhutest-workload.d
+        tar -zxvf ~/Downloads/root-nvt-tests-sottr-2025-03-11.tar.gz
+        chown -R $USER:$(id -gn) root-nvt-tests-sottr-2025-03-11
 
-        sudo rm -rf /root/.cache/nvidia/GLCache
-        sudo rm -rf /root/nvt 
-        sudo ln -sf $HOME/zhutest-workload.d/nvtest/sottr /root/nvt 
+        sudo bash -c "
+        if [[ -d /root/nvt/tests ]]; then
+            mv /root/nvt/tests /root/nvt/tests.backup
+        else
+            mkdir -p /root/nvt
+        fi"
+
+        sudo ln -sf ~/zhutest-workload.d/root-nvt-tests-sottr-2025-03-11  /root/nvt/tests 
         sudo chmod 777 /root
-        chown -R $USER:$(id -gn) $HOME/zhutest-workload.d/nvtest/sottr
     fi
 
     cd /root/nvt/tests/dxvk/run_dir; \
