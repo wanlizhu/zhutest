@@ -65,7 +65,7 @@ elif [[ $UID == 0 ]]; then
 
     if [[ -d /home/wanliz/zhutest-workload.d ]]; then  
         if [[ ! -d /root/zhutest-workload.d ]]; then 
-            ln -sf /home/wanliz/zhutest-worload.d /root/zhutest-workload.d
+            ln -sf /home/wanliz/zhutest-workload.d /root/zhutest-workload.d
         fi 
     fi
 fi
@@ -2054,39 +2054,28 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
     pushd . >/dev/null 
     zhu-mount-linuxqa || return -1
 
-    if [[ ! -d ~/zhutest-workload.d/root-nvt-tests-sottr-2025-03-11 ]]; then
-        if [[ ! -e ~/Downloads/root-nvt-tests-sottr-2025-03-11.tar.gz ]]; then
-            zhu-gtlfs-download 019586FB-A06D-7E66-9542-912CC7257F82 
+    if [[ ! -d $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11 ]]; then
+        if [[ ! -e $HOME/Downloads/nvtest-sottr-2025-03-11.tar.gz ]]; then
+            zhu-gtlfs-download 0195873E-0634-7304-ABE0-A64290DC648E  
         fi
 
-        mkdir -p ~/zhutest-workload.d
-        cd ~/zhutest-workload.d
-        tar -zxvf ~/Downloads/root-nvt-tests-sottr-2025-03-11.tar.gz
-        chown -R $USER:$(id -gn) root-nvt-tests-sottr-2025-03-11
-
-        sudo bash -c "
-        if [[ -d /root/nvt/tests ]]; then
-            mv /root/nvt/tests /root/nvt/tests.backup
-        else
-            mkdir -p /root/nvt
-        fi"
-
-        sudo ln -sf ~/zhutest-workload.d/root-nvt-tests-sottr-2025-03-11  /root/nvt/tests 
-        sudo chmod 777 /root
+        mkdir -p $HOME/zhutest-workload.d
+        cd $HOME/zhutest-workload.d
+        tar -zxvf $HOME/Downloads/nvtest-sottr-2025-03-11.tar.gz
     fi
 
-    cd /root/nvt/tests/dxvk/run_dir; \
+    cd $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/run_dir; \
     DISPLAY=:0.0 \
     DXVK_ENABLE_NVAPI=1 \
     DXVK_HUD=full \
     DXVK_LOG_LEVEL=none \
     DXVK_STATE_CACHE=0 \
-    LD_LIBRARY_PATH=/root/nvt/tests/dxvk/proton-9.0-3e/files/lib64:/root/nvt/tests/dxvk/proton-9.0-3e/files/lib:/mnt/linuxqa/nvtest/pynv_files/vulkan_loader/sdk-1.2.162.0/Linux_amd64:/mnt/linuxqa/nvtest/pynv_files/vkdevicechooser/Linux_amd64 \
+    LD_LIBRARY_PATH=$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/files/lib64:$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/files/lib:/mnt/linuxqa/nvtest/pynv_files/vulkan_loader/sdk-1.2.162.0/Linux_amd64:/mnt/linuxqa/nvtest/pynv_files/vkdevicechooser/Linux_amd64 \
     LIBC_FATAL_STDERR_=1 \
     NODEVICE_SELECT=1 \
-    PATH=/root/nvt/tests/dxvk/proton-9.0-3e/files/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin \
+    PATH=$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/files/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin \
     PROTON_VR_RUNTIME=1 \
-    STEAM_COMPAT_DATA_PATH=/root/nvt/tests/dxvk/proton-9.0-3e/prefix \
+    STEAM_COMPAT_DATA_PATH=$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/prefix \
     VKD3D_CONFIG=dxr \
     VKD3D_DEBUG=none \
     VKD3D_FEATURE_LEVEL=12_2 \
@@ -2097,9 +2086,9 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
     VULKAN_DEVICE_INDEX=0 \
     WINEDEBUG=-all \
     WINEDLLOVERRIDES='steam.exe=b;d3d11=n;d3d10core=n;dxgi=n;d3d11x_42=n;d3d11x_43=n;d3d9=n;nvcuda=b;d3d12=n;d3d12core=n;' \
-    WINEDLLPATH=/root/nvt/tests/dxvk/proton-9.0-3e/files/lib64/wine:/root/nvt/tests/dxvk/proton-9.0-3e/files/lib/wine \
+    WINEDLLPATH=$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/files/lib64/wine:$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/files/lib/wine \
     WINEESYNC=1 \
-    WINEPREFIX=/root/nvt/tests/dxvk/proton-9.0-3e/prefix/pfx \
+    WINEPREFIX=$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/prefix/pfx \
     WINE_DISABLE_FULLSCREEN_HACK=1 \
     WINE_MONO_OVERRIDES='Microsoft.Xna.Framework.*,Gac=n' \
     __GL_0x301fd6=0x00000005 \
@@ -2109,18 +2098,26 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
     __GL_61807119=/root/nvt/log/loadmonitor/00096_run-in-sniper \
     __GL_SHADER_DISK_CACHE=0 \
     __GL_SYNC_TO_VBLANK=0 \
-    /root/nvt/tests/dxvk/steam-linux-runtime-12249908/run-in-sniper -- \
-    /root/nvt/tests/dxvk/proton-9.0-3e/files/bin/wine \
-    /root/nvt/tests/dxvk/run_dir/SOTTR.exe 99999999 0 fps_log >/tmp/nvtest-sottr.log &
+    $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/steam-linux-runtime-12249908/run-in-sniper -- \
+    $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/files/bin/wine \
+    $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/run_dir/SOTTR.exe 99999999 0 fps_log >/tmp/nvtest-sottr.log &
     
     echo "Recording FPS for 30 seconds..."
     sleep 30
-    kill -INT $(nvidia-smi | grep SOTTR.exe | awk '{print $5}')
+    
+    if [[ ! -z $(nvidia-smi) ]]; then
+        kill -INT $(nvidia-smi | grep SOTTR.exe | awk '{print $5}')
+    else
+        echo TODO
+    fi 
     sleep 3
-    cat /tmp/nvtest-sottr.log | tail -n 100 >/tmp/nvtest-sottr-tail-100.log
-    echo "Generated /tmp/nvtest-sottr.log"
-    echo "Total Average FPS: $(awk '{ total += $1; count++ } END { print total/count }' /tmp/nvtest-sottr.log)"
-    echo "Stablized Avg FPS: $(awk '{ total += $1; count++ } END { print total/count }' /tmp/nvtest-sottr-tail-100.log)"
+
+    if [[ -e /tmp/nvtest-sottr.log ]]; then 
+        cat /tmp/nvtest-sottr.log | tail -n 100 >/tmp/nvtest-sottr-tail-100.log
+        echo "Generated /tmp/nvtest-sottr.log"
+        echo "Total Average FPS: $(awk '{ total += $1; count++ } END { print total/count }' /tmp/nvtest-sottr.log)"
+        echo "Stablized Avg FPS: $(awk '{ total += $1; count++ } END { print total/count }' /tmp/nvtest-sottr-tail-100.log)"
+    fi 
 
     popd >/dev/null 
 }
