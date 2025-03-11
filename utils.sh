@@ -1315,7 +1315,7 @@ function zhu-chroot-in-fex {
 
     pushd $rootfs >/dev/null 
     if [[ -e ./chroot.py && -e ~/zhutest/src/chroot.py ]]; then
-        if cmp -s ./chroot.py ~/zhutest/src/chroot.py; then
+        if ! cmp -s ./chroot.py ~/zhutest/src/chroot.py; then
             read -e -i yes -p "Use ~/zhutest/src/chroot.py? (yes/no): " ans
             if [[ $ans == yes ]]; then
                 rm -rf .chroot.py  
