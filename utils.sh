@@ -1980,31 +1980,26 @@ function zhu-test-quake2rtx {
     popd >/dev/null 
 }
 
-function zhu-nvtest-cmdline {
-    if [[ $UID != 0 ]]; then
-        if [[ -d "$1" ]]; then 
-            sudo ln -sf "$1" /root/nvt 
-        fi 
-        sudo chmod 777 /root
-    fi 
-
-    if [[ -d /root/nvt ]]; then
-        $2 
-    fi 
-}
-
 function zhu-nvtest-shadow-of-the-tomb-raider {
     pushd . >/dev/null 
     zhu-mount-linuxqa || return -1
 
     if [[ ! -d $HOME/zhutest-workload.d/nvtest/sottr ]]; then
-        cd ~/Downloads 
-        mkdir -p $HOME/zhutest-workload.d/nvtest
-        rsync -avz --progress --partial /mnt/linuxqa/wanliz/nvtest/sottr/ $HOME/zhutest-workload.d/nvtest/sottr || return -1
+        if [[ ! -e $HOME/Downloads/nvtest-sottr-2025-03-11.tar.gz ]]; then
+            echo TODO
+        fi
+
+        tar -zxvf $HOME/Downloads/nvtest-sottr-2025-03-11.tar.gz
+        mkdir -p  $HOME/zhutest-workload.d/nvtest/sottr/ 
+        mv sottr/ $HOME/zhutest-workload.d/nvtest/sottr/
+
+        sudo rm -rf /root/.cache/nvidia/GLCache
+        sudo ln -sf $HOME/zhutest-workload.d/nvtest /root/nvt 
+        sudo chmod 777 /root
         chown -R $USER:$(id -gn) $HOME/zhutest-workload.d/nvtest/sottr
     fi
 
-    zhu-nvtest-cmdline $HOME/zhutest-workload.d/nvtest/sottr "cd /root/nvt/tests/dxvk/run_dir; \
+    cd /root/nvt/tests/dxvk/run_dir; \
     DISPLAY=:0.0 \
     DXVK_ENABLE_NVAPI=1 \
     DXVK_HUD=full \
@@ -2040,11 +2035,12 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
     __GL_SYNC_TO_VBLANK=0 \
     /root/nvt/tests/dxvk/steam-linux-runtime-12249908/run-in-sniper -- \
     /root/nvt/tests/dxvk/proton-9.0-3e/files/bin/wine \
-    /root/nvt/tests/dxvk/run_dir/SOTTR.exe 99999999 0 fps_log" | tee /tmp/nvtest-sottr.log &
+    /root/nvt/tests/dxvk/run_dir/SOTTR.exe 99999999 0 fps_log | tee /tmp/nvtest-sottr.log &
+    
     gamepid=$!
     sleep 10
     kill -INT $gamepid
     echo "Generated /tmp/nvtest-sottr.log"
-    
+
     popd >/dev/null 
 }
