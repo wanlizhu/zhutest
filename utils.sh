@@ -39,14 +39,7 @@ if [[ $USER == wanliz ]]; then
         echo ".vscode" >> $P4IGNORE
     fi
 
-    if [[ $UID == 0 ]]; then
-        if [[ ! -d /root/zhutest && -d /home/wanliz/zhutest ]]; then
-            ln -sf /home/wanliz/zhutest /root/zhutest
-        fi
-        if [[ ! -d /root/zhutest-workload.d && -d /home/wanliz/zhutest-workload.d ]]; then
-            ln -sf /home/wanliz/zhutest-workload.d /root/zhutest-workload.d
-        fi
-    else
+    if [[ $UID != "0" ]]; then
         if ! sudo grep -q "$USER ALL=(ALL) NOPASSWD:ALL" /etc/sudoers; then
             echo "Enable sudo without password"
             echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
@@ -59,6 +52,13 @@ if [[ $USER == wanliz ]]; then
 
     if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-graphics-internal"; then
         export PATH="~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64:$PATH"
+    fi
+elif [[ $UID == 0 ]]; then
+    if [[ ! -d /root/zhutest && -d /home/wanliz/zhutest ]]; then
+        ln -sf /home/wanliz/zhutest /root/zhutest
+    fi
+    if [[ ! -d /root/zhutest-workload.d && -d /home/wanliz/zhutest-workload.d ]]; then
+        ln -sf /home/wanliz/zhutest-workload.d /root/zhutest-workload.d
     fi
 fi
 
