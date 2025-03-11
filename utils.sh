@@ -1976,14 +1976,36 @@ function zhu-test-quake2rtx {
     zhu-install-quake2rtx || return -1
     rm -rf ~/.quake2rtx
     pushd ~/zhutest-workload.d/quake2rtx-1.6.0 >/dev/null 
-
+    #TODO
     popd >/dev/null 
 }
 
+function zhu-nvtest-cmdline {
+    if [[ $UID != 0 ]]; then
+        if [[ -d "$1" ]]; then 
+            sudo ln -sf "$1" /root/nvt 
+        fi 
+        sudo chmod 777 /root
+    fi 
+
+    if [[ -d /root/nvt ]]; then
+        $2 
+    fi 
+}
+
 function zhu-nvtest-shadow-of-the-tomb-raider {
-    # rsync -avz --progress --partial
-    pushd /root/nvt/tests/dxvk/run_dir >/dev/null || return -1
-    DISPLAY=:0 \
+    pushd . >/dev/null 
+    zhu-mount-linuxqa || return -1
+
+    if [[ ! -d $HOME/zhutest-workload.d/nvtest/sottr ]]; then
+        cd ~/Downloads 
+        mkdir -p $HOME/zhutest-workload.d/nvtest
+        rsync -avz --progress --partial /mnt/linuxqa/wanliz/nvtest/sottr/ $HOME/zhutest-workload.d/nvtest/sottr || return -1
+        chown -R $USER:$(id -gn) $HOME/zhutest-workload.d/nvtest/sottr
+    fi
+
+    zhu-nvtest-cmdline $HOME/zhutest-workload.d/nvtest/sottr "cd /root/nvt/tests/dxvk/run_dir; \
+    DISPLAY=:0.0 \
     DXVK_ENABLE_NVAPI=1 \
     DXVK_HUD=full \
     DXVK_LOG_LEVEL=none \
@@ -2013,11 +2035,16 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
     __GL_0xcfcfa1=0x00000008 \
     __GL_0xfcd802=0x00000001 \
     __GL_4718b=0x00000008 \
-    __GL_61807119=/root/nvt/log/loadmonitor/00098_run-in-sniper \
+    __GL_61807119=/root/nvt/log/loadmonitor/00096_run-in-sniper \
     __GL_SHADER_DISK_CACHE=0 \
     __GL_SYNC_TO_VBLANK=0 \
     /root/nvt/tests/dxvk/steam-linux-runtime-12249908/run-in-sniper -- \
     /root/nvt/tests/dxvk/proton-9.0-3e/files/bin/wine \
-    /root/nvt/tests/dxvk/run_dir/SOTTR.exe 99999999 0 fps_log
+    /root/nvt/tests/dxvk/run_dir/SOTTR.exe 99999999 0 fps_log" | tee /tmp/nvtest-sottr.log &
+    gamepid=$!
+    sleep 10
+    kill -INT $gamepid
+    echo "Generated /tmp/nvtest-sottr.log"
+    
     popd >/dev/null 
 }
