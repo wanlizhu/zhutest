@@ -384,6 +384,7 @@ class MountManagerClass:
         ["dev/pts", ["-t", "devpts", "devpts"]],
         ["tmp",     ["--rbind", "/tmp"]],
         ["run",     ["--rbind", "/run"]],
+        ["home/wanliz/zhutest-workload.d", ["--rbind", "/home/wanliz/zhutest-workload.d"]],
     ]
 
     def __init__(self):
