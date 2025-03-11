@@ -1342,11 +1342,13 @@ function zhu-chroot-in-fex {
         sudo apt purge apparmor
     fi 
 
-    while IFS= read -r line; do 
-        if ! grep -q "$line" $rootfs/etc/resolv.conf; then
-            echo "line" >> $rootfs/etc/resolv.conf
-        fi
-    done < /etc/resolv.conf
+    if [[ -e /etc/resolv.conf && -e $rootfs/etc/resolv.conf ]]; then 
+        while IFS= read -r line; do 
+            if ! grep -q "$line" $rootfs/etc/resolv.conf; then
+                echo "line" >> $rootfs/etc/resolv.conf
+            fi
+        done < /etc/resolv.conf
+    fi 
 
     if [[ -e /etc/apt/sources.list.d/ubuntu.sources ]]; then
         mkdir -p $rootfs/etc/apt/sources.list.d
