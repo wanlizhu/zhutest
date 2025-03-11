@@ -549,6 +549,10 @@ function zhu-sync {
     fi
     popd >/dev/null 
     zhu-reload 
+
+    if [[ $EUID == 0 && -d /home/wanliz/zhutest ]]; then
+        chown -R wanliz:wanliz /home/wanliz/zhutest
+    fi
 }
 
 function zhu-download-nvidia-driver {
