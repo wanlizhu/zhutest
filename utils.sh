@@ -2077,6 +2077,7 @@ function zhu-vulkan-api-capture {
         git submodule update --init
         python3 scripts/build.py --arch $arch --config release --parallel $(nproc) --skip-check-code-style --skip-tests --skip-d3d12-support 
         echo "gfxreconstruct is compiled! run again."
+        popd >/dev/null
         return 
     fi 
 
