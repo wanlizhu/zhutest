@@ -682,6 +682,8 @@ function zhu-install-nsight-graphics {
     mkdir -p ~/nsight-graphics-internal/$version 
     pushd ~/nsight-graphics-internal/$version >/dev/null 
         tar -zxvf $file 
+        mv ./nvidia-nomad-internal-Linux.linux/* .
+        rm -rf ./nvidia-nomad-internal-Linux.linux
     popd >/dev/null 
     pushd ~/nsight-graphics-internal >/dev/null 
         ln -sf $version current 
