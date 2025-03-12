@@ -672,7 +672,9 @@ function zhu-decrypt {
 function zhu-install-nsight-graphics {
     sudo apt install -y cifs-utils
     sudo mkdir -p /mnt/NomadBuilds
-    sudo mount -t cifs -o username='wanliz@nvidia.com' //devrel/share/Devtools/NomadBuilds /mnt/NomadBuilds || return -1
+    if ! mountpoint -q /mnt/NomadBuilds; then
+        sudo mount -t cifs -o username='wanliz@nvidia.com' //devrel/share/Devtools/NomadBuilds /mnt/NomadBuilds || return -1
+    fi 
     file=$(ls /mnt/NomadBuilds/latest/Internal/linux/*.tar.gz)
     version=$(basename -s '-internal.tar.gz' $file)
     version=${version/#NVIDIA_Nsight_Graphics_}
