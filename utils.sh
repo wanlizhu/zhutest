@@ -866,6 +866,11 @@ function zhu-record-gpu-utilization {
 }
 
 function zhu-disable-nvidia-gpu {
+    if [[ $XDG_SESSION_TYPE != tty ]]; then
+        echo "Please run via tty session!"
+        return -1
+    fi
+
     # Get a list of NVIDIA GPUs
     IFS=$'\n' read -d '' -r -a gpu_list < <(nvidia-smi --query-gpu=index,name,uuid --format=csv,noheader | nl -v0 -w1 -s': ')
     if [[ ${#gpu_list[@]} -eq 0 ]]; then
@@ -899,8 +904,8 @@ function zhu-disable-nvidia-gpu {
 
     sudo mkdir -p /etc/udev/rules.d
     echo "ACTION==\"add\", SUBSYSTEM==\"pci\", ATTR{vendor}==\"0x$vendor_id\", ATTR{device}==\"0x$dev_id\", ATTR{enable}=\"0\"" | sudo tee /etc/udev/rules.d/99-disable-gpu.rules 
-    sudo bash -c "sudo udevadm control --reload-rules; sudo udevadm trigger --action=add" &
-    disown 
+    sudo udevadm control --reload-rules
+    sudo udevadm trigger --action=add
     echo "[Action Required] Reboot system to activate changes!"
 }
 
