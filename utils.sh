@@ -53,20 +53,9 @@ if [[ $USER == wanliz ]]; then
     if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-graphics-internal"; then
         export PATH="~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64:$PATH"
     fi
-elif [[ $UID == 0 ]]; then
-    if [[ -d /home/wanliz/zhutest ]]; then
-        if [[ ! -d /root/zhutest ]]; then
-            ln -sf /home/wanliz/zhutest /root/zhutest
-        fi
-        if [[ $(stat -c "%U" /home/wanliz/zhutest) != $USER ]]; then
-            git config --global --add safe.directory /home/wanliz/zhutest
-        fi
-    fi
 
-    if [[ -d /home/wanliz/zhutest-workload.d ]]; then  
-        if [[ ! -d /root/zhutest-workload.d ]]; then 
-            ln -sf /home/wanliz/zhutest-worload.d /root/zhutest-workload.d
-        fi 
+    if ! echo "$PATH" | tr ':' '\n' | grep -q "gfxreconstruct.git"; then
+        export PATH="~/gfxreconstruct.git/build/linux/x64/output/bin:$PATH"
     fi
 fi
 
@@ -2041,6 +2030,51 @@ function zhu-gtlfs-download {
     popd >/dev/null 
 }
 
+function zhu-vulkan-api-capture {
+    if [[ ! -e ~/gfxreconstruct.git/build/linux/x64/output/bin/gfxrecon.py ]]; then
+        if [[ ! -d ~/gfxreconstruct.git ]]; then
+            git clone --recursive https://github.com/LunarG/gfxreconstruct.git ~/gfxreconstruct.git 
+        fi
+
+        arch=x64 
+        sudo apt install -y git cmake build-essential libx11-xcb-dev libxcb-keysyms1-dev libwayland-dev libxrandr-dev zlib1g-dev liblz4-dev libzstd-dev
+        sudo apt install -y g++-multilib libx11-xcb-dev:i386 libxcb-keysyms1-dev:i386 libwayland-dev:i386 libxrandr-dev:i386 zlib1g-dev:i386 liblz4-dev:i386 libzstd-dev:i386
+        if [[ $(uname -m) == aarch64 ]]; then
+            sudo apt install -y g++-aarch64-linux-gnu
+            arch=arm64
+        fi 
+
+        pushd . >/dev/null 
+        cd ~/gfxreconstruct.git 
+        git submodule update --init
+        python3 scripts/build.py --arch $arch --config release --parallel $(nproc) --skip-check-code-style --skip-tests --skip-d3d12-support 
+        echo "gfxreconstruct is compiled! run again."
+        return 
+    fi 
+
+    echo "These environment variables are exported!"
+    if [[ -z $VK_LAYER_SETTINGS_PATH ]]; then
+        export VK_LAYER_SETTINGS_PATH=$HOME/gfxreconstruct.git/build/linux/x64/output/share/vulkan/explicit_layer.d/VkLayer_gfxreconstruct.json 
+    else
+        export VK_LAYER_SETTINGS_PATH=$HOME/gfxreconstruct.git/build/linux/x64/output/share/vulkan/explicit_layer.d/VkLayer_gfxreconstruct.json:$VK_LAYER_SETTINGS_PATH 
+    fi
+    echo "export VK_LAYER_SETTINGS_PATH=$VK_LAYER_SETTINGS_PATH"
+
+    if [[ -z $VK_LAYER_PATH ]]; then
+        export VK_LAYER_PATH=$HOME/gfxreconstruct.git/build/linux/x64/output/lib/libVkLayer_gfxreconstruct.so
+    else
+        export VK_LAYER_PATH=$HOME/gfxreconstruct.git/build/linux/x64/output/lib/libVkLayer_gfxreconstruct.so:$VK_LAYER_PATH 
+    fi
+    echo "export VK_LAYER_PATH=$VK_LAYER_PATH"
+
+    if [[ -z $VK_INSTANCE_LAYERS ]]; then
+        export VK_INSTANCE_LAYERS=VK_LAYER_LUNARG_gfxreconstruct
+    else
+        export VK_INSTANCE_LAYERS=VK_LAYER_LUNARG_gfxreconstruct:$VK_INSTANCE_LAYERS 
+    fi
+    echo "export VK_INSTANCE_LAYERS=$VK_INSTANCE_LAYERS"
+}
+
 function zhu-test-quake2rtx {
     zhu-install-quake2rtx || return -1
     rm -rf ~/.quake2rtx
@@ -2073,6 +2107,10 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
 
         sudo ln -sf ~/zhutest-workload.d/root-nvt-tests-sottr-2025-03-11  /root/nvt/tests 
         sudo chmod 777 /root
+    fi
+
+    if [[ $(sysctl kernel.unprivileged_userns_clone | awk '{print $3}') == 0 ]]; then
+        sudo sysctl -w kernel.unprivileged_userns_clone=1
     fi
 
     cd /root/nvt/tests/dxvk/run_dir; \
