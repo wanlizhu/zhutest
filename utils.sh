@@ -538,6 +538,10 @@ function zhu-sync {
     fi
     popd >/dev/null 
     zhu-reload 
+
+    if [[ $EUID == 0 && -d /home/wanliz/zhutest ]]; then
+        chown -R wanliz:wanliz /home/wanliz/zhutest
+    fi
 }
 
 function zhu-download-nvidia-driver {
@@ -654,7 +658,28 @@ function zhu-decrypt {
     echo -n "$1" | openssl enc -d -aes-256-cbc -pbkdf2 -iter 10000 -salt -base64 -A -pass "pass:${passwd}" 
 }
 
-function zhu-upgrade-nsight-systems {
+function zhu-install-nsight-graphics {
+    sudo apt install -y cifs-utils
+    sudo mkdir -p /mnt/NomadBuilds
+    if ! mountpoint -q /mnt/NomadBuilds; then
+        sudo mount -t cifs -o username='wanliz@nvidia.com' //devrel/share/Devtools/NomadBuilds /mnt/NomadBuilds || return -1
+    fi 
+    file=$(ls /mnt/NomadBuilds/latest/Internal/linux/*.tar.gz)
+    version=$(basename -s '-internal.tar.gz' $file)
+    version=${version/#NVIDIA_Nsight_Graphics_}
+    rsync -ah --progress $file ~/Downloads
+    mkdir -p ~/nsight-graphics-internal/$version 
+    pushd ~/nsight-graphics-internal/$version >/dev/null 
+        tar -zxvf $file 
+        mv ./nvidia-nomad-internal-Linux.linux/* .
+        rm -rf ./nvidia-nomad-internal-Linux.linux
+    popd >/dev/null 
+    pushd ~/nsight-graphics-internal >/dev/null 
+        ln -sf $version current 
+    popd >/dev/null 
+}
+
+function zhu-install-nsight-systems {
     if [[ ! -e ~/.zhutest.artifactory.apikey ]]; then
         echo $(zhu-decrypt 'U2FsdGVkX18elI7G2zmszU2FUxbRUHvvE8I+ZRUBdyZVdczSVW59b/Klyq8fgihi2oIXR6P1zDVjptpwVemHV71PgHm6exawmqpqxpS6UuJfBTxiW60s4VR6JJVlWYVt') > ~/.zhutest.artifactory.apikey
     fi  
@@ -682,16 +707,16 @@ function zhu-upgrade-nsight-systems {
         echo "Installed version is NULL"
     fi
     
-    read -p "Upgrade to $latest_subver? " upgrade_nsys 
+    read -e -i yes -p "Upgrade to $latest_subver? " upgrade_nsys 
     if [[ $upgrade_nsys == yes ]]; then
         pushd ~/Downloads >/dev/null
-        wget --no-check-certificate --header="X-JFrog-Art-Api: $ARTIFACTORY_API_KEY" https://urm.nvidia.com/artifactory/swdt-nsys-generic/ctk/$latest_version/$latest_subver/nsight_systems-linux-x86_64-$latest_subver.tar.gz &&
-        tar -zxvf nsight_systems-linux-x86_64-$latest_subver.tar.gz &&
-        mkdir -p ~/nsight-systems-internal && 
-        mv nsight_systems ~/nsight-systems-internal/$latest_subver &&
-        pushd ~/nsight-systems-internal >/dev/null &&
-        ln -sf $latest_subver current 
-        popd >/dev/null 
+            wget --no-check-certificate --header="X-JFrog-Art-Api: $ARTIFACTORY_API_KEY" https://urm.nvidia.com/artifactory/swdt-nsys-generic/ctk/$latest_version/$latest_subver/nsight_systems-linux-x86_64-$latest_subver.tar.gz || return -1
+            tar -zxvf nsight_systems-linux-x86_64-$latest_subver.tar.gz
+            mkdir -p ~/nsight-systems-internal 
+            mv nsight_systems ~/nsight-systems-internal/$latest_subver 
+            pushd ~/nsight-systems-internal >/dev/null 
+                ln -sf $latest_subver current 
+            popd >/dev/null 
         popd >/dev/null 
     fi
 }
@@ -1299,11 +1324,11 @@ function zhu-chroot-in-fex {
     rootfs="$HOME/.fex-emu/RootFS/$ubuntu"
 
     pushd $rootfs >/dev/null 
-    if [[ ! -e ./chroot.py ]]; then
-        wget https://raw.githubusercontent.com/FEX-Emu/RootFS/refs/heads/main/Scripts/chroot.py 
-        chmod +x ./chroot.py 
-    fi
 
+    cp -vf  ~/zhutest/src/chroot.py .
+    #wget https://raw.githubusercontent.com/FEX-Emu/RootFS/refs/heads/main/Scripts/chroot.py 
+    chmod +x ./chroot.py 
+    
     if [[ -z $(which patchelf) ]]; then
         sudo apt install -y patchelf
     fi
@@ -1314,11 +1339,13 @@ function zhu-chroot-in-fex {
         sudo apt purge apparmor
     fi 
 
-    while IFS= read -r line; do 
-        if ! grep -q "$line" $rootfs/etc/resolv.conf; then
-            echo "line" >> $rootfs/etc/resolv.conf
-        fi
-    done < /etc/resolv.conf
+    if [[ -e /etc/resolv.conf && -e $rootfs/etc/resolv.conf ]]; then 
+        while IFS= read -r line; do 
+            if ! grep -q "$line" $rootfs/etc/resolv.conf; then
+                echo "line" >> $rootfs/etc/resolv.conf
+            fi
+        done < /etc/resolv.conf
+    fi 
 
     if [[ -e /etc/apt/sources.list.d/ubuntu.sources ]]; then
         mkdir -p $rootfs/etc/apt/sources.list.d
@@ -1359,6 +1386,7 @@ function zhu-config-in-fex {
     apt install -y dbus-x11
     apt install -y vim 
     apt install -y libprotobuf-dev 
+    apt install -y nfs-common 
 
     apt reinstall -y passwd
     apt reinstall -y util-linux
@@ -2088,25 +2116,14 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
     pushd . >/dev/null 
     zhu-mount-linuxqa || return -1
 
-    if [[ ! -d ~/zhutest-workload.d/root-nvt-tests-sottr-2025-03-11 ]]; then
-        if [[ ! -e ~/Downloads/root-nvt-tests-sottr-2025-03-11.tar.gz ]]; then
-            zhu-gtlfs-download 01958659-EC0C-7E0F-9BEA-1A0E969DED5D 
+    if [[ ! -d $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11 ]]; then
+        if [[ ! -e $HOME/Downloads/nvtest-sottr-2025-03-11.tar.gz ]]; then
+            zhu-gtlfs-download 0195873E-0634-7304-ABE0-A64290DC648E  
         fi
 
-        mkdir -p ~/zhutest-workload.d
-        cd ~/zhutest-workload.d
-        tar -zxvf ~/Downloads/root-nvt-tests-sottr-2025-03-11.tar.gz
-        chown -R $USER:$(id -gn) root-nvt-tests-sottr-2025-03-11
-
-        sudo bash -c "
-        if [[ -d /root/nvt/tests ]]; then
-            mv /root/nvt/tests /root/nvt/tests.backup
-        else
-            mkdir -p /root/nvt
-        fi"
-
-        sudo ln -sf ~/zhutest-workload.d/root-nvt-tests-sottr-2025-03-11  /root/nvt/tests 
-        sudo chmod 777 /root
+        mkdir -p $HOME/zhutest-workload.d
+        cd $HOME/zhutest-workload.d
+        tar -zxvf $HOME/Downloads/nvtest-sottr-2025-03-11.tar.gz
     fi
 
     if [[ $(sysctl kernel.unprivileged_userns_clone | awk '{print $3}') == 0 ]]; then
@@ -2119,12 +2136,12 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
     DXVK_HUD=full \
     DXVK_LOG_LEVEL=none \
     DXVK_STATE_CACHE=0 \
-    LD_LIBRARY_PATH=/root/nvt/tests/dxvk/proton-9.0-3e/files/lib64:/root/nvt/tests/dxvk/proton-9.0-3e/files/lib:/mnt/linuxqa/nvtest/pynv_files/vulkan_loader/sdk-1.2.162.0/Linux_amd64:/mnt/linuxqa/nvtest/pynv_files/vkdevicechooser/Linux_amd64 \
+    LD_LIBRARY_PATH=$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/files/lib64:$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/files/lib:/mnt/linuxqa/nvtest/pynv_files/vulkan_loader/sdk-1.2.162.0/Linux_amd64:/mnt/linuxqa/nvtest/pynv_files/vkdevicechooser/Linux_amd64 \
     LIBC_FATAL_STDERR_=1 \
     NODEVICE_SELECT=1 \
-    PATH=/root/nvt/tests/dxvk/proton-9.0-3e/files/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin \
+    PATH=$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/files/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin \
     PROTON_VR_RUNTIME=1 \
-    STEAM_COMPAT_DATA_PATH=/root/nvt/tests/dxvk/proton-9.0-3e/prefix \
+    STEAM_COMPAT_DATA_PATH=$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/prefix \
     VKD3D_CONFIG=dxr \
     VKD3D_DEBUG=none \
     VKD3D_FEATURE_LEVEL=12_2 \
@@ -2135,9 +2152,9 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
     VULKAN_DEVICE_INDEX=0 \
     WINEDEBUG=-all \
     WINEDLLOVERRIDES='steam.exe=b;d3d11=n;d3d10core=n;dxgi=n;d3d11x_42=n;d3d11x_43=n;d3d9=n;nvcuda=b;d3d12=n;d3d12core=n;' \
-    WINEDLLPATH=/root/nvt/tests/dxvk/proton-9.0-3e/files/lib64/wine:/root/nvt/tests/dxvk/proton-9.0-3e/files/lib/wine \
+    WINEDLLPATH=$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/files/lib64/wine:$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/files/lib/wine \
     WINEESYNC=1 \
-    WINEPREFIX=/root/nvt/tests/dxvk/proton-9.0-3e/prefix/pfx \
+    WINEPREFIX=$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/prefix/pfx \
     WINE_DISABLE_FULLSCREEN_HACK=1 \
     WINE_MONO_OVERRIDES='Microsoft.Xna.Framework.*,Gac=n' \
     __GL_0x301fd6=0x00000005 \
@@ -2147,14 +2164,26 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
     __GL_61807119=/root/nvt/log/loadmonitor/00096_run-in-sniper \
     __GL_SHADER_DISK_CACHE=0 \
     __GL_SYNC_TO_VBLANK=0 \
-    /root/nvt/tests/dxvk/steam-linux-runtime-12249908/run-in-sniper -- \
-    /root/nvt/tests/dxvk/proton-9.0-3e/files/bin/wine \
-    /root/nvt/tests/dxvk/run_dir/SOTTR.exe 99999999 0 fps_log | tee /tmp/nvtest-sottr.log &
+    $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/steam-linux-runtime-12249908/run-in-sniper -- \
+    $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/files/bin/wine \
+    $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/run_dir/SOTTR.exe 99999999 0 fps_log >/tmp/nvtest-sottr.log &
     
-    gamepid=$!
+    echo "Recording FPS for 30 seconds..."
     sleep 30
-    kill -INT $gamepid
-    echo "Generated /tmp/nvtest-sottr.log"
+    
+    if [[ ! -z $(nvidia-smi) ]]; then
+        kill -INT $(nvidia-smi | grep SOTTR.exe | awk '{print $5}')
+    else
+        echo TODO
+    fi 
+    sleep 3
+
+    if [[ -e /tmp/nvtest-sottr.log ]]; then 
+        cat /tmp/nvtest-sottr.log | tail -n 100 >/tmp/nvtest-sottr-tail-100.log
+        echo "Generated /tmp/nvtest-sottr.log"
+        echo "Total Average FPS: $(awk '{ total += $1; count++ } END { print total/count }' /tmp/nvtest-sottr.log)"
+        echo "Stablized Avg FPS: $(awk '{ total += $1; count++ } END { print total/count }' /tmp/nvtest-sottr-tail-100.log)"
+    fi 
 
     popd >/dev/null 
 }
