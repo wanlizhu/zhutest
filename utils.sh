@@ -2063,19 +2063,6 @@ function zhu-gtlfs-download {
     popd >/dev/null 
 }
 
-function zhu-append-and-export {
-    local name=$1
-    local value=$2
-    if [[ -z ${!name} ]]; then
-        eval "export $name=$value"
-    else
-        if [[ "${!name}" != *"$value"* ]]; then
-            eval "export $name=$value:${!name}"
-        fi  
-    fi
-    echo "export $name=${!name}"
-}
-
 function zhu-vulkan-api-capture {
     if [[ ! -e ~/gfxreconstruct.git/build/linux/x64/output/bin/gfxrecon-capture-vulkan.py ]]; then
         if [[ ! -d ~/gfxreconstruct.git ]]; then
@@ -2093,9 +2080,7 @@ function zhu-vulkan-api-capture {
         popd >/dev/null
     fi 
 
-    zhu-append-and-export VK_INSTANCE_LAYERS VK_LAYER_LUNARG_gfxreconstruct
-    zhu-append-and-export VK_LAYER_PATH $HOME/gfxreconstruct.git/build/linux/x64/output/share/vulkan/explicit_layer.d
-
+    edit_ld_library_path=no
     library_path=$(jq -r '.layer.library_path' $HOME/gfxreconstruct.git/build/linux/x64/output/share/vulkan/explicit_layer.d/VkLayer_gfxreconstruct.json)
     if [[ $library_path == "/"* ]]; then
         echo "VkLayer_gfxreconstruct.json->layer->library_path is NOT an absolute path of libVkLayer_gfxreconstruct.so!"
@@ -2107,9 +2092,37 @@ function zhu-vulkan-api-capture {
             jq --arg real_path "/home/wanliz/gfxreconstruct.git/build/linux/x64/output/lib/libVkLayer_gfxreconstruct.so" '.layer.library_path = $real_path' -i $HOME/gfxreconstruct.git/build/linux/x64/output/share/vulkan/explicit_layer.d/VkLayer_gfxreconstruct.json
             echo "Replaced VkLayer_gfxreconstruct.json->layer->library_path with its real path"
         else
-            zhu-append-and-export LD_LIBRARY_PATH $HOME/gfxreconstruct.git/build/linux/x64/output/lib
+            edit_ld_library_path=yes 
         fi
     fi
+
+    echo "Output directory is $HOME/Documents/"
+    mkdir -p $HOME/Documents 
+
+    read -p "Output name: " name
+    read -e -i yes -p "Add timestamp suffix? (yes/no): " suffix
+    read -e -i yes -p "Is capture triggered by hotkey (F10)? (yes/no): " hotkey
+    if [[ $hotkey == yes ]]; then
+        read -e -i 500 -p "Number of frames to capture via hotkey: " num_frames 
+    else
+        read -e -i '500-1000' -p "Index of frames to capture: " idx_frames
+    fi
+
+    cmdline="VK_INSTANCE_LAYERS=VK_LAYER_LUNARG_gfxreconstruct${VK_INSTANCE_LAYERS:+:$VK_INSTANCE_LAYERS} VK_LAYER_PATH=$HOME/gfxreconstruct.git/build/linux/x64/output/share/vulkan/explicit_layer.d${VK_LAYER_PATH:+:$VK_LAYER_PATH}"
+    if [[ $edit_ld_library_path == yes ]]; then
+        cmdline="$cmdline LD_LIBRARY_PATH=$HOME/gfxreconstruct.git/build/linux/x64/output/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+    fi
+    cmdline="$cmdline GFXRECON_CAPTURE_FILE=$HOME/Documents/$name.gfxr"
+    if [[ $suffix != yes ]]; then
+        cmdline="$cmdline GFXRECON_CAPTURE_FILE_TIMESTAMP=false"
+    fi 
+    if [[ $hotkey == yes ]]; then
+        cmdline="$cmdline GFXRECON_CAPTURE_TRIGGER=F10"
+        cmdline="$cmdline GFXRECON_CAPTURE_TRIGGER_FRAMES=$num_frames"
+    else
+        cmdline="$cmdline GFXRECON_CAPTURE_FRAMES=$idx_frames"
+    fi 
+    echo "$cmdline"
 }
 
 function zhu-test-quake2rtx {
