@@ -2059,7 +2059,7 @@ function zhu-gtlfs-download {
 }
 
 function zhu-vulkan-api-capture {
-    if [[ ! -e ~/gfxreconstruct.git/build/linux/x64/output/bin/gfxrecon.py ]]; then
+    if [[ ! -e ~/gfxreconstruct.git/build/linux/x64/output/bin/gfxrecon-capture-vulkan.py ]]; then
         if [[ ! -d ~/gfxreconstruct.git ]]; then
             git clone --recursive https://github.com/LunarG/gfxreconstruct.git ~/gfxreconstruct.git 
         fi
