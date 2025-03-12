@@ -669,7 +669,24 @@ function zhu-decrypt {
     echo -n "$1" | openssl enc -d -aes-256-cbc -pbkdf2 -iter 10000 -salt -base64 -A -pass "pass:${passwd}" 
 }
 
-function zhu-upgrade-nsight-systems {
+function zhu-install-nsight-graphics {
+    sudo apt install -y cifs-utils
+    sudo mkdir -p /mnt/NomadBuilds
+    sudo mount -t cifs -o username='wanliz@nvidia.com' //devrel/share/Devtools/NomadBuilds /mnt/NomadBuilds || return -1
+    file=$(ls /mnt/NomadBuilds/latest/Internal/linux/*.tar.gz)
+    version=$(basename -s '-internal.tar.gz' $file)
+    version=${version/#NVIDIA_Nsight_Graphics_}
+    rsync -ah --progress $file ~/Downloads
+    mkdir -p ~/nsight-graphics-internal/$version 
+    pushd ~/nsight-graphics-internal/$version >/dev/null 
+        tar -zxvf $file 
+    popd >/dev/null 
+    pushd ~/nsight-graphics-internal >/dev/null 
+        ln -sf $version current 
+    popd >/dev/null 
+}
+
+function zhu-install-nsight-systems {
     if [[ ! -e ~/.zhutest.artifactory.apikey ]]; then
         echo $(zhu-decrypt 'U2FsdGVkX18elI7G2zmszU2FUxbRUHvvE8I+ZRUBdyZVdczSVW59b/Klyq8fgihi2oIXR6P1zDVjptpwVemHV71PgHm6exawmqpqxpS6UuJfBTxiW60s4VR6JJVlWYVt') > ~/.zhutest.artifactory.apikey
     fi  
@@ -697,16 +714,16 @@ function zhu-upgrade-nsight-systems {
         echo "Installed version is NULL"
     fi
     
-    read -p "Upgrade to $latest_subver? " upgrade_nsys 
+    read -e -i yes -p "Upgrade to $latest_subver? " upgrade_nsys 
     if [[ $upgrade_nsys == yes ]]; then
         pushd ~/Downloads >/dev/null
-        wget --no-check-certificate --header="X-JFrog-Art-Api: $ARTIFACTORY_API_KEY" https://urm.nvidia.com/artifactory/swdt-nsys-generic/ctk/$latest_version/$latest_subver/nsight_systems-linux-x86_64-$latest_subver.tar.gz &&
-        tar -zxvf nsight_systems-linux-x86_64-$latest_subver.tar.gz &&
-        mkdir -p ~/nsight-systems-internal && 
-        mv nsight_systems ~/nsight-systems-internal/$latest_subver &&
-        pushd ~/nsight-systems-internal >/dev/null &&
-        ln -sf $latest_subver current 
-        popd >/dev/null 
+            wget --no-check-certificate --header="X-JFrog-Art-Api: $ARTIFACTORY_API_KEY" https://urm.nvidia.com/artifactory/swdt-nsys-generic/ctk/$latest_version/$latest_subver/nsight_systems-linux-x86_64-$latest_subver.tar.gz || return -1
+            tar -zxvf nsight_systems-linux-x86_64-$latest_subver.tar.gz
+            mkdir -p ~/nsight-systems-internal 
+            mv nsight_systems ~/nsight-systems-internal/$latest_subver 
+            pushd ~/nsight-systems-internal >/dev/null 
+                ln -sf $latest_subver current 
+            popd >/dev/null 
         popd >/dev/null 
     fi
 }
