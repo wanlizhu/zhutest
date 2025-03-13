@@ -2103,14 +2103,26 @@ function zhu-vulkan-api-capture {
 
         sudo apt install -y git cmake build-essential libx11-xcb-dev libxcb-keysyms1-dev libwayland-dev libxrandr-dev zlib1g-dev liblz4-dev libzstd-dev
         sudo apt install -y g++-multilib libx11-xcb-dev:i386 libxcb-keysyms1-dev:i386 libwayland-dev:i386 libxrandr-dev:i386 zlib1g-dev:i386 liblz4-dev:i386 libzstd-dev:i386
+        if [[ $(uname -m) == aarch64 ]]; then
+            sudo apt install -y g++-aarch64-linux-gnu
+            arch=arm64
+        else
+            arch=x64
+        fi
 
         pushd . >/dev/null 
         cd ~/gfxreconstruct.git 
         git submodule update --init
-        python3 scripts/build.py --arch x64 --config release --parallel $(nproc) --skip-check-code-style --skip-tests --skip-d3d12-support 
+        python3 scripts/build.py --arch $arch --config release --parallel $(nproc) --skip-check-code-style --skip-tests --skip-d3d12-support 
         echo "gfxreconstruct is compiled!"
         popd >/dev/null
     fi 
+
+    if [[ $(uname -m) == aarch64 ]]; then
+        arch=arm64
+    else
+        arch=x64
+    fi
 
     echo "Output directory is $HOME/Documents/"
     mkdir -p $HOME/Documents 
@@ -2124,8 +2136,8 @@ function zhu-vulkan-api-capture {
     fi
     read -e -i yes -p "Log messages to file? (yes/no): " logfile
 
-    cmdline="VK_INSTANCE_LAYERS=VK_LAYER_LUNARG_gfxreconstruct${VK_INSTANCE_LAYERS:+:$VK_INSTANCE_LAYERS} VK_LAYER_PATH=$HOME/gfxreconstruct.git/build/linux/x64/output/share/vulkan/explicit_layer.d${VK_LAYER_PATH:+:$VK_LAYER_PATH}"
-    cmdline="$cmdline LD_LIBRARY_PATH=$HOME/gfxreconstruct.git/build/linux/x64/output/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+    cmdline="VK_INSTANCE_LAYERS=VK_LAYER_LUNARG_gfxreconstruct${VK_INSTANCE_LAYERS:+:$VK_INSTANCE_LAYERS} VK_LAYER_PATH=$HOME/gfxreconstruct.git/build/linux/$arch/output/share/vulkan/explicit_layer.d${VK_LAYER_PATH:+:$VK_LAYER_PATH}"
+    cmdline="$cmdline LD_LIBRARY_PATH=$HOME/gfxreconstruct.git/build/linux/$arch/output/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
     cmdline="$cmdline GFXRECON_CAPTURE_FILE=$HOME/Documents/$name.gfxr"
     cmdline="$cmdline GFXRECON_CAPTURE_FILE_TIMESTAMP=false"
     if [[ $hotkey == yes ]]; then
