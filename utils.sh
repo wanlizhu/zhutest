@@ -57,6 +57,13 @@ if [[ $USER == wanliz ]]; then
     if ! echo "$PATH" | tr ':' '\n' | grep -q "gfxreconstruct.git"; then
         export PATH="~/gfxreconstruct.git/build/linux/x64/output/bin:$PATH"
     fi
+
+    if [[ $(uname -m) == aarch64 ]]; then
+        if [[ -e $HOME/.fex-emu/Config.json ]]; then
+            which jq >/dev/null || sudo apt install -y jq 
+            export rootfs="$HOME/.fex-emu/RootFS/$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)"
+        fi 
+    fi
 fi
 
 function zhu-reload {
