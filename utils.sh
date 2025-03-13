@@ -606,7 +606,11 @@ function zhu-install-nvidia-driver-cloudbuild {
     fi
 
     if [[ -e $(realpath $path) ]]; then
-        zhu-install-nvidia-driver-localbuild $(realpath $path)
+        if [[ $1 == --dryrun ]]; then
+            echo "$(realpath $path)"
+        else
+            zhu-install-nvidia-driver-localbuild $(realpath $path)
+        fi 
     else
         echo "$(realpath $path) not found!"
         return -1
