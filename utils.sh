@@ -1356,34 +1356,35 @@ function zhu-chroot-in-fex {
 
     pushd $rootfs >/dev/null 
 
-    cp -vf  ~/zhutest/src/chroot.py .
-    #wget https://raw.githubusercontent.com/FEX-Emu/RootFS/refs/heads/main/Scripts/chroot.py 
-    chmod +x ./chroot.py 
+    if [[ ! -e ./chroot.py ]]; then 
+        wget https://raw.githubusercontent.com/FEX-Emu/RootFS/refs/heads/main/Scripts/chroot.py 
+        chmod +x ./chroot.py 
+    fi 
     
     if [[ -z $(which patchelf) ]]; then
         sudo apt install -y patchelf
     fi
 
-    if [[ $(systemctl is-active apparmor) == active ]]; then
-        sudo systemctl stop apparmor
-        sudo systemctl disable apparmor
-        sudo apt purge apparmor
-    fi 
+    #if [[ $(systemctl is-active apparmor) == active ]]; then
+    #    sudo systemctl stop apparmor
+    #    sudo systemctl disable apparmor
+    #    sudo apt purge apparmor
+    #fi 
 
-    if [[ -e /etc/resolv.conf && -e $rootfs/etc/resolv.conf ]]; then 
-        while IFS= read -r line; do 
-            if ! grep -q "$line" $rootfs/etc/resolv.conf; then
-                echo "line" >> $rootfs/etc/resolv.conf
-            fi
-        done < /etc/resolv.conf
-    fi 
+    #if [[ -e /etc/resolv.conf && -e $rootfs/etc/resolv.conf ]]; then 
+    #    while IFS= read -r line; do 
+    #        if ! grep -q "$line" $rootfs/etc/resolv.conf; then
+    #            echo "line" >> $rootfs/etc/resolv.conf
+    #        fi
+    #    done < /etc/resolv.conf
+    #fi 
 
-    if [[ -e /etc/apt/sources.list.d/ubuntu.sources ]]; then
-        mkdir -p $rootfs/etc/apt/sources.list.d
-        echo "" >> $rootfs/etc/apt/sources.list.d/ubuntu.sources
-        echo "# Imported from native arm64 filesystem" >> $rootfs/etc/apt/sources.list.d/ubuntu.sources
-        cat /etc/apt/sources.list.d/ubuntu.sources >> $rootfs/etc/apt/sources.list.d/ubuntu.sources
-    fi 
+    #if [[ -e /etc/apt/sources.list.d/ubuntu.sources ]]; then
+    #    mkdir -p $rootfs/etc/apt/sources.list.d
+    #    echo "" >> $rootfs/etc/apt/sources.list.d/ubuntu.sources
+    #    echo "# Imported from native arm64 filesystem" >> $rootfs/etc/apt/sources.list.d/ubuntu.sources
+    #    cat /etc/apt/sources.list.d/ubuntu.sources >> $rootfs/etc/apt/sources.list.d/ubuntu.sources
+    #fi 
 
     ./chroot.py chroot 
     popd >/dev/null 
