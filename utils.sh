@@ -1138,7 +1138,7 @@ function zhu-cursor-click-on-window {
     xdotool mousemove --window $window_id $2 $3 click 1
 }
 
-function zhu-test-3dmark-attan-wildlife {
+function zhu-test-3dmark-wildlife {
     zhu-validate-display || return -1
 
     if [[ ! -e ~/zhutest-workload.d/3dmark-attan-wildlife-1.1.2.1 ]]; then
@@ -1168,7 +1168,7 @@ function zhu-test-3dmark-attan-wildlife {
     popd >/dev/null 
 }
 
-function zhu-test-3dmark-disco-steelnomad {
+function zhu-test-3dmark-steelnomad {
     zhu-validate-display || return -1
 
     if [[ ! -e ~/zhutest-workload.d/3dmark-disco-steelnomad-1.0.0 ]]; then
@@ -1198,7 +1198,7 @@ function zhu-test-3dmark-disco-steelnomad {
     popd >/dev/null 
 }
 
-function zhu-test-3dmark-pogo-solarbay {
+function zhu-test-3dmark-solarbay {
     zhu-validate-display || return -1
 
     if [[ ! -e ~/zhutest-workload.d/3dmark-pogo-solarbay-1.0.5.3 ]]; then
@@ -1226,24 +1226,6 @@ function zhu-test-3dmark-pogo-solarbay {
     echo "3DMark - Solar Bay - Vulkan raytracing"
     echo "Typed result: $result FPS"
     popd >/dev/null 
-}
-
-function zhu-fetch-from-data-server {
-    if [[ -z $(which sshpass) ]]; then
-        sudo apt install -y sshpass
-    fi
-
-    if [[ ! -e ~/.zhurc.data.server ]]; then
-        read -p "Data server IP: " ip
-        read -e -i wanliz -p "Data server username: " user
-        read -s -p "Data server password: " passwd
-        echo "$user@$ip $passwd" > ~/.zhurc.data.server
-    fi
-
-    remote=$(cat ~/.zhurc.data.server | awk '{print $1}')
-    passwd=$(cat ~/.zhurc.data.server | awk '{print $2}')
-
-    sshpass -p "$passwd" rsync -ah --progress $remote:"$1" "$2"
 }
 
 function zhu-install-vscode {
@@ -1488,7 +1470,9 @@ function zhu-test-unigine-heaven {
             rsync -ah --progress ./Unigine_Heaven-4.0/ ~/zhutest-workload.d/unigine-heaven-1.6.5 || return -1
             popd >/dev/null
         } || {
-            zhu-fetch-from-data-server /home/wanliz/.phoronix-test-suite/installed-tests/pts/unigine-heaven-1.6.5/Unigine_Heaven-4.0/ ~/zhutest-workload.d/unigine-heaven-1.6.5 || return -1
+            read -p "copy workload from host: " host
+            read -e -i wanliz -p "username: " user
+            rsync -ah --progress $user@$host:/home/$user/.phoronix-test-suite/installed-tests/pts/unigine-heaven-1.6.5/Unigine_Heaven-4.0/ ~/zhutest-workload.d/unigine-heaven-1.6.5 || return -1
         }
     fi
 
@@ -1512,7 +1496,9 @@ function zhu-test-unigine-vally {
             rsync -ah --progress ./Unigine_Valley-1.0/ ~/zhutest-workload.d/unigine-valley-1.1.8 || return -1
             popd >/dev/null
         } || {
-            zhu-fetch-from-data-server /home/wanliz/.phoronix-test-suite/installed-tests/pts/unigine-valley-1.1.8/Unigine_Valley-1.0/ ~/zhutest-workload.d/unigine-valley-1.1.8 || return -1
+            read -p "copy workload from host: " host
+            read -e -i wanliz -p "username: " user
+            rsync -ah --progress $user@$host:/home/$user/.phoronix-test-suite/installed-tests/pts/unigine-valley-1.1.8/Unigine_Valley-1.0/ ~/zhutest-workload.d/unigine-valley-1.1.8 || return -1
         }
     fi 
 
@@ -1536,7 +1522,9 @@ function zhu-test-unigine-superposition {
             rsync -ah --progress ./Unigine_Superposition-1.0/ ~/zhutest-workload.d/unigine-super-1.0.7 || return -1
             popd >/dev/null
         } || {
-            zhu-fetch-from-data-server /home/wanliz/.phoronix-test-suite/installed-tests/pts/unigine-super-1.0.7/Unigine_Superposition-1.0/ ~/zhutest-workload.d/unigine-super-1.0.7 || return -1
+            read -p "copy workload from host: " host
+            read -e -i wanliz -p "username: " user
+            rsync -ah --progress $user@$host:/home/$user/.phoronix-test-suite/installed-tests/pts/unigine-super-1.0.7/Unigine_Superposition-1.0/ ~/zhutest-workload.d/unigine-super-1.0.7 || return -1
         }
     fi 
 
@@ -2080,48 +2068,35 @@ function zhu-vulkan-api-capture {
         popd >/dev/null
     fi 
 
-    edit_ld_library_path=no
-    library_path=$(jq -r '.layer.library_path' $HOME/gfxreconstruct.git/build/linux/x64/output/share/vulkan/explicit_layer.d/VkLayer_gfxreconstruct.json)
-    if [[ $library_path == "/"* ]]; then
-        echo "VkLayer_gfxreconstruct.json->layer->library_path is NOT an absolute path of libVkLayer_gfxreconstruct.so!"
-        echo "[1] Edit VkLayer_gfxreconstruct.json to use absolute path"
-        echo "[2] Edit LD_LIBRARY_PATH to add parent directory"
-        read -p "Select: " selection
-
-        if [[ $selection == 1 ]]; then
-            jq --arg real_path "/home/wanliz/gfxreconstruct.git/build/linux/x64/output/lib/libVkLayer_gfxreconstruct.so" '.layer.library_path = $real_path' -i $HOME/gfxreconstruct.git/build/linux/x64/output/share/vulkan/explicit_layer.d/VkLayer_gfxreconstruct.json
-            echo "Replaced VkLayer_gfxreconstruct.json->layer->library_path with its real path"
-        else
-            edit_ld_library_path=yes 
-        fi
-    fi
-
     echo "Output directory is $HOME/Documents/"
     mkdir -p $HOME/Documents 
 
     read -p "Output name: " name
-    read -e -i yes -p "Add timestamp suffix? (yes/no): " suffix
     read -e -i yes -p "Is capture triggered by hotkey (F10)? (yes/no): " hotkey
     if [[ $hotkey == yes ]]; then
         read -e -i 500 -p "Number of frames to capture via hotkey: " num_frames 
     else
         read -e -i '500-1000' -p "Index of frames to capture: " idx_frames
     fi
+    read -e -i yes -p "Log messages to file? (yes/no): " logfile
 
     cmdline="VK_INSTANCE_LAYERS=VK_LAYER_LUNARG_gfxreconstruct${VK_INSTANCE_LAYERS:+:$VK_INSTANCE_LAYERS} VK_LAYER_PATH=$HOME/gfxreconstruct.git/build/linux/x64/output/share/vulkan/explicit_layer.d${VK_LAYER_PATH:+:$VK_LAYER_PATH}"
-    if [[ $edit_ld_library_path == yes ]]; then
-        cmdline="$cmdline LD_LIBRARY_PATH=$HOME/gfxreconstruct.git/build/linux/x64/output/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-    fi
+    cmdline="$cmdline LD_LIBRARY_PATH=$HOME/gfxreconstruct.git/build/linux/x64/output/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
     cmdline="$cmdline GFXRECON_CAPTURE_FILE=$HOME/Documents/$name.gfxr"
-    if [[ $suffix != yes ]]; then
-        cmdline="$cmdline GFXRECON_CAPTURE_FILE_TIMESTAMP=false"
-    fi 
+    cmdline="$cmdline GFXRECON_CAPTURE_FILE_TIMESTAMP=false"
     if [[ $hotkey == yes ]]; then
         cmdline="$cmdline GFXRECON_CAPTURE_TRIGGER=F10"
         cmdline="$cmdline GFXRECON_CAPTURE_TRIGGER_FRAMES=$num_frames"
     else
         cmdline="$cmdline GFXRECON_CAPTURE_FRAMES=$idx_frames"
     fi 
+    if [[ $logfile == yes ]]; then
+        cmdline="$cmdline GFXRECON_LOG_DETAILED=true"
+        cmdline="$cmdline GFXRECON_LOG_ALLOW_INDENTS=true"
+        cmdline="$cmdline GFXRECON_LOG_FILE=$HOME/Documents/$name.gfxr.log.txt"
+    fi
+    
+    echo 
     echo "$cmdline"
 }
 
@@ -2206,6 +2181,23 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
         echo "Total Average FPS: $(awk '{ total += $1; count++ } END { print total/count }' /tmp/nvtest-sottr.log)"
         echo "Stablized Avg FPS: $(awk '{ total += $1; count++ } END { print total/count }' /tmp/nvtest-sottr-tail-100.log)"
     fi 
+
+    popd >/dev/null 
+}
+
+function zhu-test-ngfxcpp-sottr {
+    if [[ ! -d ~/zhutest-workload.d/ngfxcpp-sottr ]]; then
+        read -p "copy workload from host: " host
+        read -e -i wanliz -p "username: " user
+        rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/ngfxcpp-sottr/ ~/zhutest-workload.d/ngfxcpp-sottr || return -1
+    fi
+
+    pushd ~/zhutest-workload.d/ngfxcpp-sottr >/dev/null 
+
+    read -e -i 100 -p "Number of frames to repeat: " frames
+
+    chmod +x ./ShadowOfTheTombRaider
+    LD_LIBRARY_PATH=$LD_LIBRARY_PATH: ./ShadowOfTheTombRaider -automated -noreset -fps -mincpu -repeat $frames   
 
     popd >/dev/null 
 }
