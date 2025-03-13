@@ -1430,10 +1430,7 @@ function zhu-config-in-fex {
         adduser wanliz
     fi 
 
-    read -e -i yes -p "Bypass steam client checks? (yes/no): " ans
-    if [[ $ans == yes ]]; then
-        zhu-bypass-steam-client-checks
-    fi
+    touch /.zhurc.chroot.config.success
 }
 
 function zhu-sudo-in-fex {
