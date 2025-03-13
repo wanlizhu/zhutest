@@ -11,60 +11,64 @@ if [[ -z $DISPLAY ]]; then
     fi
 fi
 
-if [[ $DISPLAY == *"localhost"* ]]; then
-    # When X11 forwarding is enabled
-    export XAUTHORITY=~/.Xauthority
-fi 
-
-if [[ -z $XAUTHORITY ]]; then
-    if [[ -e ~/.zhurc.xauth ]]; then
-        source ~/.zhurc.xauth
-    fi
-fi
-
-if [[ $XDG_SESSION_TYPE == x11 ]]; then
-    xhost + >/dev/null 2>&1
-fi
-
-if [[ $USER == wanliz ]]; then
-    export P4CLIENT=wanliz-p4sw-bugfix_main
-    export P4ROOT=$HOME/$P4CLIENT
-    export P4IGNORE=$HOME/.p4ignore 
-    export P4PORT=p4proxy-sc.nvidia.com:2006
-    export P4USER=wanliz 
-
-    if [[ ! -e $P4IGNORE ]]; then
-        echo "_out" > $P4IGNORE
-        echo ".git" >> $P4IGNORE
-        echo ".vscode" >> $P4IGNORE
-    fi
-
-    if [[ $UID != "0" ]]; then
-        if ! sudo grep -q "$USER ALL=(ALL) NOPASSWD:ALL" /etc/sudoers; then
-            echo "Enable sudo without password"
-            echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
-        fi
+if sudo ls >/dev/null 2>&1; then
+    if [[ $DISPLAY == *"localhost"* ]]; then
+        # When X11 forwarding is enabled
+        export XAUTHORITY=~/.Xauthority
     fi 
 
-    if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-systems-internal"; then
-        export PATH="~/nsight-systems-internal/current/host-linux-x64:$PATH" 
+    if [[ -z $XAUTHORITY ]]; then
+        if [[ -e ~/.zhurc.xauth ]]; then
+            source ~/.zhurc.xauth
+        fi
     fi
 
-    if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-graphics-internal"; then
-        export PATH="~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64:$PATH"
+    if [[ $XDG_SESSION_TYPE == x11 ]]; then
+        xhost + >/dev/null 2>&1
     fi
 
-    if ! echo "$PATH" | tr ':' '\n' | grep -q "gfxreconstruct.git"; then
-        export PATH="~/gfxreconstruct.git/build/linux/x64/output/bin:$PATH"
-    fi
+    if [[ $USER == wanliz ]]; then
+        export P4CLIENT=wanliz-p4sw-bugfix_main
+        export P4ROOT=$HOME/$P4CLIENT
+        export P4IGNORE=$HOME/.p4ignore 
+        export P4PORT=p4proxy-sc.nvidia.com:2006
+        export P4USER=wanliz 
 
-    if [[ $(uname -m) == aarch64 ]]; then
-        if [[ -e $HOME/.fex-emu/Config.json ]]; then
-            which jq >/dev/null || sudo apt install -y jq 
-            export rootfs="$HOME/.fex-emu/RootFS/$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)"
+        if [[ ! -e $P4IGNORE ]]; then
+            echo "_out" > $P4IGNORE
+            echo ".git" >> $P4IGNORE
+            echo ".vscode" >> $P4IGNORE
+        fi
+
+        if [[ $UID != "0" ]]; then
+            if ! sudo grep -q "$USER ALL=(ALL) NOPASSWD:ALL" /etc/sudoers; then
+                echo "Enable sudo without password"
+                echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
+            fi
         fi 
+
+        if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-systems-internal"; then
+            export PATH="~/nsight-systems-internal/current/host-linux-x64:$PATH" 
+        fi
+
+        if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-graphics-internal"; then
+            export PATH="~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64:$PATH"
+        fi
+
+        if ! echo "$PATH" | tr ':' '\n' | grep -q "gfxreconstruct.git"; then
+            export PATH="~/gfxreconstruct.git/build/linux/x64/output/bin:$PATH"
+        fi
+
+        if [[ $(uname -m) == aarch64 ]]; then
+            if [[ -e $HOME/.fex-emu/Config.json ]]; then
+                which jq >/dev/null || sudo apt install -y jq 
+                export rootfs="$HOME/.fex-emu/RootFS/$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)"
+            fi 
+        fi
     fi
-fi
+else # if `sudo ls` failed
+    echo "Running inside FEX, config nothing!" >/dev/null 
+fi 
 
 function zhu-reload {
     if [[ -e ~/zhutest/utils.sh ]]; then
@@ -1354,24 +1358,19 @@ function zhu-install-nvidia-driver-in-fex {
 }
 
 function zhu-chroot-in-fex {
-    if [[ -z $(which jq) ]]; then
-        sudo apt install -y jq 
-    fi 
-
+    which jq >/dev/null || sudo apt install -y jq 
     ubuntu=$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)
     rootfs="$HOME/.fex-emu/RootFS/$ubuntu"
 
-    pushd $rootfs >/dev/null 
-
-    if [[ ! -e ./chroot.py ]]; then 
-        wget https://raw.githubusercontent.com/FEX-Emu/RootFS/refs/heads/main/Scripts/chroot.py 
-        chmod +x ./chroot.py 
-    fi 
-    
     if [[ -z $(which patchelf) ]]; then
         sudo apt install -y patchelf
     fi
 
+    if [[ ! -e $rootfs/chroot.py ]]; then 
+        wget  -O $rootfs/chroot.py https://raw.githubusercontent.com/FEX-Emu/RootFS/refs/heads/main/Scripts/chroot.py 
+        chmod +x $rootfs/chroot.py 
+    fi 
+ 
     #if [[ $(systemctl is-active apparmor) == active ]]; then
     #    sudo systemctl stop apparmor
     #    sudo systemctl disable apparmor
@@ -1393,6 +1392,7 @@ function zhu-chroot-in-fex {
     #    cat /etc/apt/sources.list.d/ubuntu.sources >> $rootfs/etc/apt/sources.list.d/ubuntu.sources
     #fi 
 
+    pushd $rootfs >/dev/null
     ./chroot.py chroot 
     popd >/dev/null 
 }
@@ -1406,18 +1406,6 @@ function zhu-config-in-fex {
     if [[ $UID != 0 ]]; then
         echo "Must run as root!"
         return -1
-    fi
-
-    if [[ -e /.zhurc.chroot.config.success ]]; then
-        echo "This rootfs has been configured at $(cat /.zhurc.chroot.config.success)"
-        read -e -i yes -p "Force re-configure? (yes/no): " ans
-        if [[ $ans == yes ]]; then
-            rm -rf /.zhurc.chroot.config.success
-        fi
-    fi 
-
-    if [[ -e /.zhurc.chroot.config.success ]]; then
-        return 
     fi
 
     apt install -y sudo
@@ -1436,8 +1424,6 @@ function zhu-config-in-fex {
         echo "Add new user: wanliz in FEX"
         adduser wanliz
     fi 
-
-    touch /.zhurc.chroot.config.success
 }
 
 function zhu-sudo-in-fex {
