@@ -1584,19 +1584,19 @@ function zhu-test-unigine-superposition {
 }
 
 function zhu-install-viewperf {
-    if [[ ! -e ~/zhutest-workload.d/viewperf2020/viewperf/bin/viewperf ]]; then
+    if [[ ! -e ~/zhutest-workload.d/viewperf2020.$(uname -m)/viewperf/bin/viewperf ]]; then
         which rsync >/dev/null || sudo apt install -y rsync 
         pushd ~/Downloads >/dev/null
         if [[ $(uname -m) == "x86_64" ]]; then
             zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3.tar.gz ~/Downloads/ || return -1
             tar -zxvf viewperf2020v3.tar.gz
             mkdir -p ~/zhutest-workload.d
-            mv viewperf2020 ~/zhutest-workload.d/viewperf2020
+            mv viewperf2020 ~/zhutest-workload.d/viewperf2020.$(uname -m)
         elif [[ $(uname -m) == "aarch64" ]]; then
             zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3-aarch64-rev2.tar.gz ~/Downloads/ || return -1
-            tar -zxvf viewperf2020v3-aarch64-rev2.tar.gz
-            mkdir -p ~/zhutest-workload.d
-            mv viewperf2020 ~/zhutest-workload.d/viewperf2020
+            mkdir -p ~/zhutest-workload.d/viewperf2020.$(uname -m)
+            cd ~/zhutest-workload.d/viewperf2020.$(uname -m)
+            tar -zxvf ~/Downloads/viewperf2020v3-aarch64-rev2.tar.gz
         fi
         popd >/dev/null
     fi
@@ -1610,7 +1610,7 @@ function zhu-test-viewperf {
     zhu-validate-display || return -1
     zhu-install-viewperf || return -1 
 
-    pushd ~/zhutest-workload.d/viewperf2020 >/dev/null 
+    pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) >/dev/null || return -1
     if [[ -z "$1" || "$1" == *"catia"* ]]; then
         mkdir -p results/catia-06 
         ./viewperf/bin/viewperf viewsets/catia/config/catia.xml -resolution 1920x1080 && cat results/catia-06/results.xml || echo "Failed to run viewsets/catia"
@@ -1653,7 +1653,7 @@ function zhu-test-viewperf-in-gui {
     zhu-install-viewperf || return -1 
 
     # Start all viewsets in viewperf GUI
-    ~/zhutest-workload.d/viewperf2020/RunViewperf 
+    ~/zhutest-workload.d/viewperf2020.$(uname -m)/RunViewperf || return -1
     zhu-cursor-click-on-window "SPECviewperf 2020 v3.0" 441 550
     window_id=$(cat /tmp/zhu-activate-window)
 
@@ -1679,7 +1679,7 @@ function zhu-test-viewperf-maya-subtest5 {
     zhu-validate-display || return -1
     zhu-install-viewperf || return -1 
 
-    pushd ~/zhutest-workload.d/viewperf2020 >/dev/null
+    pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) >/dev/null || return -1
     mkdir -p results/maya-06
 
     if [[ ! -e viewsets/maya/config/subtest5.xml ]]; then
