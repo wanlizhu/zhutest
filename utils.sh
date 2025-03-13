@@ -553,7 +553,7 @@ function zhu-download-nvidia-driver {
     echo TODO
 }
 
-function zhu-install-nvidia-driver {
+function zhu-install-nvidia-driver-localbuild {
     if [[ -e $1 ]]; then
         sudo systemctl stop display-manager 
         chmod +x $(realpath $1) 
@@ -567,12 +567,50 @@ function zhu-install-nvidia-driver {
         ((${#files[@]})) || { echo "No nvidia .run found"; return -1; }
         select file in "${files[@]}"; do 
             [[ $file ]] && { 
-                zhu-install-nvidia-driver $file 
+                zhu-install-nvidia-driver-localbuild $file 
                 return 
             }
             echo "Invalid choice, try again"
         done
     fi
+}
+
+function zhu-install-nvidia-driver-cloudbuild {
+    path="/mnt"
+    echo "[1] release build"
+    echo "[2] daily build"
+    echo "[3] dvs build"
+    read -e -i 1 -p "Select: " type
+
+    if [[ $type == 1 ]]; then
+        path="$path/builds/release/display/$(uname -m)"
+        read -e -i release -p "Configure (release/debug): " config
+        config=$([[ $config == debug ]] && echo "/debug" || echo "")
+        path="$path$config"
+        read -p "Release version: " version
+        path="$path/$version/NVIDIA-Linux-$(uname -m)-$version.run"
+    elif [[ $type == 2 ]]; then
+        path="$path/builds/daily/display/$(uname -m)/dev/gpu_drv/bugfix_main"
+        read -e -i release -p "Configure (release/debug): " config
+        config=$([[ $config == debug ]] && echo "/debug" || echo "")
+        path="$path$config"
+        read -p "Date (yyyymmdd): " date
+        path="$path/${date}_*/NVIDIA-Linux-$(uname -m)-dev_gpu_drv_bugfix_main-${date}_*.run"
+    elif [[ $type == 3 ]]; then
+        path="$path/dvsbuilds/gpu_drv_bugfix_main_Release_Linux_$(uname -m)_unix-build_Test_Driver"
+        read -p "Change list number: " changelist
+        path="$path/SW_$changelist.0_*"
+        paths="$path/NVIDIA-Linux-$(uname -m)-DVS-internal.run"
+        path=${path//x86_64/AMD64}
+        path=${path//aarch64_unix-build_Test_Driver/aarch64_unix-build_Driver}
+    fi
+
+    if [[ -e $(realpath $path) ]]; then
+        zhu-install-nvidia-driver-localbuild $(realpath $path)
+    else
+        echo "$(realpath $path) not found!"
+        return -1
+    fi  
 }
 
 function zhu-build-nvidia-driver {
@@ -2074,9 +2112,9 @@ function zhu-vulkan-api-capture {
     read -p "Output name: " name
     read -e -i yes -p "Is capture triggered by hotkey (F10)? (yes/no): " hotkey
     if [[ $hotkey == yes ]]; then
-        read -e -i 500 -p "Number of frames to capture via hotkey: " num_frames 
+        read -e -i 100 -p "Number of frames to capture via hotkey: " num_frames 
     else
-        read -e -i '500-1000' -p "Index of frames to capture: " idx_frames
+        read -e -i '500-600' -p "Index of frames to capture: " idx_frames
     fi
     read -e -i yes -p "Log messages to file? (yes/no): " logfile
 
@@ -2187,8 +2225,8 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
 
 function zhu-test-ngfxcpp-sottr {
     if [[ ! -d ~/zhutest-workload.d/ngfxcpp-sottr ]]; then
-        read -p "copy workload from host: " host
-        read -e -i wanliz -p "username: " user
+        read -p "Copy workload from host: " host
+        read -e -i wanliz -p "As user: " user
         rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/ngfxcpp-sottr/ ~/zhutest-workload.d/ngfxcpp-sottr || return -1
     fi
 
