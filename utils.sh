@@ -1209,7 +1209,7 @@ function zhu-test-3dmark-wildlife {
         zhu-install-fex || return -1
     fi
 
-    pushd ~/zhutest-workload.d/3dmark-attan-wildlife-1.1.2.1 >/dev/null 
+    pushd ~/zhutest-workload.d/3dmark-attan-wildlife-1.1.2.1 || return -1
     rm -rf result.json
     chmod +x run_linux_x64.sh 
     ./run_linux_x64.sh || return -1
@@ -1239,7 +1239,7 @@ function zhu-test-3dmark-steelnomad {
         zhu-install-fex || return -1
     fi
 
-    pushd ~/zhutest-workload.d/3dmark-disco-steelnomad-1.0.0 >/dev/null 
+    pushd ~/zhutest-workload.d/3dmark-disco-steelnomad-1.0.0 || return -1
     rm -rf result_vulkan.json
     chmod +x run_workload_linux_vulkan.sh
     ./run_workload_linux_vulkan.sh || return -1
@@ -1269,7 +1269,7 @@ function zhu-test-3dmark-solarbay {
         zhu-install-fex || return -1
     fi
 
-    pushd ~/zhutest-workload.d/3dmark-pogo-solarbay-1.0.5.3 >/dev/null 
+    pushd ~/zhutest-workload.d/3dmark-pogo-solarbay-1.0.5.3 || return -1
     rm -rf result.json
     chmod +x run_dev_player_linux_x64.sh
     ./run_dev_player_linux_x64.sh || return -1
@@ -1603,7 +1603,7 @@ function zhu-test-viewperf {
     zhu-validate-display || return -1
     zhu-install-viewperf || return -1 
 
-    pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) >/dev/null || return -1
+    pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
     if [[ -z "$1" || "$1" == *"catia"* ]]; then
         mkdir -p results/catia-06 
         ./viewperf/bin/viewperf viewsets/catia/config/catia.xml -resolution 1920x1080 && cat results/catia-06/results.xml || echo "Failed to run viewsets/catia"
@@ -1672,7 +1672,7 @@ function zhu-test-viewperf-maya-subtest5 {
     zhu-validate-display || return -1
     zhu-install-viewperf || return -1 
 
-    pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) >/dev/null || return -1
+    pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
     mkdir -p results/maya-06
 
     if [[ ! -e viewsets/maya/config/subtest5.xml ]]; then
@@ -2152,7 +2152,7 @@ function zhu-install-quake2rtx {
 function zhu-test-quake2rtx {
     zhu-install-quake2rtx || return -1
     rm -rf ~/.quake2rtx
-    pushd ~/zhutest-workload.d/quake2rtx-1.6.0.$(uname -m) >/dev/null 
+    pushd ~/zhutest-workload.d/quake2rtx-1.6.0.$(uname -m) || return -1
     echo "Enter \"demo q2demo1\" in the in-game console" 
     chmod +x q2rtx.sh
     ./q2rtx.sh
@@ -2242,7 +2242,7 @@ function zhu-test-ngfxcpp-sottr {
         rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/ngfxcpp-sottr/ ~/zhutest-workload.d/ngfxcpp-sottr || return -1
     fi
 
-    pushd ~/zhutest-workload.d/ngfxcpp-sottr >/dev/null 
+    pushd ~/zhutest-workload.d/ngfxcpp-sottr || return -1
 
     read -e -i 100 -p "Number of frames to repeat: " frames
 
