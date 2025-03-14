@@ -1376,6 +1376,7 @@ function zhu-chroot-in-fex {
     #    sudo systemctl disable apparmor
     #    sudo apt purge apparmor
     #fi 
+    # TODO: stop apparmor before launching chroot
 
     #if [[ -e /etc/resolv.conf && -e $rootfs/etc/resolv.conf ]]; then 
     #    while IFS= read -r line; do 
@@ -1384,6 +1385,7 @@ function zhu-chroot-in-fex {
     #        fi
     #    done < /etc/resolv.conf
     #fi 
+    # TODO: append the nameserver from native host into rootfs
 
     #if [[ -e /etc/apt/sources.list.d/ubuntu.sources ]]; then
     #    mkdir -p $rootfs/etc/apt/sources.list.d
@@ -2151,6 +2153,7 @@ function zhu-test-quake2rtx {
     zhu-install-quake2rtx || return -1
     rm -rf ~/.quake2rtx
     pushd ~/zhutest-workload.d/quake2rtx-1.6.0 >/dev/null 
+    echo "Enter \"demo q2demo1\" in the in-game console" 
     chmod +x q2rtx.sh
     ./q2rtx.sh
     popd >/dev/null 
