@@ -2001,24 +2001,6 @@ function zhu-enable-x11-forwarding {
     echo "X11 forwarding enabled!"
 }
 
-function zhu-install-quake2rtx {
-    if [[ ! -d ~/zhutest-workload.d/quake2rtx-1.6.0 ]]; then
-        pushd ~/Downloads >/dev/null 
-        if [[ $(uname -m) == "x86_64" ]]; then
-            zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/q2rtx/builds/1.6.0-701cf31/q2rtx-1.6.0.tar.gz ~/Downloads/ || return -1
-            tar -zxvf q2rtx-1.6.0.tar.gz 
-            mkdir -p ~/zhutest-workload.d
-            mv q2rtx ~/zhutest-workload.d/quake2rtx-1.6.0
-        elif [[ $(uname -m) == "aarch64" ]]; then
-            zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/q2rtx/builds/1.6.0-701cf31/q2rtx-1.6.0-aarch64.tar.gz ~/Downloads/ || return -1
-            tar -zxvf q2rtx-1.6.0-aarch64.tar.gz 
-            mkdir -p ~/zhutest-workload.d
-            mv q2rtx ~/zhutest-workload.d/quake2rtx-1.6.0
-        fi
-        popd >/dev/null 
-    fi
-}
-
 function zhu-share-folder-via-nfs {
     if [[ ! -d "$1" ]]; then
         echo "Folder $1 doesn't exist!"
@@ -2149,10 +2131,28 @@ function zhu-vulkan-api-capture {
     echo "$cmdline"
 }
 
+function zhu-install-quake2rtx {
+    if [[ ! -d ~/zhutest-workload.d/quake2rtx-1.6.0.$(uname -m) ]]; then
+        pushd ~/Downloads >/dev/null 
+        if [[ $(uname -m) == "x86_64" ]]; then
+            zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/q2rtx/builds/1.6.0-701cf31/q2rtx-1.6.0.tar.gz ~/Downloads/ || return -1
+            tar -zxvf q2rtx-1.6.0.tar.gz 
+            mkdir -p ~/zhutest-workload.d
+            mv q2rtx ~/zhutest-workload.d/quake2rtx-1.6.0.x86_64
+        elif [[ $(uname -m) == "aarch64" ]]; then
+            zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/q2rtx/builds/1.6.0-701cf31/q2rtx-1.6.0-aarch64.tar.gz ~/Downloads/ || return -1
+            tar -zxvf q2rtx-1.6.0-aarch64.tar.gz 
+            mkdir -p ~/zhutest-workload.d
+            mv q2rtx ~/zhutest-workload.d/quake2rtx-1.6.0.aarch64
+        fi
+        popd >/dev/null 
+    fi
+}
+
 function zhu-test-quake2rtx {
     zhu-install-quake2rtx || return -1
     rm -rf ~/.quake2rtx
-    pushd ~/zhutest-workload.d/quake2rtx-1.6.0 >/dev/null 
+    pushd ~/zhutest-workload.d/quake2rtx-1.6.0.$(uname -m) >/dev/null 
     echo "Enter \"demo q2demo1\" in the in-game console" 
     chmod +x q2rtx.sh
     ./q2rtx.sh
