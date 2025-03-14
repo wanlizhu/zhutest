@@ -1584,11 +1584,11 @@ function zhu-install-viewperf {
             zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3.tar.gz ~/Downloads/ || return -1
             tar -zxvf viewperf2020v3.tar.gz
             mkdir -p ~/zhutest-workload.d
-            mv viewperf2020 ~/zhutest-workload.d/viewperf2020.$(uname -m)
+            mv viewperf2020 ~/zhutest-workload.d/viewperf2020.x86_64
         elif [[ $(uname -m) == "aarch64" ]]; then
             zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3-aarch64-rev2.tar.gz ~/Downloads/ || return -1
-            mkdir -p ~/zhutest-workload.d/viewperf2020.$(uname -m)
-            cd ~/zhutest-workload.d/viewperf2020.$(uname -m)
+            mkdir -p ~/zhutest-workload.d/viewperf2020.aarch64
+            cd ~/zhutest-workload.d/viewperf2020.aarch64
             tar -zxvf ~/Downloads/viewperf2020v3-aarch64-rev2.tar.gz
         fi
         popd >/dev/null
