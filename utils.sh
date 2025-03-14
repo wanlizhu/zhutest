@@ -2245,9 +2245,24 @@ function zhu-test-ngfxcpp-sottr {
     pushd ~/zhutest-workload.d/ngfxcpp-sottr || return -1
 
     read -e -i 100 -p "Number of frames to repeat: " frames
-
     chmod +x ./ShadowOfTheTombRaider
     LD_LIBRARY_PATH=$LD_LIBRARY_PATH: ./ShadowOfTheTombRaider -automated -noreset -fps -mincpu -repeat $frames   
 
     popd >/dev/null 
+}
+
+function zhu-test-ngfxcpp-deus-ex-md {
+    if [[ ! -d ~/zhutest-workload.d/ngfxcpp-deus-ex-md ]]; then
+        read -p "Copy workload from host: " host
+        read -e -i wanliz -p "As user: " user
+        rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/ngfxcpp-deus-ex-md/ ~/zhutest-workload.d/ngfxcpp-deus-ex-md || return -1
+    fi
+
+    pushd ~/zhutest-workload.d/ngfxcpp-deus-ex-md || return -1
+
+    read -e -i 100 -p "Number of frames to repeat: " frames
+    chmod +x ./DeusExMD
+    ./DeusExMD -automated -noreset -fps -mincpu -repeat $frames
+
+    popd >/dev/null
 }
