@@ -1523,7 +1523,7 @@ function zhu-test-unigine-heaven {
     popd >/dev/null 
 }
 
-function zhu-test-unigine-vally {
+function zhu-test-unigine-valley {
     zhu-validate-display || return -1
 
     if [[ ! -e ~/zhutest-workload.d/unigine-valley-1.1.8 ]]; then
