@@ -2271,7 +2271,7 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
     __GL_0xcfcfa1=0x00000008 \
     __GL_0xfcd802=0x00000001 \
     __GL_4718b=0x00000008 \
-    __GL_61807119=/root/nvt/log/loadmonitor/00096_run-in-sniper \
+    __GL_61807119=$HOME/zhutest-workload.d/nvtest-sottr/log/loadmonitor/00096_run-in-sniper \
     __GL_SHADER_DISK_CACHE=0 \
     __GL_SYNC_TO_VBLANK=0 \
     $HOME/zhutest-workload.d/nvtest-sottr/dxvk/steam-linux-runtime-12249908/run-in-sniper -- \
@@ -2340,7 +2340,7 @@ function zhu-nvtest-grand-theft-auto-v {
     __GL_0xcfcfa1=0x00000008 \
     __GL_0xfcd802=0x00000001 \
     __GL_4718b=0x00000008 \
-    __GL_61807119=/root/nvt/log/loadmonitor/00071_run-in-sniper \
+    __GL_61807119=$HOME/zhutest-workload.d/nvtest-gtav/log/loadmonitor/00071_run-in-sniper \
     __GL_SHADER_DISK_CACHE=0 \
     __GL_SYNC_TO_VBLANK=0 \
     $HOME/zhutest-workload.d/nvtest-gtav/dxvk/steam-linux-runtime-12249908/run-in-sniper -- \
@@ -2412,7 +2412,7 @@ function zhu-nvtest-cyberpunk2077 {
     __GL_0xcfcfa1=0x00000008 \
     __GL_0xfcd802=0x00000001 \
     __GL_4718b=0x00000008 \
-    __GL_61807119=/root/nvt/log/loadmonitor/00072_run-in-sniper \
+    __GL_61807119=$HOME/zhutest-workload.d/nvtest-cyberpunk2077/log/loadmonitor/00072_run-in-sniper \
     __GL_SHADER_DISK_CACHE=0 \
     __GL_SYNC_TO_VBLANK=0 \
     $HOME/zhutest-workload.d/nvtest-cyberpunk2077/dxvk/steam-linux-runtime-12249908/run-in-sniper -- \
