@@ -2228,10 +2228,10 @@ function zhu-test-quake2rtx {
 function zhu-install-shadow-of-the-tomb-raider {
     zhu-mount-linuxqa || return -1
 
-    if [[ ! -d $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11 ]]; then
+    if [[ ! -d $HOME/zhutest-workload.d/nvtest-sottr ]]; then
         read -p "Copy workload from host: " host
         read -e -i wanliz -p "As user: " user
-        rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/nvtest-sottr-2025-03-11/ $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/ || return -1
+        rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/nvtest-sottr/ $HOME/zhutest-workload.d/nvtest-sottr/ || return -1
     fi
 }
 
@@ -2240,18 +2240,18 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
 
     pushd . >/dev/null 
     rm -rf /tmp/nvtest-sottr.log; \
-    cd $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/run_dir; \
+    cd $HOME/zhutest-workload.d/nvtest-sottr/dxvk/run_dir; \
     DISPLAY=:0.0 \
     DXVK_ENABLE_NVAPI=1 \
     DXVK_HUD=full \
     DXVK_LOG_LEVEL=none \
     DXVK_STATE_CACHE=0 \
-    LD_LIBRARY_PATH=$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/files/lib64:$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/files/lib:/mnt/linuxqa/nvtest/pynv_files/vulkan_loader/sdk-1.2.162.0/Linux_amd64:/mnt/linuxqa/nvtest/pynv_files/vkdevicechooser/Linux_amd64 \
+    LD_LIBRARY_PATH=$HOME/zhutest-workload.d/nvtest-sottr/dxvk/proton-9.0-3e/files/lib64:$HOME/zhutest-workload.d/nvtest-sottr/dxvk/proton-9.0-3e/files/lib:/mnt/linuxqa/nvtest/pynv_files/vulkan_loader/sdk-1.2.162.0/Linux_amd64:/mnt/linuxqa/nvtest/pynv_files/vkdevicechooser/Linux_amd64 \
     LIBC_FATAL_STDERR_=1 \
     NODEVICE_SELECT=1 \
-    PATH=$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/files/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin \
+    PATH=$HOME/zhutest-workload.d/nvtest-sottr/dxvk/proton-9.0-3e/files/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin \
     PROTON_VR_RUNTIME=1 \
-    STEAM_COMPAT_DATA_PATH=$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/prefix \
+    STEAM_COMPAT_DATA_PATH=$HOME/zhutest-workload.d/nvtest-sottr/dxvk/proton-9.0-3e/prefix \
     VKD3D_CONFIG=dxr \
     VKD3D_DEBUG=none \
     VKD3D_FEATURE_LEVEL=12_2 \
@@ -2262,9 +2262,9 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
     VULKAN_DEVICE_INDEX=0 \
     WINEDEBUG=-all \
     WINEDLLOVERRIDES='steam.exe=b;d3d11=n;d3d10core=n;dxgi=n;d3d11x_42=n;d3d11x_43=n;d3d9=n;nvcuda=b;d3d12=n;d3d12core=n;' \
-    WINEDLLPATH=$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/files/lib64/wine:$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/files/lib/wine \
+    WINEDLLPATH=$HOME/zhutest-workload.d/nvtest-sottr/dxvk/proton-9.0-3e/files/lib64/wine:$HOME/zhutest-workload.d/nvtest-sottr/dxvk/proton-9.0-3e/files/lib/wine \
     WINEESYNC=1 \
-    WINEPREFIX=$HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/prefix/pfx \
+    WINEPREFIX=$HOME/zhutest-workload.d/nvtest-sottr/dxvk/proton-9.0-3e/prefix/pfx \
     WINE_DISABLE_FULLSCREEN_HACK=1 \
     WINE_MONO_OVERRIDES='Microsoft.Xna.Framework.*,Gac=n' \
     __GL_0x301fd6=0x00000005 \
@@ -2274,9 +2274,9 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
     __GL_61807119=/root/nvt/log/loadmonitor/00096_run-in-sniper \
     __GL_SHADER_DISK_CACHE=0 \
     __GL_SYNC_TO_VBLANK=0 \
-    $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/steam-linux-runtime-12249908/run-in-sniper -- \
-    $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/files/bin/wine \
-    $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/run_dir/SOTTR.exe 99999999 0 fps_log | tee /tmp/nvtest-sottr.log &
+    $HOME/zhutest-workload.d/nvtest-sottr/dxvk/steam-linux-runtime-12249908/run-in-sniper -- \
+    $HOME/zhutest-workload.d/nvtest-sottr/dxvk/proton-9.0-3e/files/bin/wine \
+    $HOME/zhutest-workload.d/nvtest-sottr/dxvk/run_dir/SOTTR.exe 99999999 0 fps_log | tee /tmp/nvtest-sottr.log &
     
     echo "Recording FPS for 30 seconds..."
     sleep 30
@@ -2300,10 +2300,10 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
 
 function zhu-install-grand-theft-auto-v {
     zhu-mount-linuxqa || return -1
-    if [[ ! -d $HOME/zhutest-workload.d/nvtest-gtav-2025-03-11 ]]; then
+    if [[ ! -d $HOME/zhutest-workload.d/nvtest-gtav ]]; then
         read -p "Copy workload from host: " host
         read -e -i wanliz -p "As user: " user
-        rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/nvtest-gtav-2025-03-11/ $HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/ || return -1
+        rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/nvtest-gtav/ $HOME/zhutest-workload.d/nvtest-gtav/ || return -1
     fi
 }
 
@@ -2312,18 +2312,18 @@ function zhu-nvtest-grand-theft-auto-v {
 
     pushd . >/dev/null 
     rm -rf /tmp/nvtest-gtav.log; \
-    cd $HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/run_dir; \
+    cd $HOME/zhutest-workload.d/nvtest-gtav/dxvk/run_dir; \
     DISPLAY=:0.0 \
     DXVK_ENABLE_NVAPI=1 \
     DXVK_HUD=full \
     DXVK_LOG_LEVEL=none \
     DXVK_STATE_CACHE=0 \
-    LD_LIBRARY_PATH=$HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/proton-9.0-3e/files/lib64:$HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/proton-9.0-3e/files/lib:/mnt/linuxqa/nvtest/pynv_files/vulkan_loader/sdk-1.1.92.1/Linux_amd64:/mnt/linuxqa/nvtest/pynv_files/vkdevicechooser/Linux_amd64 \
+    LD_LIBRARY_PATH=$HOME/zhutest-workload.d/nvtest-gtav/dxvk/proton-9.0-3e/files/lib64:$HOME/zhutest-workload.d/nvtest-gtav/dxvk/proton-9.0-3e/files/lib:/mnt/linuxqa/nvtest/pynv_files/vulkan_loader/sdk-1.1.92.1/Linux_amd64:/mnt/linuxqa/nvtest/pynv_files/vkdevicechooser/Linux_amd64 \
     LIBC_FATAL_STDERR_=1 \
     NODEVICE_SELECT=1 \
-    PATH=$HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/proton-9.0-3e/files/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin \
+    PATH=$HOME/zhutest-workload.d/nvtest-gtav/dxvk/proton-9.0-3e/files/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin \
     PROTON_VR_RUNTIME=1 \
-    STEAM_COMPAT_DATA_PATH=$HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/proton-9.0-3e/prefix \
+    STEAM_COMPAT_DATA_PATH=$HOME/zhutest-workload.d/nvtest-gtav/dxvk/proton-9.0-3e/prefix \
     VK_ICD_FILENAMES=/etc/vulkan/icd.d/nvidia_icd.json \
     VK_INSTANCE_LAYERS=VK_LAYER_AEJS_DeviceChooserLayer \
     VK_LAYER_PATH=/dev/null/explicit_layer.d:/mnt/linuxqa/nvtest/pynv_files/vkdevicechooser \
@@ -2331,9 +2331,9 @@ function zhu-nvtest-grand-theft-auto-v {
     VULKAN_DEVICE_INDEX=0 \
     WINEDEBUG=-all \
     WINEDLLOVERRIDES='steam.exe=b;d3d11=n;d3d10core=n;dxgi=n;d3d11x_42=n;d3d11x_43=n;d3d9=n;nvcuda=b;' \
-    WINEDLLPATH=$HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/proton-9.0-3e/files/lib64/wine:$HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/proton-9.0-3e/files/lib/wine \
+    WINEDLLPATH=$HOME/zhutest-workload.d/nvtest-gtav/dxvk/proton-9.0-3e/files/lib64/wine:$HOME/zhutest-workload.d/nvtest-gtav/dxvk/proton-9.0-3e/files/lib/wine \
     WINEESYNC=1 \
-    WINEPREFIX=$HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/proton-9.0-3e/prefix/pfx \
+    WINEPREFIX=$HOME/zhutest-workload.d/nvtest-gtav/dxvk/proton-9.0-3e/prefix/pfx \
     WINE_DISABLE_FULLSCREEN_HACK=1 \
     WINE_MONO_OVERRIDES='Microsoft.Xna.Framework.*,Gac=n' \
     __GL_0x301fd6=0x00000005 \
@@ -2343,9 +2343,9 @@ function zhu-nvtest-grand-theft-auto-v {
     __GL_61807119=/root/nvt/log/loadmonitor/00071_run-in-sniper \
     __GL_SHADER_DISK_CACHE=0 \
     __GL_SYNC_TO_VBLANK=0 \
-    $HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/steam-linux-runtime-12249908/run-in-sniper -- \
-    $HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/proton-9.0-3e/files/bin/wine \
-    $HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/run_dir/GTA5.exe 99999999 0 fps_log | tee /tmp/nvtest-gtav.log &
+    $HOME/zhutest-workload.d/nvtest-gtav/dxvk/steam-linux-runtime-12249908/run-in-sniper -- \
+    $HOME/zhutest-workload.d/nvtest-gtav/dxvk/proton-9.0-3e/files/bin/wine \
+    $HOME/zhutest-workload.d/nvtest-gtav/dxvk/run_dir/GTA5.exe 99999999 0 fps_log | tee /tmp/nvtest-gtav.log &
     
     echo "Recording FPS for 30 seconds..."
     sleep 30
@@ -2369,10 +2369,10 @@ function zhu-nvtest-grand-theft-auto-v {
 
 function zhu-install-cyberpunk2077 {
     zhu-mount-linuxqa || return -1
-    if [[ ! -d $HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11 ]]; then
+    if [[ ! -d $HOME/zhutest-workload.d/nvtest-cyberpunk2077 ]]; then
         read -p "Copy workload from host: " host
         read -e -i wanliz -p "As user: " user
-        rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/ $HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/ || return -1
+        rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/nvtest-cyberpunk2077/ $HOME/zhutest-workload.d/nvtest-cyberpunk2077/ || return -1
     fi
 }
 
@@ -2381,18 +2381,18 @@ function zhu-nvtest-cyberpunk2077 {
 
     pushd . >/dev/null 
     rm -rf /tmp/nvtest-cyberpunk2077.log; \
-    cd $HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/run_dir; \
+    cd $HOME/zhutest-workload.d/nvtest-cyberpunk2077/dxvk/run_dir; \
     DISPLAY=:0.0 \
     DXVK_ENABLE_NVAPI=1 \
     DXVK_HUD=full \
     DXVK_LOG_LEVEL=none \
     DXVK_STATE_CACHE=0 \
-    LD_LIBRARY_PATH=$HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/proton-9.0-3e/files/lib64:$HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/proton-9.0-3e/files/lib:/mnt/linuxqa/nvtest/pynv_files/vulkan_loader/sdk-1.2.162.0/Linux_amd64:/mnt/linuxqa/nvtest/pynv_files/vkdevicechooser/Linux_amd64 \
+    LD_LIBRARY_PATH=$HOME/zhutest-workload.d/nvtest-cyberpunk2077/dxvk/proton-9.0-3e/files/lib64:$HOME/zhutest-workload.d/nvtest-cyberpunk2077/dxvk/proton-9.0-3e/files/lib:/mnt/linuxqa/nvtest/pynv_files/vulkan_loader/sdk-1.2.162.0/Linux_amd64:/mnt/linuxqa/nvtest/pynv_files/vkdevicechooser/Linux_amd64 \
     LIBC_FATAL_STDERR_=1 \
     NODEVICE_SELECT=1 \
-    PATH=$HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/proton-9.0-3e/files/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin \
+    PATH=$HOME/zhutest-workload.d/nvtest-cyberpunk2077/dxvk/proton-9.0-3e/files/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin \
     PROTON_VR_RUNTIME=1 \
-    STEAM_COMPAT_DATA_PATH=$HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/proton-9.0-3e/prefix \
+    STEAM_COMPAT_DATA_PATH=$HOME/zhutest-workload.d/nvtest-cyberpunk2077/dxvk/proton-9.0-3e/prefix \
     VKD3D_CONFIG=dxr \
     VKD3D_DEBUG=none \
     VKD3D_FEATURE_LEVEL=12_2 \
@@ -2403,9 +2403,9 @@ function zhu-nvtest-cyberpunk2077 {
     VULKAN_DEVICE_INDEX=0 \
     WINEDEBUG=-all \
     WINEDLLOVERRIDES='steam.exe=b;d3d11=n;d3d10core=n;dxgi=n;d3d11x_42=n;d3d11x_43=n;d3d9=n;nvcuda=b;d3d12=n;d3d12core=n;' \
-    WINEDLLPATH=$HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/proton-9.0-3e/files/lib64/wine:$HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/proton-9.0-3e/files/lib/wine \
+    WINEDLLPATH=$HOME/zhutest-workload.d/nvtest-cyberpunk2077/dxvk/proton-9.0-3e/files/lib64/wine:$HOME/zhutest-workload.d/nvtest-cyberpunk2077/dxvk/proton-9.0-3e/files/lib/wine \
     WINEESYNC=1 \
-    WINEPREFIX=$HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/proton-9.0-3e/prefix/pfx \
+    WINEPREFIX=$HOME/zhutest-workload.d/nvtest-cyberpunk2077/dxvk/proton-9.0-3e/prefix/pfx \
     WINE_DISABLE_FULLSCREEN_HACK=1 \
     WINE_MONO_OVERRIDES='Microsoft.Xna.Framework.*,Gac=n' \
     __GL_0x301fd6=0x00000005 \
@@ -2415,9 +2415,9 @@ function zhu-nvtest-cyberpunk2077 {
     __GL_61807119=/root/nvt/log/loadmonitor/00072_run-in-sniper \
     __GL_SHADER_DISK_CACHE=0 \
     __GL_SYNC_TO_VBLANK=0 \
-    $HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/steam-linux-runtime-12249908/run-in-sniper -- \
-    $HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/proton-9.0-3e/files/bin/wine \
-    $HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/run_dir/cpLauncher.exe 99999999 0 fps_log | tee /tmp/nvtest-cyberpunk2077.log &
+    $HOME/zhutest-workload.d/nvtest-cyberpunk2077/dxvk/steam-linux-runtime-12249908/run-in-sniper -- \
+    $HOME/zhutest-workload.d/nvtest-cyberpunk2077/dxvk/proton-9.0-3e/files/bin/wine \
+    $HOME/zhutest-workload.d/nvtest-cyberpunk2077/dxvk/run_dir/cpLauncher.exe 99999999 0 fps_log | tee /tmp/nvtest-cyberpunk2077.log &
     
     echo "Recording FPS for 30 seconds..."
     sleep 30
