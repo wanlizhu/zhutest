@@ -1191,25 +1191,37 @@ function zhu-cursor-click-on-window {
     xdotool mousemove --window $window_id $2 $3 click 1
 }
 
-function zhu-test-3dmark-wildlife {
+function zhu-install-3dmark-wildlife {
     zhu-validate-display || return -1
 
-    if [[ ! -e ~/zhutest-workload.d/3dmark-attan-wildlife-1.1.2.1 ]]; then
+    if [[ ! -e ~/zhutest-workload.d/3dmark-wildlife-1.1.2.1 ]]; then
         which rsync >/dev/null || sudo apt install -y rsync
-        zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Attan_Wild_Life/3dmark-attan-extreme-1.1.2.1-workload-bin.zip ~/Downloads/ || return -1
-
         which unzip >/dev/null || sudo apt install -y unzip 
-        mkdir -p ~/zhutest-workload.d/3dmark-attan-wildlife-1.1.2.1 
-        pushd ~/zhutest-workload.d/3dmark-attan-wildlife-1.1.2.1 >/dev/null || return -1
-        unzip ~/Downloads/3dmark-attan-extreme-1.1.2.1-workload-bin.zip || return -1
+        mkdir -p ~/zhutest-workload.d/3dmark-wildlife-1.1.2.1 
+        pushd ~/zhutest-workload.d/3dmark-wildlife-1.1.2.1 >/dev/null  
+            echo "[1] Copy from remote host"
+            echo "[2] Download from /mnt/linuxqa/"
+            read -e -i 1 -p "Select: " selection
+            if [[ $selection == 1 ]]; then
+                read -p "Copy workload from host: " host
+                read -e -i wanliz -p "As user: " user
+                rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/3dmark-wildlife-1.1.2.1/ ~/zhutest-workload.d/3dmark-wildlife-1.1.2.1/ || return -1
+            elif [[ $selection == 2 ]]; then
+                zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Attan_Wild_Life/3dmark-attan-extreme-1.1.2.1-workload-bin.zip ~/Downloads/ || return -1
+                unzip ~/Downloads/3dmark-attan-extreme-1.1.2.1-workload-bin.zip || return -1
+            fi 
         popd >/dev/null 
     fi
 
     if [[ $(uname -m) == "aarch64" ]]; then
         zhu-install-fex || return -1
     fi
+}
 
-    pushd ~/zhutest-workload.d/3dmark-attan-wildlife-1.1.2.1 || return -1
+function zhu-test-3dmark-wildlife {
+    zhu-install-3dmark-wildlife || return -1
+
+    pushd ~/zhutest-workload.d/3dmark-wildlife-1.1.2.1 || return -1
     rm -rf result.json
     chmod +x run_linux_x64.sh 
     ./run_linux_x64.sh || return -1
@@ -1221,25 +1233,37 @@ function zhu-test-3dmark-wildlife {
     popd >/dev/null 
 }
 
-function zhu-test-3dmark-steelnomad {
+function zhu-install-3dmark-steelnomad {
     zhu-validate-display || return -1
 
-    if [[ ! -e ~/zhutest-workload.d/3dmark-disco-steelnomad-1.0.0 ]]; then
+    if [[ ! -e ~/zhutest-workload.d/3dmark-steelnomad-1.0.0 ]]; then
         which rsync >/dev/null || sudo apt install -y rsync
-        zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Disco_Steel_Nomad/3dmark-disco-1.0.0-bin.zip ~/Downloads/ || return -1
-
         which unzip >/dev/null || sudo apt install -y unzip 
-        mkdir -p ~/zhutest-workload.d/3dmark-disco-steelnomad-1.0.0 
-        pushd ~/zhutest-workload.d/3dmark-disco-steelnomad-1.0.0 >/dev/null || return -1
-        unzip ~/Downloads/3dmark-disco-1.0.0-bin.zip || return -1
+        mkdir -p ~/zhutest-workload.d/3dmark-steelnomad-1.0.0 
+        pushd ~/zhutest-workload.d/3dmark-steelnomad-1.0.0 >/dev/null  
+            echo "[1] Copy from remote host"
+            echo "[2] Download from /mnt/linuxqa/"
+            read -e -i 1 -p "Select: " selection
+            if [[ $selection == 1 ]]; then
+                read -p "Copy workload from host: " host
+                read -e -i wanliz -p "As user: " user
+                rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/3dmark-steelnomad-1.0.0/ ~/zhutest-workload.d/3dmark-steelnomad-1.0.0/ || return -1
+            elif [[ $selection == 2 ]]; then
+                zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Disco_Steel_Nomad/3dmark-disco-1.0.0-bin.zip ~/Downloads/ || return -1
+                unzip ~/Downloads/3dmark-disco-1.0.0-bin.zip || return -1
+            fi 
         popd >/dev/null 
     fi
 
     if [[ $(uname -m) == "aarch64" ]]; then
         zhu-install-fex || return -1
     fi
+}
 
-    pushd ~/zhutest-workload.d/3dmark-disco-steelnomad-1.0.0 || return -1
+function zhu-test-3dmark-steelnomad {
+    zhu-install-3dmark-steelnomad || return -1
+
+    pushd ~/zhutest-workload.d/3dmark-steelnomad-1.0.0 || return -1
     rm -rf result_vulkan.json
     chmod +x run_workload_linux_vulkan.sh
     ./run_workload_linux_vulkan.sh || return -1
@@ -1251,25 +1275,37 @@ function zhu-test-3dmark-steelnomad {
     popd >/dev/null 
 }
 
-function zhu-test-3dmark-solarbay {
+function zhu-install-3dmark-solarbay {
     zhu-validate-display || return -1
 
-    if [[ ! -e ~/zhutest-workload.d/3dmark-pogo-solarbay-1.0.5.3 ]]; then
+    if [[ ! -e ~/zhutest-workload.d/3dmark-solarbay-1.0.5.3 ]]; then
         which rsync >/dev/null || sudo apt install -y rsync
-        zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Pogo_Solar_Bay/3dmark-pogo-1.0.5.3-bin.zip ~/Downloads/ || return -1
-
         which unzip >/dev/null || sudo apt install -y unzip 
-        mkdir -p ~/zhutest-workload.d/3dmark-pogo-solarbay-1.0.5.3
-        pushd ~/zhutest-workload.d/3dmark-pogo-solarbay-1.0.5.3 >/dev/null || return -1
-        unzip ~/Downloads/3dmark-pogo-1.0.5.3-bin.zip || return -1
+        mkdir -p ~/zhutest-workload.d/3dmark-solarbay-1.0.5.3 
+        pushd ~/zhutest-workload.d/3dmark-solarbay-1.0.5.3 >/dev/null  
+            echo "[1] Copy from remote host"
+            echo "[2] Download from /mnt/linuxqa/"
+            read -e -i 1 -p "Select: " selection
+            if [[ $selection == 1 ]]; then
+                read -p "Copy workload from host: " host
+                read -e -i wanliz -p "As user: " user
+                rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/3dmark-solarbay-1.0.5.3/ ~/zhutest-workload.d/3dmark-solarbay-1.0.5.3/ || return -1
+            elif [[ $selection == 2 ]]; then
+                zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Pogo_Solar_Bay/3dmark-pogo-1.0.5.3-bin.zip ~/Downloads/ || return -1
+                unzip ~/Downloads/3dmark-pogo-1.0.5.3-bin.zip || return -1
+            fi 
         popd >/dev/null 
     fi
 
     if [[ $(uname -m) == "aarch64" ]]; then
         zhu-install-fex || return -1
     fi
+}
 
-    pushd ~/zhutest-workload.d/3dmark-pogo-solarbay-1.0.5.3 || return -1
+function zhu-test-3dmark-solarbay {
+    zhu-install-3dmark-solarbay || return -1
+
+    pushd ~/zhutest-workload.d/3dmark-solarbay-1.0.5.3 || return -1
     rm -rf result.json
     chmod +x run_dev_player_linux_x64.sh
     ./run_dev_player_linux_x64.sh || return -1
@@ -1497,7 +1533,7 @@ function zhu-fetch-packages-in-fex {
     done < /tmp/dpkg.log 
 }
 
-function zhu-test-unigine-heaven {
+function zhu-install-unigine-heaven {
     zhu-validate-display || return -1
 
     if [[ ! -e ~/zhutest-workload.d/unigine-heaven-1.6.5 ]]; then
@@ -1509,13 +1545,17 @@ function zhu-test-unigine-heaven {
         } || {
             read -p "copy workload from host: " host
             read -e -i wanliz -p "username: " user
-            rsync -ah --progress $user@$host:/home/$user/.phoronix-test-suite/installed-tests/pts/unigine-heaven-1.6.5/Unigine_Heaven-4.0/ ~/zhutest-workload.d/unigine-heaven-1.6.5 || return -1
+            rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/unigine-heaven-1.6.5/ ~/zhutest-workload.d/unigine-heaven-1.6.5/ || return -1
         }
     fi
 
     if [[ $(uname -m) == "aarch64" ]]; then
         zhu-install-fex || return -1
     fi
+}
+
+function zhu-test-unigine-heaven {
+    zhu-install-unigine-heaven || return -1
 
     pushd ~/zhutest-workload.d/unigine-heaven-1.6.5 >/dev/null 
     LD_LIBRARY_PATH=bin/:bin/x64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} ./bin/heaven_x64 -data_path ../ -sound_app null -engine_config ../data/heaven_4.0.cfg -system_script heaven/unigine.cpp -video_mode -1 -extern_define PHORONIX,RELEASE -video_width 1920 -video_height 1080 -video_fullscreen 1 -video_app opengl > /tmp/unigine-heaven.log  || return -1
@@ -1523,7 +1563,7 @@ function zhu-test-unigine-heaven {
     popd >/dev/null 
 }
 
-function zhu-test-unigine-valley {
+function zhu-install-unigine-valley {
     zhu-validate-display || return -1
 
     if [[ ! -e ~/zhutest-workload.d/unigine-valley-1.1.8 ]]; then
@@ -1535,13 +1575,17 @@ function zhu-test-unigine-valley {
         } || {
             read -p "copy workload from host: " host
             read -e -i wanliz -p "username: " user
-            rsync -ah --progress $user@$host:/home/$user/.phoronix-test-suite/installed-tests/pts/unigine-valley-1.1.8/Unigine_Valley-1.0/ ~/zhutest-workload.d/unigine-valley-1.1.8 || return -1
+            rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/unigine-valley-1.1.8/ ~/zhutest-workload.d/unigine-valley-1.1.8/ || return -1
         }
     fi 
 
     if [[ $(uname -m) == "aarch64" ]]; then
         zhu-install-fex || return -1
     fi
+}
+
+function zhu-test-unigine-valley {
+    zhu-install-unigine-valley || return -1
 
     pushd ~/zhutest-workload.d/unigine-valley-1.1.8  >/dev/null 
     LD_LIBRARY_PATH=bin/:bin/x64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} ./bin/valley_x64 -data_path ../ -sound_app null -engine_config ../data/valley_1.0.cfg -system_script valley/unigine.cpp -video_mode -1 -extern_define PHORONIX,RELEASE -video_width 1920 -video_height 1080 -video_fullscreen 1 -video_app opengl > /tmp/unigine-valley.log 
@@ -1549,7 +1593,7 @@ function zhu-test-unigine-valley {
     popd >/dev/null 
 }
 
-function zhu-test-unigine-superposition {
+function zhu-install-unigine-superposition {
     zhu-validate-display || return -1
 
     if [[ ! -e ~/zhutest-workload.d/unigine-super-1.0.7 ]]; then
@@ -1561,13 +1605,17 @@ function zhu-test-unigine-superposition {
         } || {
             read -p "copy workload from host: " host
             read -e -i wanliz -p "username: " user
-            rsync -ah --progress $user@$host:/home/$user/.phoronix-test-suite/installed-tests/pts/unigine-super-1.0.7/Unigine_Superposition-1.0/ ~/zhutest-workload.d/unigine-super-1.0.7 || return -1
+            rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/unigine-super-1.0.7/ ~/zhutest-workload.d/unigine-super-1.0.7/ || return -1
         }
     fi 
 
     if [[ $(uname -m) == "aarch64" ]]; then
         zhu-install-fex || return -1
     fi
+}
+
+function zhu-test-unigine-superposition {
+    zhu-install-unigine-superposition || return -1
 
     pushd ~/zhutest-workload.d/unigine-super-1.0.7  >/dev/null 
     ./bin/superposition -sound_app openal  -system_script superposition/system_script.cpp  -data_path ../ -engine_config ../data/superposition/unigine.cfg  -video_mode -1 -project_name Superposition  -video_resizable 1  -console_command "config_readonly 1 && world_load superposition/superposition" -mode 2 -preset 0 -video_width 1920 -video_height 1080 -video_fullscreen 1 -shaders_quality 2 -textures_quality 2 -video_app opengl 
@@ -1580,17 +1628,26 @@ function zhu-install-viewperf {
     if [[ ! -e ~/zhutest-workload.d/viewperf2020.$(uname -m)/viewperf/bin/viewperf ]]; then
         which rsync >/dev/null || sudo apt install -y rsync 
         pushd ~/Downloads >/dev/null
-        if [[ $(uname -m) == "x86_64" ]]; then
-            zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3.tar.gz ~/Downloads/ || return -1
-            tar -zxvf viewperf2020v3.tar.gz
-            mkdir -p ~/zhutest-workload.d
-            mv viewperf2020 ~/zhutest-workload.d/viewperf2020.x86_64
-        elif [[ $(uname -m) == "aarch64" ]]; then
-            zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3-aarch64-rev2.tar.gz ~/Downloads/ || return -1
-            mkdir -p ~/zhutest-workload.d/viewperf2020.aarch64
-            cd ~/zhutest-workload.d/viewperf2020.aarch64
-            tar -zxvf ~/Downloads/viewperf2020v3-aarch64-rev2.tar.gz
-        fi
+            echo "[1] Copy from remote host"
+            echo "[2] Download from /mnt/linuxqa/"
+            read -e -i 1 -p "Select: " selection
+            if [[ $selection == 1 ]]; then
+                read -p "copy workload from host: " host
+                read -e -i wanliz -p "username: " user
+                rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/viewperf2020.$(uname -m)/ ~/zhutest-workload.d/viewperf2020.$(uname -m)/ || return -1
+            elif [[ $selection == 2 ]]; then
+                if [[ $(uname -m) == "x86_64" ]]; then
+                    zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3.tar.gz ~/Downloads/ || return -1
+                    tar -zxvf viewperf2020v3.tar.gz
+                    mkdir -p ~/zhutest-workload.d
+                    mv viewperf2020 ~/zhutest-workload.d/viewperf2020.x86_64
+                elif [[ $(uname -m) == "aarch64" ]]; then
+                    zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3-aarch64-rev2.tar.gz ~/Downloads/ || return -1
+                    mkdir -p ~/zhutest-workload.d/viewperf2020.aarch64
+                    cd ~/zhutest-workload.d/viewperf2020.aarch64
+                    tar -zxvf ~/Downloads/viewperf2020v3-aarch64-rev2.tar.gz
+                fi
+            fi 
         popd >/dev/null
     fi
 
@@ -2134,17 +2191,26 @@ function zhu-vulkan-api-capture {
 function zhu-install-quake2rtx {
     if [[ ! -d ~/zhutest-workload.d/quake2rtx-1.6.0.$(uname -m) ]]; then
         pushd ~/Downloads >/dev/null 
-        if [[ $(uname -m) == "x86_64" ]]; then
-            zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/q2rtx/builds/1.6.0-701cf31/q2rtx-1.6.0.tar.gz ~/Downloads/ || return -1
-            tar -zxvf q2rtx-1.6.0.tar.gz 
-            mkdir -p ~/zhutest-workload.d
-            mv q2rtx ~/zhutest-workload.d/quake2rtx-1.6.0.x86_64
-        elif [[ $(uname -m) == "aarch64" ]]; then
-            zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/q2rtx/builds/1.6.0-701cf31/q2rtx-1.6.0-aarch64.tar.gz ~/Downloads/ || return -1
-            tar -zxvf q2rtx-1.6.0-aarch64.tar.gz 
-            mkdir -p ~/zhutest-workload.d
-            mv q2rtx ~/zhutest-workload.d/quake2rtx-1.6.0.aarch64
-        fi
+            echo "[1] Copy from remote host"
+            echo "[2] Download from /mnt/linuxqa/"
+            read -e -i 1 -p "Select: " selection
+            if [[ $selection == 1 ]]; then
+                read -p "Copy workload from host: " host
+                read -e -i wanliz -p "As user: " user
+                rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/quake2rtx-1.6.0.$(uname -m)/ $HOME/zhutest-workload.d/quake2rtx-1.6.0.$(uname -m)/ || return -1
+            elif [[ $selection == 2 ]]; then
+                if [[ $(uname -m) == "x86_64" ]]; then
+                    zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/q2rtx/builds/1.6.0-701cf31/q2rtx-1.6.0.tar.gz ~/Downloads/ || return -1
+                    tar -zxvf q2rtx-1.6.0.tar.gz 
+                    mkdir -p ~/zhutest-workload.d
+                    mv q2rtx ~/zhutest-workload.d/quake2rtx-1.6.0.x86_64
+                elif [[ $(uname -m) == "aarch64" ]]; then
+                    zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/q2rtx/builds/1.6.0-701cf31/q2rtx-1.6.0-aarch64.tar.gz ~/Downloads/ || return -1
+                    tar -zxvf q2rtx-1.6.0-aarch64.tar.gz 
+                    mkdir -p ~/zhutest-workload.d
+                    mv q2rtx ~/zhutest-workload.d/quake2rtx-1.6.0.aarch64
+                fi
+            fi 
         popd >/dev/null 
     fi
 }
@@ -2159,25 +2225,22 @@ function zhu-test-quake2rtx {
     popd >/dev/null 
 }
 
-function zhu-nvtest-shadow-of-the-tomb-raider {
-    pushd . >/dev/null 
+function zhu-install-shadow-of-the-tomb-raider {
     zhu-mount-linuxqa || return -1
 
     if [[ ! -d $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11 ]]; then
-        if [[ ! -e $HOME/Downloads/nvtest-sottr-2025-03-11.tar.gz ]]; then
-            zhu-gtlfs-download 0195873E-0634-7304-ABE0-A64290DC648E  
-        fi
-
-        mkdir -p $HOME/zhutest-workload.d
-        cd $HOME/zhutest-workload.d
-        tar -zxvf $HOME/Downloads/nvtest-sottr-2025-03-11.tar.gz
+        read -p "Copy workload from host: " host
+        read -e -i wanliz -p "As user: " user
+        rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/nvtest-sottr-2025-03-11/ $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/ || return -1
     fi
+}
 
-    if [[ $(sysctl kernel.unprivileged_userns_clone | awk '{print $3}') == 0 ]]; then
-        sudo sysctl -w kernel.unprivileged_userns_clone=1
-    fi
+function zhu-nvtest-shadow-of-the-tomb-raider {
+    zhu-install-shadow-of-the-tomb-raider || return -1
 
-    cd /root/nvt/tests/dxvk/run_dir; \
+    pushd . >/dev/null 
+    rm -rf /tmp/nvtest-sottr.log; \
+    cd $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/run_dir; \
     DISPLAY=:0.0 \
     DXVK_ENABLE_NVAPI=1 \
     DXVK_HUD=full \
@@ -2213,7 +2276,7 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
     __GL_SYNC_TO_VBLANK=0 \
     $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/steam-linux-runtime-12249908/run-in-sniper -- \
     $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/proton-9.0-3e/files/bin/wine \
-    $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/run_dir/SOTTR.exe 99999999 0 fps_log >/tmp/nvtest-sottr.log &
+    $HOME/zhutest-workload.d/nvtest-sottr-2025-03-11/dxvk/run_dir/SOTTR.exe 99999999 0 fps_log | tee /tmp/nvtest-sottr.log &
     
     echo "Recording FPS for 30 seconds..."
     sleep 30
@@ -2235,13 +2298,157 @@ function zhu-nvtest-shadow-of-the-tomb-raider {
     popd >/dev/null 
 }
 
-function zhu-test-ngfxcpp-sottr {
+function zhu-install-grand-theft-auto-v {
+    zhu-mount-linuxqa || return -1
+    if [[ ! -d $HOME/zhutest-workload.d/nvtest-gtav-2025-03-11 ]]; then
+        read -p "Copy workload from host: " host
+        read -e -i wanliz -p "As user: " user
+        rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/nvtest-gtav-2025-03-11/ $HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/ || return -1
+    fi
+}
+
+function zhu-nvtest-grand-theft-auto-v {
+    zhu-install-grand-theft-auto-v || return -1
+
+    pushd . >/dev/null 
+    rm -rf /tmp/nvtest-gtav.log; \
+    cd $HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/run_dir; \
+    DISPLAY=:0.0 \
+    DXVK_ENABLE_NVAPI=1 \
+    DXVK_HUD=full \
+    DXVK_LOG_LEVEL=none \
+    DXVK_STATE_CACHE=0 \
+    LD_LIBRARY_PATH=$HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/proton-9.0-3e/files/lib64:$HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/proton-9.0-3e/files/lib:/mnt/linuxqa/nvtest/pynv_files/vulkan_loader/sdk-1.1.92.1/Linux_amd64:/mnt/linuxqa/nvtest/pynv_files/vkdevicechooser/Linux_amd64 \
+    LIBC_FATAL_STDERR_=1 \
+    NODEVICE_SELECT=1 \
+    PATH=$HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/proton-9.0-3e/files/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin \
+    PROTON_VR_RUNTIME=1 \
+    STEAM_COMPAT_DATA_PATH=$HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/proton-9.0-3e/prefix \
+    VK_ICD_FILENAMES=/etc/vulkan/icd.d/nvidia_icd.json \
+    VK_INSTANCE_LAYERS=VK_LAYER_AEJS_DeviceChooserLayer \
+    VK_LAYER_PATH=/dev/null/explicit_layer.d:/mnt/linuxqa/nvtest/pynv_files/vkdevicechooser \
+    VR_OVERRIDE=1 \
+    VULKAN_DEVICE_INDEX=0 \
+    WINEDEBUG=-all \
+    WINEDLLOVERRIDES='steam.exe=b;d3d11=n;d3d10core=n;dxgi=n;d3d11x_42=n;d3d11x_43=n;d3d9=n;nvcuda=b;' \
+    WINEDLLPATH=$HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/proton-9.0-3e/files/lib64/wine:$HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/proton-9.0-3e/files/lib/wine \
+    WINEESYNC=1 \
+    WINEPREFIX=$HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/proton-9.0-3e/prefix/pfx \
+    WINE_DISABLE_FULLSCREEN_HACK=1 \
+    WINE_MONO_OVERRIDES='Microsoft.Xna.Framework.*,Gac=n' \
+    __GL_0x301fd6=0x00000005 \
+    __GL_0xcfcfa1=0x00000008 \
+    __GL_0xfcd802=0x00000001 \
+    __GL_4718b=0x00000008 \
+    __GL_61807119=/root/nvt/log/loadmonitor/00071_run-in-sniper \
+    __GL_SHADER_DISK_CACHE=0 \
+    __GL_SYNC_TO_VBLANK=0 \
+    $HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/steam-linux-runtime-12249908/run-in-sniper -- \
+    $HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/proton-9.0-3e/files/bin/wine \
+    $HOME/zhutest-workload.d/nvtest-gtav-2025-03-11/dxvk/run_dir/GTA5.exe 99999999 0 fps_log | tee /tmp/nvtest-gtav.log &
+    
+    echo "Recording FPS for 30 seconds..."
+    sleep 30
+    
+    if [[ ! -z $(nvidia-smi) ]]; then
+        kill -INT $(nvidia-smi | grep GTAV.exe | awk '{print $5}')
+    else
+        echo TODO
+    fi 
+    sleep 3
+
+    if [[ -e /tmp/nvtest-gtav.log ]]; then 
+        cat /tmp/nvtest-gtav.log | tail -n 100 >/tmp/nvtest-gtav-tail-100.log
+        echo "Generated /tmp/nvtest-gtav.log"
+        echo "Total Average FPS: $(awk '{ total += $1; count++ } END { print total/count }' /tmp/nvtest-gtav.log)"
+        echo "Stablized Avg FPS: $(awk '{ total += $1; count++ } END { print total/count }' /tmp/nvtest-gtav-tail-100.log)"
+    fi 
+
+    popd >/dev/null 
+}
+
+function zhu-install-cyberpunk2077 {
+    zhu-mount-linuxqa || return -1
+    if [[ ! -d $HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11 ]]; then
+        read -p "Copy workload from host: " host
+        read -e -i wanliz -p "As user: " user
+        rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/ $HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/ || return -1
+    fi
+}
+
+function zhu-nvtest-cyberpunk2077 {
+    zhu-install-cyberpunk2077 || return -1
+
+    pushd . >/dev/null 
+    rm -rf /tmp/nvtest-cyberpunk2077.log; \
+    cd $HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/run_dir; \
+    DISPLAY=:0.0 \
+    DXVK_ENABLE_NVAPI=1 \
+    DXVK_HUD=full \
+    DXVK_LOG_LEVEL=none \
+    DXVK_STATE_CACHE=0 \
+    LD_LIBRARY_PATH=$HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/proton-9.0-3e/files/lib64:$HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/proton-9.0-3e/files/lib:/mnt/linuxqa/nvtest/pynv_files/vulkan_loader/sdk-1.2.162.0/Linux_amd64:/mnt/linuxqa/nvtest/pynv_files/vkdevicechooser/Linux_amd64 \
+    LIBC_FATAL_STDERR_=1 \
+    NODEVICE_SELECT=1 \
+    PATH=$HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/proton-9.0-3e/files/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin \
+    PROTON_VR_RUNTIME=1 \
+    STEAM_COMPAT_DATA_PATH=$HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/proton-9.0-3e/prefix \
+    VKD3D_CONFIG=dxr \
+    VKD3D_DEBUG=none \
+    VKD3D_FEATURE_LEVEL=12_2 \
+    VK_ICD_FILENAMES=/etc/vulkan/icd.d/nvidia_icd.json \
+    VK_INSTANCE_LAYERS=VK_LAYER_AEJS_DeviceChooserLayer \
+    VK_LAYER_PATH=/mnt/linuxqa/nvtest/pynv_files/vulkan_loader/sdk-1.2.162.0/Linux_amd64/explicit_layer.d:/mnt/linuxqa/nvtest/pynv_files/vkdevicechooser \
+    VR_OVERRIDE=1 \
+    VULKAN_DEVICE_INDEX=0 \
+    WINEDEBUG=-all \
+    WINEDLLOVERRIDES='steam.exe=b;d3d11=n;d3d10core=n;dxgi=n;d3d11x_42=n;d3d11x_43=n;d3d9=n;nvcuda=b;d3d12=n;d3d12core=n;' \
+    WINEDLLPATH=$HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/proton-9.0-3e/files/lib64/wine:$HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/proton-9.0-3e/files/lib/wine \
+    WINEESYNC=1 \
+    WINEPREFIX=$HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/proton-9.0-3e/prefix/pfx \
+    WINE_DISABLE_FULLSCREEN_HACK=1 \
+    WINE_MONO_OVERRIDES='Microsoft.Xna.Framework.*,Gac=n' \
+    __GL_0x301fd6=0x00000005 \
+    __GL_0xcfcfa1=0x00000008 \
+    __GL_0xfcd802=0x00000001 \
+    __GL_4718b=0x00000008 \
+    __GL_61807119=/root/nvt/log/loadmonitor/00072_run-in-sniper \
+    __GL_SHADER_DISK_CACHE=0 \
+    __GL_SYNC_TO_VBLANK=0 \
+    $HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/steam-linux-runtime-12249908/run-in-sniper -- \
+    $HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/proton-9.0-3e/files/bin/wine \
+    $HOME/zhutest-workload.d/nvtest-cyberpunk2077-2025-03-11/dxvk/run_dir/cpLauncher.exe 99999999 0 fps_log | tee /tmp/nvtest-cyberpunk2077.log &
+    
+    echo "Recording FPS for 30 seconds..."
+    sleep 30
+    
+    if [[ ! -z $(nvidia-smi) ]]; then
+        kill -INT $(nvidia-smi | grep cpLauncher.exe | awk '{print $5}')
+    else
+        echo TODO
+    fi 
+    sleep 3
+
+    if [[ -e /tmp/nvtest-cyberpunk2077.log ]]; then 
+        cat /tmp/nvtest-cyberpunk2077.log | tail -n 100 >/tmp/nvtest-cyberpunk2077-tail-100.log
+        echo "Generated /tmp/nvtest-cyberpunk2077.log"
+        echo "Total Average FPS: $(awk '{ total += $1; count++ } END { print total/count }' /tmp/nvtest-cyberpunk2077.log)"
+        echo "Stablized Avg FPS: $(awk '{ total += $1; count++ } END { print total/count }' /tmp/nvtest-cyberpunk2077-tail-100.log)"
+    fi 
+
+    popd >/dev/null 
+}
+
+function zhu-install-ngfxcpp-sottr {
     if [[ ! -d ~/zhutest-workload.d/ngfxcpp-sottr ]]; then
         read -p "Copy workload from host: " host
         read -e -i wanliz -p "As user: " user
         rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/ngfxcpp-sottr/ ~/zhutest-workload.d/ngfxcpp-sottr || return -1
     fi
+}
 
+function zhu-test-ngfxcpp-sottr {
+    zhu-install-ngfxcpp-sottr || return -1
     pushd ~/zhutest-workload.d/ngfxcpp-sottr || return -1
 
     read -e -i 100 -p "Number of frames to repeat: " frames
@@ -2251,13 +2458,16 @@ function zhu-test-ngfxcpp-sottr {
     popd >/dev/null 
 }
 
-function zhu-test-ngfxcpp-deus-ex-md {
+function zhu-install-ngfxcpp-deus-ex-md {
     if [[ ! -d ~/zhutest-workload.d/ngfxcpp-deus-ex-md ]]; then
         read -p "Copy workload from host: " host
         read -e -i wanliz -p "As user: " user
         rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/ngfxcpp-deus-ex-md/ ~/zhutest-workload.d/ngfxcpp-deus-ex-md || return -1
     fi
+}
 
+function zhu-test-ngfxcpp-deus-ex-md {
+    zhu-install-ngfxcpp-deus-ex-md || return -1
     pushd ~/zhutest-workload.d/ngfxcpp-deus-ex-md || return -1
 
     read -e -i 100 -p "Number of frames to repeat: " frames
