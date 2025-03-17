@@ -324,9 +324,13 @@ function zhu-generate-perf-and-flamegraph {
         duration=5
     fi
 
+    if [[ -z $frequency ]]; then
+        frequency=5
+    fi
+
     data_path=$output_dir/perf.data
-    echo "perf is recording system-wide counters into $output_dir/perf.data for $duration seconds"
-    sudo perf record -a -s -g --call-graph dwarf --freq=max --output=$data_path -- sleep $duration || return -1
+    echo "perf is recording system-wide counters into $output_dir/perf.data in $frequency Hz for $duration seconds"
+    sudo perf record -a -s -g --call-graph dwarf --freq=$frequency --output=$data_path -- sleep $duration || return -1
 
     if [[ -e $data_path ]]; then
         zhu-generate-flamegraph $output_dir/perf.data
