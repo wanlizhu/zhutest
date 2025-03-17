@@ -985,8 +985,6 @@ function zhu-lscpu {
     bg_colors=('\033[48;5;234m' '\033[48;5;239m')
     strike='\033[9m'  
 
-    echo "Available CPU cores ($(lscpu -e=modelname | head -2 | tail -1)):"
-
     # Find P-cores (cores with multiple CPUs)
     declare -A core_counts
     while IFS=' ' read -r cpu core; do 
