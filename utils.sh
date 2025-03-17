@@ -891,6 +891,7 @@ function zhu-cpu-utilization {
     fi
 
     file="/tmp/cpu-utilization.log"
+    rm -rf $file 
     echo "Recording cpu utilization data to $file every second..."
     pidstat -t -u -p $target --human 1 | tee $file 
 }
@@ -899,8 +900,7 @@ function zhu-gpu-utilization {
     if [[ -z $1 ]]; then
         echo "Manual termination mode is ON"
     else
-        "$@" &
-        target=$!
+        target=$1 
     fi
 
     if [[ -z $(which bc) ]]; then
@@ -909,12 +909,15 @@ function zhu-gpu-utilization {
 
     freq=20  # Can be less than 1
     file="/tmp/nvidia-gpu-utilization.log"
+    rm -rf $file 
     echo "Recording gpu utilization data to $file at ${freq} Hz..."
     nvidia-smi --query-gpu=power.draw,temperature.gpu,utilization.gpu,utilization.memory,clocks.mem,clocks.gr --format=csv -lms $(bc -l <<< "x=1000/$freq; scale=0; x/1") > $file & 
     smipid=$!
 
     if [[ ! -z $1 ]]; then
-        wait $target 
+        while [[ -d /proc/$target ]]; do 
+            sleep 1
+        done
     else
         read -p "Press [ENTER] to stop recording: " _
     fi
