@@ -2507,6 +2507,12 @@ function zhu-data-visualize {
     fi
 
     if ! python3 -c "import pandas" &>/dev/null; then
-        python3 -m pip install pandas 
+        python3 -m pip install pandas matplotlib numpy 
     fi
+
+    if [[ ! -e /$HOME/zhutest/data-visualize.py ]]; then
+        git clone https://github.com/wanlizhu/zhutest $HOME/zhutest || return -1
+    fi
+
+    python3 $HOME/zhutest/data-visualize.py "$1"
 }
