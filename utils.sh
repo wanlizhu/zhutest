@@ -321,7 +321,7 @@ function zhu-generate-perf-and-flamegraph {
     mkdir -p $output_dir || return -1
 
     if [[ -z $duration ]]; then
-        duration=$5
+        duration=5
     fi
 
     data_path=$output_dir/perf.data
