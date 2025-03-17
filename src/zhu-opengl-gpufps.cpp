@@ -45,6 +45,8 @@ void glXSwapBuffers(Display *dpy, GLXDrawable drawable) {
         } else {
             printf("gladLoadGLLoader(...) failed!\n");
         }
+
+        printf("CPU FPS, GPU FPS, Delta\n");
     }
 
     if (getenv("zhu_force_glfinish")) {
@@ -73,7 +75,7 @@ void glXSwapBuffers(Display *dpy, GLXDrawable drawable) {
             double gpu_time_ms = (gpu_end - gpu_start) * 1.0 / 1e6;
             double cpu_time_ms = ((cpu_end.tv_sec - cpu_start.tv_sec) * 1e9 + (cpu_end.tv_nsec - cpu_start.tv_nsec)) * 1.0 / 1e6;
             
-            snprintf(tmpstr, 100, "%07.2f, %07.2f, %07.2f\n", 
+            snprintf(tmpstr, 100, "%7.2f, %7.2f, %7.2f\n", 
                 float(1000.0 / cpu_time_ms),
                 float(1000.0 / gpu_time_ms),
                 float(1000.0 / cpu_time_ms) - float(1000.0 / gpu_time_ms));
