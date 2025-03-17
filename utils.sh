@@ -2517,6 +2517,6 @@ function zhu-data-visualize {
     python3 $HOME/zhutest/data-visualize.py "$1"
 }
 
-function zhu-nsight-graphics-create-gpu-trace {
+function zhu-nsight-graphics-gpu-trace {
     ngfx --activity "GPU Trace Profiler" --exe "/home/wanliz/zhutest-workload.d/viewperf2020.x86_64/viewperf/bin/viewperf" --args "viewsets/maya/config/subtest5.xml -resolution 1920x1080" --dir "/home/wanliz/zhutest-workload.d/viewperf2020.x86_64" --start-after-frames 1000 --limit-to-frames 1 --auto-export --architecture "Ampere GA10x" --metric-set-name "Throughput Metrics" --multi-pass-metrics --set-gpu-clocks base --disable-nvtx-ranges 1
 }
