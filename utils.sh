@@ -2500,3 +2500,13 @@ function zhu-test-ngfxcpp-deus-ex-md {
 
     popd >/dev/null
 }
+
+function zhu-data-visualize {
+    if [[ "$1" != *".csv" ]]; then
+        read -p "Please confirm the data is in csv format! " _
+    fi
+
+    if ! python3 -c "import pandas" &>/dev/null; then
+        python3 -m pip install pandas 
+    fi
+}
