@@ -54,7 +54,7 @@ void glXSwapBuffers(Display *dpy, GLXDrawable drawable) {
     }
 
     real_glXSwapBuffers(dpy, drawable); // Non-blocking (vsync off)
-    if (cool_down_time++ < 500 || !glad_inited) {
+    if (cool_down_time++ < 100 || !glad_inited) {
         return;
     }
 
