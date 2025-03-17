@@ -992,7 +992,7 @@ function zhu-lscpu {
     done < <(lscpu -e=cpu,core | tail -n +2)
 
     # Show header
-    echo -e "${header_style}CPU  CORE MAXMHZ    MHZ  ONLINE${reset}"
+    echo -e "${header_style}CPU  CORE MAXMHZ    MHZ      ONLINE${reset}"
 
     # Show cpu data
     local color_idx=0 last_core=-1
@@ -1016,7 +1016,7 @@ function zhu-lscpu {
         fi
 
         # Print out
-        printf "${style}%-4s %-4s %-7s %-8s %-6s${reset}\n" \
+        printf "${style}%-4s %-4s %-7s %-7s %-6s${reset}\n" \
                "$cpu" "$core" "$maxmhz" "$mhz" "$online"
     done
 }
