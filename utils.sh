@@ -2516,3 +2516,7 @@ function zhu-data-visualize {
 
     python3 $HOME/zhutest/data-visualize.py "$1"
 }
+
+function zhu-nsight-graphics-create-gpu-trace {
+    echo 
+}
