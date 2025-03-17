@@ -124,7 +124,7 @@ void __attribute__((destructor)) shutdown() {
         }
 
         for (int i = 0; i < sums.size(); i++) {
-            printf("Avg of column %d: %07.2f  (%s)\n", i + 1, sums[i] / counts[i], names[i].c_str());
+            printf("Avg of column %d: %7.2f  (%s)\n", i + 1, sums[i] / counts[i], names[i].c_str());
         }
     }
 }
