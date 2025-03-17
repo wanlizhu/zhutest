@@ -298,9 +298,9 @@ function zhu-generate-flamegraph {
     sudo perf script --no-inline --force --input=$(basename $1) > /tmp/$(basename $1).script &&
     sudo ~/flamegraph.git/stackcollapse-perf.pl /tmp/$(basename $1).script > /tmp/$(basename $1).script.collapse &&
     sudo ~/flamegraph.git/stackcollapse-recursive.pl /tmp/$(basename $1).script.collapse > $(basename $1).folded && echo "Generated $(basename $1).folded" &&
-    sort -k2 -nr $(basename $1).folded | head -n 1000 > $(basename $1).folded.top1k && echo "Generated $(basename $1)a.folded.top1k" &&
+    sort -k2 -nr $(basename $1).folded | head -n 1000 > $(basename $1).head1000.folded && echo "Generated $(basename $1).head1000.folded" &&
     sudo ~/flamegraph.git/flamegraph.pl $(basename $1).folded > $(basename $1).svg  && echo "Generated $(basename $1).svg" &&
-    sudo ~/flamegraph.git/flamegraph.pl --minwidth '1%' $(basename $1).folded > $(basename $1).mini.svg  && echo "Generated $(basename $1).mini.svg" &&
+    sudo ~/flamegraph.git/flamegraph.pl --minwidth '1%' $(basename $1).folded > $(basename $1).minwidth1.svg  && echo "Generated $(basename $1).minwidth1.svg" &&
     echo "[optional] Generating a text-based graph (this may take time). Press [CTRL-C] to cancel." && sudo perf report --stdio --show-nr-samples --show-cpu-utilization --threads --input=$(basename $1) > /tmp/$(basename $1).graph.txt &&
     mv /tmp/$(basename $1).graph.txt $(basename $1).graph.txt &&
     echo "Generated $(basename $1).graph.txt"
