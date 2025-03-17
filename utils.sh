@@ -571,7 +571,7 @@ function zhu-download-nvidia-driver {
 function zhu-install-nvidia-driver-localbuild {
     if [[ -e $1 ]]; then
         sudo systemctl stop display-manager 
-        chmod +x $(realpath $1) 
+        #chmod +x $(realpath $1) 
         sudo $(realpath $1) && {
             echo "Nvidia driver is installed!"
             read -e -i yes -p "Do you want to start display manager? " start_dm
