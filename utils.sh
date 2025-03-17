@@ -713,6 +713,7 @@ function zhu-show-gpufps {
     g++ -shared -fPIC -o /tmp/zhu-opengl-gpufps.so ~/zhutest/src/zhu-opengl-gpufps.cpp -ldl -lGL -lX11 /tmp/glad.a &&
     echo "Generated /tmp/zhu-opengl-gpufps.so" || return -1
 
+    echo "CPU FPS, GPU FPS, Delta (C-G)"
     __GL_SYNC_TO_VBLANK=0 vblank_mode=0 LD_PRELOAD=/tmp/zhu-opengl-gpufps.so "$@"
 }
 
