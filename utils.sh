@@ -599,15 +599,15 @@ function zhu-install-nvidia-driver-cloudbuild {
 
     if [[ $type == 1 ]]; then
         path="$path/builds/release/display/$(uname -m)"
-        read -e -i release -p "Configure (release/debug): " config
-        config=$([[ $config == debug ]] && echo "/debug" || echo "")
+        read -e -i release -p "Configure (release/debug/develop): " config
+        config=$([[ $config == release ]] && echo "" || echo "/$config")
         path="$path$config"
         read -p "Release version: " version
         path="$path/$version/NVIDIA-Linux-$(uname -m)-$version.run"
     elif [[ $type == 2 ]]; then
         path="$path/builds/daily/display/$(uname -m)/dev/gpu_drv/bugfix_main"
-        read -e -i release -p "Configure (release/debug): " config
-        config=$([[ $config == debug ]] && echo "/debug" || echo "")
+        read -e -i release -p "Configure (release/debug/develop): " config
+        config=$([[ $config == release ]] && echo "" || echo "/$config")
         path="$path$config"
         read -p "Date (yyyymmdd): " date
         path="$path/${date}_*/NVIDIA-Linux-$(uname -m)-dev_gpu_drv_bugfix_main-${date}_*.run"
