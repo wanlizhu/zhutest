@@ -992,12 +992,12 @@ function zhu-lscpu {
     done < <(lscpu -e=cpu,core | tail -n +2)
 
     # Show header
-    echo -e "${header_style}CPU  CORE MAXMHZ    SCLMHZ%  ONLINE${reset}"
+    echo -e "${header_style}CPU  CORE MAXMHZ    MHZ  ONLINE${reset}"
 
     # Show cpu data
     local color_idx=0 last_core=-1
-    lscpu -e=cpu,core,maxmhz,scalmhz%,online | tail -n +2 | \
-    while IFS=' ' read -r cpu core maxmhz scalmhz online; do 
+    lscpu -e=cpu,core,maxmhz,mhz,online | tail -n +2 | \
+    while IFS=' ' read -r cpu core maxmhz mhz online; do 
         # Choose background color
         if [[ "$core" != "$last_core" ]]; then
             color_idx=$(( (color_idx + 1) % ${#bg_colors[@]} ))
@@ -1017,7 +1017,7 @@ function zhu-lscpu {
 
         # Print out
         printf "${style}%-4s %-4s %-7s %-8s %-6s${reset}\n" \
-               "$cpu" "$core" "$maxmhz" "$scalmhz" "$online"
+               "$cpu" "$core" "$maxmhz" "$mhz" "$online"
     done
 }
 
