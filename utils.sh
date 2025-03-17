@@ -893,11 +893,6 @@ function zhu-record-cpu-utilization {
     file="/tmp/cpu-utilization.log"
     echo "Recording cpu utilization data to $file every second..."
     pidstat -t -u -p $target --human 1 | tee $file 
-
-    if [[ ! -e ~/zhutest/src/visualize-csv-data.py ]]; then
-        git clone --depth 1 https://github.com/wanlizhu/zhutest ~/zhutest
-    fi
-    python3 ~/zhutest/src/visualize-csv-data.py $file 
 }
 
 function zhu-record-gpu-utilization {
@@ -925,12 +920,6 @@ function zhu-record-gpu-utilization {
     fi
 
     kill -SIGINT $smipid 
-    sleep 1
-
-    if [[ ! -e ~/zhutest/src/visualize-csv-data.py ]]; then
-        git clone --depth 1 https://github.com/wanlizhu/zhutest ~/zhutest
-    fi
-    python3 ~/zhutest/src/visualize-csv-data.py $file 
 }
 
 function zhu-disable-nvidia-gpu {
