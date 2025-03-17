@@ -908,10 +908,10 @@ function zhu-gpu-utilization {
     fi
 
     freq=20  # Can be less than 1
-    file="/tmp/nvidia-gpu-utilization.log"
+    file="/tmp/nvidia-gpu-utilization.csv"
     rm -rf $file 
     echo "Recording gpu utilization data to $file at ${freq} Hz..."
-    nvidia-smi --query-gpu=power.draw,temperature.gpu,utilization.gpu,utilization.memory,clocks.mem,clocks.gr --format=csv -lms $(bc -l <<< "x=1000/$freq; scale=0; x/1") > $file & 
+    nvidia-smi --query-gpu=power.draw,temperature.gpu,utilization.gpu,utilization.memory,clocks.gr,clocks.mem --format=csv -lms $(bc -l <<< "x=1000/$freq; scale=0; x/1") > $file & 
     smipid=$!
 
     if [[ ! -z $1 ]]; then
