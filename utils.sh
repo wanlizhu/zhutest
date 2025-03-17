@@ -703,7 +703,7 @@ function zhu-enable-nvidia-gsp {
     echo "[Action Required] Reboot system to activate changes!"
 }
 
-function zhu-opengl-gpufps {
+function zhu-show-gpufps {
     if [[ ! -d ~/zhutest ]]; then
         git clone --depth 1 https://github.com/wanlizhu/zhutest ~/zhutest
     fi
@@ -867,10 +867,10 @@ EOF
     fi 
 }
 
-function zhu-cpu-utilization {
+function zhu-show-cpu-utilization {
     if [[ -z $1 ]]; then
-        echo "Usage 1: zhu-cpu-utilization <PID>"
-        echo "Usage 2: zhu-cpu-utilization <program> [args...]"
+        echo "Usage 1: xxx <PID>"
+        echo "Usage 2: xxx <program> [args...]"
         return -1
     else
         if [[ "$1" =~ ^[0-9]+$ ]]; then
@@ -896,7 +896,7 @@ function zhu-cpu-utilization {
     pidstat -t -u -p $target --human 1 | tee $file 
 }
 
-function zhu-gpu-utilization {
+function zhu-show-gpu-utilization {
     if [[ -z $1 ]]; then
         echo "Manual termination mode is ON"
     else
