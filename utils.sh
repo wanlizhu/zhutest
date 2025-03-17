@@ -1753,7 +1753,7 @@ function zhu-test-viewperf-maya-subtest5 {
 EOF
     fi
 
-    taskset -c 11 ./viewperf/bin/viewperf viewsets/maya/config/subtest5.xml -resolution 1920x1080 &>/dev/null && {
+    ./viewperf/bin/viewperf viewsets/maya/config/subtest5.xml -resolution 1920x1080 && {
         cat results/maya-06/results.xml | grep FPS | xmllint --xpath 'string(//Test/@FPS)' - >> /tmp/fps.log 
         echo "Viewperf Maya-06/subtest5 result FPS: $(cat /tmp/fps.log | tail -1)"
     }
