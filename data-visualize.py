@@ -30,7 +30,8 @@ def main():
         ranges = df.max() - df.min()
         ranges[ranges == 0] = 1e-9
         normalized_df = (df - df.min()) / ranges
-        stats = df.agg(['min', 'max', 'mean', 'std']).T.round(2)
+        normalized_df = normalized_df[columns_to_plot]
+        stats = df[columns_to_plot].agg(['min', 'max', 'mean', 'std']).T.round(2)
         stats.index = columns_to_plot # Use original names for display
 
         # Create figure
@@ -38,17 +39,16 @@ def main():
         gs = GridSpec(2, 1, height_ratios=[3, 1], hspace=0.05)
         ax_plot = fig.add_subplot(gs[0])
         ax_stats = fig.add_subplot(gs[1])
-        num_cols = len(df.columns)
-        colors = plt.cm.tab10(np.linspace(0, 1, num_cols))
+        colors = plt.cm.tab10(np.linspace(0, 1, len(columns_to_plot)))
 
         # Plot each column
         x = np.arange(len(df))
-        for idx, col in enumerate(normalized_df.columns):
+        for idx, col in enumerate(columns_to_plot):
             ax_plot.plot(x, normalized_df[col], 
                          color=colors[idx], 
                          label=columns_to_plot[idx])
-        ax_plot.set_title('GPU Utilization Analysis', pad=20)
-        ax_plot.set_ylabel('Normalized Value')
+        ax_plot.set_title('GPU Utilization Analysis', pad=20, fontsize=14)
+        ax_plot.set_ylabel('Normalized Value', fontsize=12)
         ax_plot.grid(alpha=0.3)
         ax_plot.legend(loc='upper left', bbox_to_anchor=(1.02, 1), borderaxespad=0)
 
