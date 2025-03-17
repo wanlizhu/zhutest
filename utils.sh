@@ -350,7 +350,7 @@ function zhu-start-gdm3 {
     fi
 }
 
-function zhu-start-bare-x {
+function zhu-start-bare-x-session {
     if [[ $XDG_SESSION_TYPE == tty ]]; then
         xset -dpms
         xset s off 
