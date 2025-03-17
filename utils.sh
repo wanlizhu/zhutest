@@ -2473,6 +2473,14 @@ function zhu-test-ngfxcpp-sottr {
     popd >/dev/null 
 }
 
+function zhu-install-ngfxcpp-viewperf2020-maya {
+    if [[ ! -d ~/zhutest-workload.d/ngfxcpp-viewperf2020-maya ]]; then
+        read -p "Copy workload from host: " host
+        read -e -i wanliz -p "As user: " user
+        rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/ngfxcpp-viewperf2020-maya/ ~/zhutest-workload.d/ngfxcpp-viewperf2020-maya || return -1
+    fi
+}
+
 function zhu-test-ngfxcpp-viewperf2020-maya {
     zhu-install-ngfxcpp-viewperf2020-maya || return -1
     pushd ~/zhutest-workload.d/ngfxcpp-viewperf2020-maya || return -1
