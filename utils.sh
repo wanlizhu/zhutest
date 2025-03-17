@@ -2473,6 +2473,17 @@ function zhu-test-ngfxcpp-sottr {
     popd >/dev/null 
 }
 
+function zhu-test-ngfxcpp-viewperf2020-maya {
+    zhu-install-ngfxcpp-viewperf2020-maya || return -1
+    pushd ~/zhutest-workload.d/ngfxcpp-viewperf2020-maya || return -1
+
+    read -e -i 100 -p "Number of frames to repeat: " frames
+    chmod +x ./viewperf
+    LD_LIBRARY_PATH=$LD_LIBRARY_PATH: ./viewperf -automated -noreset -fps -mincpu -repeat $frames   
+
+    popd >/dev/null 
+}
+
 function zhu-install-ngfxcpp-deus-ex-md {
     if [[ ! -d ~/zhutest-workload.d/ngfxcpp-deus-ex-md ]]; then
         read -p "Copy workload from host: " host
