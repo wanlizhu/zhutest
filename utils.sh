@@ -618,6 +618,8 @@ function zhu-install-nvidia-driver-cloudbuild {
         paths="$path/NVIDIA-Linux-$(uname -m)-DVS-internal.run"
         path=${path//x86_64/AMD64}
         path=${path//aarch64_unix-build_Test_Driver/aarch64_unix-build_Driver}
+    else
+        return -1
     fi
 
     if [[ -e $(realpath $path) ]]; then
