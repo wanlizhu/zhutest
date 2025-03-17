@@ -15,13 +15,23 @@ def main():
         # Read and clean data
         df = pd.read_csv(sys.argv[1])
         original_columns = [col.strip() for col in df.columns.to_list()]
+        print("Available columns:")
+        for idx, col in enumerate(original_columns):
+            print(f"{idx}: {col}")
+        plot_all = input("Do you want to plot all columns? (y/n): ").strip().lower()
+        if plot_all == 'y':
+            columns_to_plot = original_columns
+        else:
+            selected_indices = input("Enter the indices of the columns to plot (comma-separated): ").strip().lower().split(',')
+            columns_to_plot = [original_columns[int(idx)] for idx in selected_indices]
+
         df = df.replace('[^\d.]', '', regex=True).astype(float)
-        df.columns = [col.strip().replace(' ', '_') for col in original_columns]
+        df.columns = [col.strip().replace(' ', '_') for col in columns_to_plot]
         ranges = df.max() - df.min()
         ranges[ranges == 0] = 1e-9
         normalized_df = (df - df.min()) / ranges
         stats = df.agg(['min', 'max', 'mean', 'std']).T.round(2)
-        stats.index = original_columns # Use original names for display
+        stats.index = columns_to_plot # Use original names for display
 
         # Create figure
         fig = plt.figure(figsize=(16, 12))
@@ -36,7 +46,7 @@ def main():
         for idx, col in enumerate(normalized_df.columns):
             ax_plot.plot(x, normalized_df[col], 
                          color=colors[idx], 
-                         label=original_columns[idx])
+                         label=columns_to_plot[idx])
         ax_plot.set_title('GPU Utilization Analysis', pad=20)
         ax_plot.set_ylabel('Normalized Value')
         ax_plot.grid(alpha=0.3)
