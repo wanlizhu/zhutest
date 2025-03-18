@@ -723,6 +723,8 @@ function zhu-build-nvidia-driver {
             nvmake sweep 
     fi
 
+    sudo apt install -y libelf-dev &>/dev/null 
+
     if [[ -d drivers ]]; then
         time $P4ROOT/misc/linux/unix-build \
             --tools  $P4ROOT/tools \
