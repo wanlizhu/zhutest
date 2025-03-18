@@ -2524,5 +2524,26 @@ function zhu-nsight-graphics-gpu-trace {
 }
 
 function zhu-show-interrupt-count {
-    echo 
+    # Determine GPU IRQ based on loaded module
+    if lsmod | grep -q nvidia; then
+        gpu_irq=$(grep 'nvidia' /proc/interrupts | awk '{print $1}' | cut -d: -f1 | head -n 1)
+    else
+        gpu_irq=$(grep 'amdgpu' /proc/interrupts | awk '{print $1}' | cut -d: -f1 | head -n 1)
+    fi
+
+    echo "[1/4] Set ftrace filter for irq_handler_entry events on the GPU IRQ"
+    echo "irq == $gpu_irq" | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null
+    echo "[2/4] Start recording all irq_handler_entry events (without limiting to a particular function)"
+    sudo trace-cmd record -e irq_handler_entry &
+    tracecmd_pid=$!
+
+    echo "[3/4] Let it ($tracecmd_pid) run for 10 seconds..."
+    sleep 10
+    sudo kill $tracecmd_pid
+    count=$(trace-cmd report | grep "irq=$gpu_irq" | wc -l)
+
+    echo "[4/4] Clean up the ftrace filter for irq_handler_entry events"
+    echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter
+
+    echo "The number of interrupts is $count"
 }
