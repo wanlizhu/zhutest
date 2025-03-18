@@ -1687,44 +1687,103 @@ function zhu-install-viewperf {
 }
 
 function zhu-test-viewperf {
+    zhu-test-viewperf-catia 
+    zhu-test-viewperf-creo 
+    zhu-test-viewperf-energy 
+    zhu-test-viewperf-maya 
+    zhu-test-viewperf-medical 
+    zhu-test-viewperf-snx 
+    zhu-test-viewperf-sw 
+}
+
+function zhu-test-viewperf-catia {
     zhu-validate-display || return -1
     zhu-install-viewperf || return -1 
 
     pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
-    if [[ -z "$1" || "$1" == *"catia"* ]]; then
-        mkdir -p results/catia-06 
-        ./viewperf/bin/viewperf viewsets/catia/config/catia.xml -resolution 1920x1080 && cat results/catia-06/results.xml || echo "Failed to run viewsets/catia"
-    fi 
+    mkdir -p results/catia-06 
+    rm -rf results/catia-06/results.xml
+    ./viewperf/bin/viewperf viewsets/catia/config/catia.xml -resolution 1920x1080 \
+        && cat results/catia-06/results.xml \
+        || echo "Failed to run viewsets/catia"
+    popd >/dev/null 
+}
 
-    if [[ -z "$1" || "$1" == *"creo"* ]]; then
-        mkdir -p results/creo-03
-        ./viewperf/bin/viewperf viewsets/creo/config/creo.xml -resolution 1920x1080 && cat results/creo-03/results.xml || echo "Failed to run viewsets/creo"
-    fi 
+function zhu-test-viewperf-creo {
+    zhu-validate-display || return -1
+    zhu-install-viewperf || return -1 
 
-    if [[ -z "$1" || "$1" == *"energy"* ]]; then
-        mkdir -p results/energy-03
-        ./viewperf/bin/viewperf viewsets/energy/config/energy.xml -resolution 1920x1080 && cat results/energy-03/results.xml || echo "Failed to run viewsets/energy"
-    fi 
+    pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
+    mkdir -p results/creo-03 
+    rm -rf results/creo-03/results.xml
+    ./viewperf/bin/viewperf viewsets/creo/config/creo.xml -resolution 1920x1080 \
+        && cat results/creo-03/results.xml \
+        || echo "Failed to run viewsets/creo"
+    popd >/dev/null 
+}
 
-    if [[ -z "$1" || "$1" == *"maya"* ]]; then
-        mkdir -p results/maya-06 
-        ./viewperf/bin/viewperf viewsets/maya/config/maya.xml -resolution 1920x1080 && cat results/maya-06/results.xml || echo "Failed to run viewsets/maya"
-    fi 
+function zhu-test-viewperf-energy {
+    zhu-validate-display || return -1
+    zhu-install-viewperf || return -1 
 
-    if [[ -z "$1" || "$1" == *"medical"* ]]; then
-        mkdir -p results/medical-03
-        ./viewperf/bin/viewperf viewsets/medical/config/medical.xml -resolution 1920x1080 && cat results/medical-03/results.xml || echo "Failed to run viewsets/medical"
-    fi 
+    pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
+    mkdir -p results/energy-03 
+    rm -rf results/energy-03/results.xml
+    ./viewperf/bin/viewperf viewsets/energy/config/energy.xml -resolution 1920x1080 \
+        && cat results/energy-03/results.xml \
+        || echo "Failed to run viewsets/energy"
+    popd >/dev/null 
+}
 
-    if [[ -z "$1" || "$1" == *"snx"* ]]; then
-        mkdir -p results/snx-04
-        ./viewperf/bin/viewperf viewsets/snx/config/snx.xml -resolution 1920x1080 && cat results/snx-04/results.xml || echo "Failed to run viewsets/snx"
-    fi 
+function zhu-test-viewperf-maya {
+    zhu-validate-display || return -1
+    zhu-install-viewperf || return -1 
 
-    if [[ -z "$1" || "$1" == *"sw"* ]]; then
-        mkdir -p results/solidworks-07
-        ./viewperf/bin/viewperf viewsets/sw/config/sw.xml -resolution 1920x1080 && cat results/solidworks-07/results.xml || echo "Failed to run viewsets/sw"
-    fi 
+    pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
+    mkdir -p results/maya-06 
+    rm -rf results/maya-06/results.xml
+    ./viewperf/bin/viewperf viewsets/maya/config/maya.xml -resolution 1920x1080 \
+        && cat results/maya-06/results.xml \
+        || echo "Failed to run viewsets/maya"
+    popd >/dev/null 
+}
+
+function zhu-test-viewperf-medical {
+    zhu-validate-display || return -1
+    zhu-install-viewperf || return -1 
+
+    pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
+    mkdir -p results/medical-03 
+    rm -rf results/medical-03/results.xml
+    ./viewperf/bin/viewperf viewsets/medical/config/medical.xml -resolution 1920x1080 \
+        && cat results/medical-03/results.xml \
+        || echo "Failed to run viewsets/medical"
+    popd >/dev/null 
+}
+
+function zhu-test-viewperf-snx {
+    zhu-validate-display || return -1
+    zhu-install-viewperf || return -1 
+
+    pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
+    mkdir -p results/snx-04 
+    rm -rf results/snx-04/results.xml
+    ./viewperf/bin/viewperf viewsets/snx/config/snx.xml -resolution 1920x1080 \
+        && cat results/snx-04/results.xml \
+        || echo "Failed to run viewsets/snx"
+    popd >/dev/null 
+}
+
+function zhu-test-viewperf-sw {
+    zhu-validate-display || return -1
+    zhu-install-viewperf || return -1 
+
+    pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
+    mkdir -p results/solidworks-07
+    rm -rf results/solidworks-07/results.xml
+    ./viewperf/bin/viewperf viewsets/sw/config/sw.xml -resolution 1920x1080 \
+        && cat results/solidworks-07/results.xml \
+        || echo "Failed to run viewsets/sw"
     popd >/dev/null 
 }
 
