@@ -232,12 +232,6 @@ function zhu-install-pts {
     popd >/dev/null 
 }
 
-function zhu-install-lsgpus {
-    if [[ -z $(which lsgpus) ]]; then
-        zhu-fetch-from-linuxqa /mnt/nvtest/bin/Linux_amd64/lsgpus /usr/local/bin/
-    fi
-}
-
 function zhu-install-perf {
     if ! zhu-is-installed linux-tools-$(uname -r); then 
         sudo apt install -y linux-tools-$(uname -r) linux-tools-generic >/dev/null 2>&1
@@ -528,20 +522,6 @@ function zhu-mount-linuxqa {
     if ! mountpoint -q /mnt/dvsbuilds; then
         sudo mount linuxqa.nvidia.com:/storage5/dvsbuilds /mnt/dvsbuilds && echo "Mounted /mnt/dvsbuilds" 
     fi 
-}
-
-function zhu-fetch-from-linuxqa {
-    [[ -z $(which curl) ]] && sudo apt install -y curl
-
-    zhu-mount-linuxqa 
-
-    if [[ -z $(ls /mnt/linuxqa) && -d "$2" ]]; then
-        pushd "$2" >/dev/null 
-        curl -k -# -O "${1//\/mnt\/linuxqa/http://linuxqa/people}" 
-        popd >/dev/null 
-    else
-        rsync -ah --progress "$1" "$2" 
-    fi
 }
 
 function zhu-sync {
@@ -1290,16 +1270,15 @@ function zhu-install-3dmark-wildlife {
         which unzip >/dev/null || sudo apt install -y unzip 
         mkdir -p ~/zhutest-workload.d/3dmark-wildlife-1.1.2.1 
         pushd ~/zhutest-workload.d/3dmark-wildlife-1.1.2.1 >/dev/null  
-            echo "[1] Copy from remote host"
-            echo "[2] Download from /mnt/linuxqa/"
+            echo "[1] Rsync from remote host"
+            echo "[2] Decompress from /mnt/linuxqa/"
             read -e -i 1 -p "Select: " selection
             if [[ $selection == 1 ]]; then
-                read -p "Copy workload from host: " host
+                read -p "Rsync workload from host: " host
                 read -e -i wanliz -p "As user: " user
                 rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/3dmark-wildlife-1.1.2.1/ ~/zhutest-workload.d/3dmark-wildlife-1.1.2.1/ || return -1
             elif [[ $selection == 2 ]]; then
-                zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Attan_Wild_Life/3dmark-attan-extreme-1.1.2.1-workload-bin.zip ~/Downloads/ || return -1
-                unzip ~/Downloads/3dmark-attan-extreme-1.1.2.1-workload-bin.zip || return -1
+                unzip /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Attan_Wild_Life/3dmark-attan-extreme-1.1.2.1-workload-bin.zip || return -1
             fi 
         popd >/dev/null 
     fi
@@ -1332,16 +1311,15 @@ function zhu-install-3dmark-steelnomad {
         which unzip >/dev/null || sudo apt install -y unzip 
         mkdir -p ~/zhutest-workload.d/3dmark-steelnomad-1.0.0 
         pushd ~/zhutest-workload.d/3dmark-steelnomad-1.0.0 >/dev/null  
-            echo "[1] Copy from remote host"
-            echo "[2] Download from /mnt/linuxqa/"
+            echo "[1] Rsync from remote host"
+            echo "[2] Decompress from /mnt/linuxqa/"
             read -e -i 1 -p "Select: " selection
             if [[ $selection == 1 ]]; then
-                read -p "Copy workload from host: " host
+                read -p "Rsync workload from host: " host
                 read -e -i wanliz -p "As user: " user
                 rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/3dmark-steelnomad-1.0.0/ ~/zhutest-workload.d/3dmark-steelnomad-1.0.0/ || return -1
             elif [[ $selection == 2 ]]; then
-                zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Disco_Steel_Nomad/3dmark-disco-1.0.0-bin.zip ~/Downloads/ || return -1
-                unzip ~/Downloads/3dmark-disco-1.0.0-bin.zip || return -1
+                unzip /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Disco_Steel_Nomad/3dmark-disco-1.0.0-bin.zip || return -1
             fi 
         popd >/dev/null 
     fi
@@ -1374,16 +1352,15 @@ function zhu-install-3dmark-solarbay {
         which unzip >/dev/null || sudo apt install -y unzip 
         mkdir -p ~/zhutest-workload.d/3dmark-solarbay-1.0.5.3 
         pushd ~/zhutest-workload.d/3dmark-solarbay-1.0.5.3 >/dev/null  
-            echo "[1] Copy from remote host"
-            echo "[2] Download from /mnt/linuxqa/"
+            echo "[1] Rsync from remote host"
+            echo "[2] Decompress from /mnt/linuxqa/"
             read -e -i 1 -p "Select: " selection
             if [[ $selection == 1 ]]; then
-                read -p "Copy workload from host: " host
+                read -p "Rsync workload from host: " host
                 read -e -i wanliz -p "As user: " user
                 rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/3dmark-solarbay-1.0.5.3/ ~/zhutest-workload.d/3dmark-solarbay-1.0.5.3/ || return -1
             elif [[ $selection == 2 ]]; then
-                zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Pogo_Solar_Bay/3dmark-pogo-1.0.5.3-bin.zip ~/Downloads/ || return -1
-                unzip ~/Downloads/3dmark-pogo-1.0.5.3-bin.zip || return -1
+                unzip /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Pogo_Solar_Bay/3dmark-pogo-1.0.5.3-bin.zip || return -1
             fi 
         popd >/dev/null 
     fi
@@ -1717,26 +1694,26 @@ function zhu-test-unigine-superposition {
 
 function zhu-install-viewperf {
     if [[ ! -e ~/zhutest-workload.d/viewperf2020.$(uname -m)/viewperf/bin/viewperf ]]; then
-        which rsync >/dev/null || sudo apt install -y rsync 
+        echo "[1] Rsync from remote host"
+        echo "[2] Decompress from /mnt/linuxqa/"
+        read -e -i 1 -p "Select: " selection
+
         pushd ~/Downloads >/dev/null
-            echo "[1] Copy from remote host"
-            echo "[2] Download from /mnt/linuxqa/"
-            read -e -i 1 -p "Select: " selection
             if [[ $selection == 1 ]]; then
-                read -p "copy workload from host: " host
+                read -p "Rsync workload from host: " host
                 read -e -i wanliz -p "username: " user
+                which rsync >/dev/null || sudo apt install -y rsync 
                 rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/viewperf2020.$(uname -m)/ ~/zhutest-workload.d/viewperf2020.$(uname -m)/ || return -1
             elif [[ $selection == 2 ]]; then
                 if [[ $(uname -m) == "x86_64" ]]; then
-                    zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3.tar.gz ~/Downloads/ || return -1
-                    tar -zxvf viewperf2020v3.tar.gz
                     mkdir -p ~/zhutest-workload.d
-                    mv viewperf2020 ~/zhutest-workload.d/viewperf2020.x86_64
+                    cd ~/zhutest-workload.d
+                    tar -zxvf /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3.tar.gz
+                    mv viewperf2020 viewperf2020.x86_64
                 elif [[ $(uname -m) == "aarch64" ]]; then
-                    zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3-aarch64-rev2.tar.gz ~/Downloads/ || return -1
                     mkdir -p ~/zhutest-workload.d/viewperf2020.aarch64
                     cd ~/zhutest-workload.d/viewperf2020.aarch64
-                    tar -zxvf ~/Downloads/viewperf2020v3-aarch64-rev2.tar.gz
+                    tar -zxvf /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3-aarch64-rev2.tar.gz
                 fi
             fi 
         popd >/dev/null
@@ -2282,22 +2259,20 @@ function zhu-vulkan-api-capture {
 function zhu-install-quake2rtx {
     if [[ ! -d ~/zhutest-workload.d/quake2rtx-1.6.0.$(uname -m) ]]; then
         pushd ~/Downloads >/dev/null 
-            echo "[1] Copy from remote host"
-            echo "[2] Download from /mnt/linuxqa/"
+            echo "[1] Rsync from remote host"
+            echo "[2] Decompress from /mnt/linuxqa/"
             read -e -i 1 -p "Select: " selection
             if [[ $selection == 1 ]]; then
-                read -p "Copy workload from host: " host
+                read -p "Rsync workload from host: " host
                 read -e -i wanliz -p "As user: " user
                 rsync -ah --progress $user@$host:/home/$user/zhutest-workload.d/quake2rtx-1.6.0.$(uname -m)/ $HOME/zhutest-workload.d/quake2rtx-1.6.0.$(uname -m)/ || return -1
             elif [[ $selection == 2 ]]; then
                 if [[ $(uname -m) == "x86_64" ]]; then
-                    zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/q2rtx/builds/1.6.0-701cf31/q2rtx-1.6.0.tar.gz ~/Downloads/ || return -1
-                    tar -zxvf q2rtx-1.6.0.tar.gz 
+                    tar -zxvf /mnt/linuxqa/nvtest/pynv_files/q2rtx/builds/1.6.0-701cf31/q2rtx-1.6.0.tar.gz 
                     mkdir -p ~/zhutest-workload.d
                     mv q2rtx ~/zhutest-workload.d/quake2rtx-1.6.0.x86_64
                 elif [[ $(uname -m) == "aarch64" ]]; then
-                    zhu-fetch-from-linuxqa /mnt/linuxqa/nvtest/pynv_files/q2rtx/builds/1.6.0-701cf31/q2rtx-1.6.0-aarch64.tar.gz ~/Downloads/ || return -1
-                    tar -zxvf q2rtx-1.6.0-aarch64.tar.gz 
+                    tar -zxvf /mnt/linuxqa/nvtest/pynv_files/q2rtx/builds/1.6.0-701cf31/q2rtx-1.6.0-aarch64.tar.gz 
                     mkdir -p ~/zhutest-workload.d
                     mv q2rtx ~/zhutest-workload.d/quake2rtx-1.6.0.aarch64
                 fi
