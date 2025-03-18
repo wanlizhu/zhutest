@@ -367,7 +367,8 @@ function zhu-start-gdm3 {
 }
 
 function zhu-start-bare-x-session {
-    if [[ $XDG_SESSION_TYPE == tty ]]; then
+    # When run via SSH/TTY session
+    if [[ ! -z $(who am i) ]]; then 
         xset -dpms
         xset s off 
 
