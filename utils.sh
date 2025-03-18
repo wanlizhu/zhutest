@@ -2563,8 +2563,7 @@ function zhu-show-interrupt-count {
 }
 
 function zhu-find-irq-handler {
-    local src_dir=$HOME/zhutest/src
-    local src=$src_dir/zhutest-irq-inspect.c
+    local src_dir=$HOME/zhutest/src/zhutest-irq-inspect
     local mod_name=zhutest_irq_inspect
     local mod_file=${mod_name}.ko 
 
