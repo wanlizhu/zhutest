@@ -619,6 +619,10 @@ function zhu-install-nvidia-driver-cloudbuild {
         read -e -i release -p "Configure (release/debug/develop): " config
         config=$([[ $config == release ]] && echo "" || echo "/$config")
         path="$path$config"
+        if [[ ! -d $path ]]; then
+            echo "$config build is not available for $(uname -m)!"
+            return -1
+        fi
         read -p "Release version: " version
         path="$path/$version/NVIDIA-Linux-$(uname -m)-$version.run"
     elif [[ $type == 2 ]]; then
@@ -626,6 +630,10 @@ function zhu-install-nvidia-driver-cloudbuild {
         read -e -i release -p "Configure (release/debug/develop): " config
         config=$([[ $config == release ]] && echo "" || echo "/$config")
         path="$path$config"
+        if [[ ! -d $path ]]; then
+            echo "$config build is not available for $(uname -m)!"
+            return -1
+        fi
         read -p "Date (yyyymmdd): " date
         path="$path/${date}_*/NVIDIA-Linux-$(uname -m)-dev_gpu_drv_bugfix_main-${date}_*.run"
     elif [[ $type == 3 ]]; then
