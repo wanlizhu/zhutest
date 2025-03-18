@@ -711,12 +711,12 @@ function zhu-show-gpufps {
         git clone --depth 1 https://github.com/wanlizhu/zhutest ~/zhutest
     fi
 
-    rm -rf /tmp/zhu-opengl-gpufps.so
+    rm -rf /tmp/zhutest-gpufps.so
     gcc -c ~/zhutest/src/glad.c -fPIC -o /tmp/glad.a &&
-    g++ -shared -fPIC -o /tmp/zhu-opengl-gpufps.so ~/zhutest/src/zhu-opengl-gpufps.cpp -ldl -lGL -lX11 /tmp/glad.a &&
-    echo "Generated /tmp/zhu-opengl-gpufps.so" || return -1
+    g++ -shared -fPIC -o /tmp/zhutest-gpufps.so ~/zhutest/src/zhutest-gpufps.cpp -ldl -lGL -lX11 /tmp/glad.a &&
+    echo "Generated /tmp/zhutest-gpufps.so" || return -1
 
-    __GL_SYNC_TO_VBLANK=0 vblank_mode=0 LD_PRELOAD=/tmp/zhu-opengl-gpufps.so "$@"
+    __GL_SYNC_TO_VBLANK=0 vblank_mode=0 LD_PRELOAD=/tmp/zhutest-gpufps.so "$@"
 }
 
 function zhu-encrypt {
@@ -2562,6 +2562,32 @@ function zhu-show-interrupt-count {
     trace-cmd report | grep "irq=$gpu_irq" | wc -l
 }
 
+function zhu-find-irq-handler {
+    local src=$HOME/zhutest/src/zhutest-irq-inspect.c
+    local obj=/tmp/zhutest-irq-inspect.o 
+    local mod=/tmp/zhutest-irq-inspect.ko 
+    local mod_name=zhutest_irq_inspect
+
+    if [[ -z "$1" ]]; then
+        echo "Usage: xxx <IRQ_NUMBER>"
+        return -1
+    fi
+
+    sudo rm -rf $obj $mod 
+    sudo gcc -Wall -Wextra -O2 -D__KERNEL__ -DMODULE -isystem /lib/modules/$(uname -r)/build/include -c $src -o $obj && 
+    sudo ld -r $obj -o $mod 
+
+    if [[ ! -e "$mod" ]]; then
+        echo "Failed to compile kernel module: $mod"
+        return -1
+    fi
+
+    sudo insmod $mod irq_num=$1 
+    sleep 1
+    sudo dmesg | tail -n 100 | grep "Zhutest: "
+    sudo rmmod $mod_name
+}
+
 function xxx {
     zhu-test-viewperf-maya-subtest5 &
     zhu-show-interrupt-count $!
@@ -2571,3 +2597,4 @@ function xxx2 {
     zhu-test-viewperf maya &
     zhu-show-interrupt-count $!
 }
+
