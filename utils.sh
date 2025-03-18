@@ -47,6 +47,10 @@ if sudo ls >/dev/null 2>&1; then
             fi
         fi 
 
+        if ! echo "$PATH" | tr ':' '\n' | grep -q "dvs/dvsbuild"; then
+            export PATH="${P4ROOT/$P4CLIENT/wanliz-p4sw-common}/automation/dvs/dvsbuild:$PATH" 
+        fi
+
         if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-systems-internal"; then
             export PATH="~/nsight-systems-internal/current/host-linux-x64:$PATH" 
         fi

@@ -11,6 +11,7 @@ static int __init zhutest_irq_inspect_init(void) {
     struct irq_desc* desc;
     struct irqaction* action;
 
+    // The error modpost: "irq_to_desc" undefined occurs because the irq_to_desc function is not exported for use in loadable kernel modules. 
     desc = irq_to_desc(irq_num);
     if (!desc) {
         pr_err("Zhutest: Cannot find descriptor for IRQ %d\n", irq_num);
