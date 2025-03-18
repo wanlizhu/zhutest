@@ -2572,6 +2572,10 @@ function zhu-find-irq-handler {
         return -1
     fi
 
+    if [[ -z $(dpkg -l | grep linux-headers-$(uname -r)) ]]; then
+        sudo apt install -y linux-headers-$(uname -r)
+    fi 
+
     sudo make -C /lib/modules/$(uname -r)/build M="$src_dir" clean
     sudo make -C /lib/modules/$(uname -r)/build M="$src_dir" modules 
     if [[ ! -f "${src_dir}/${mod_file}" ]]; then

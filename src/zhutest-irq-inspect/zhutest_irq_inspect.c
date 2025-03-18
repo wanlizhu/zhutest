@@ -1,6 +1,7 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/interrupt.h>
+#include <linux/irqdesc.h>
 
 static int irq_num = 219;
 module_param(irq_num, int, 0444);
