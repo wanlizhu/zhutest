@@ -723,15 +723,24 @@ function zhu-build-nvidia-driver {
         cd $P4ROOT
     fi
 
-    read -e -i amd64    -p "[1/3] Target architecture: " arch
-    read -e -i release  -p "[2/3] Build type: " build_type
-    read -e -i $(nproc) -p "[3/3] Number of build threads: " threads
+    read -e -i amd64    -p "[1/4] Target architecture: " arch
+    read -e -i release  -p "[2/4] Build type: " build_type
+    read -e -i $(nproc) -p "[3/4] Number of build threads: " threads
+    read -e -i no       -p "[4/4] Clean build? (yes/no): " cleanbuild
 
     if [[ ! -d $P4ROOT ]]; then
         read -e -i "yes" -p "Pull the latest revision of $P4CLIENT? " pull_p4client
         if [[ $pull_p4client == yes ]]; then
             p4 sync -f //sw/...
         fi
+    fi
+
+    if [[ $cleanbuild == yes ]]; then
+        $P4ROOT/misc/linux/unix-build \
+            --tools  $P4ROOT/tools \
+            --devrel $P4ROOT/devrel/SDK/inc/GL \
+            --unshare-namespaces \
+            nvmake sweep 
     fi
 
     if [[ -d drivers ]]; then
