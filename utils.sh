@@ -607,6 +607,7 @@ function zhu-install-nvidia-driver-localbuild {
 }
 
 function zhu-install-nvidia-driver-cloudbuild {
+    zhu-mount-linuxqa || return -1
     path="/mnt"
     echo "[1] release build"
     echo "[2] daily build"
@@ -645,7 +646,7 @@ function zhu-install-nvidia-driver-cloudbuild {
             zhu-install-nvidia-driver-localbuild $(realpath $path)
         fi 
     else
-        echo "$(realpath $path) not found!"
+        echo "$path not found!"
         return -1
     fi  
 }
