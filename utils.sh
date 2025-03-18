@@ -2546,7 +2546,7 @@ function zhu-show-interrupt-count {
     echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null 
 
     echo "The number of interrupt (irq=$gpu_irq) is: "
-    trace-cmd report | grep "irq=$gpu_irq" | wc -l
+    trace-cmd report 2>/dev/null | grep "irq=$gpu_irq" | wc -l
 }
 
 function xxx {
