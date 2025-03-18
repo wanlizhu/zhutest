@@ -190,18 +190,6 @@ function zhu-validate-display {
     if [[ ! -d /tmp/.X11-unix ]]; then
         return 
     fi
-    if [[ $(ls /tmp/.X11-unix | wc -l) == 0 ]]; then
-        echo TODO
-
-        while [[ -z $(pidof Xorg) ]]; do 
-            echo "Wait for Xorg to start..."
-            sleep 1
-        done
-        while ! $(pidof glxgears) >/dev/null 2>&1; do 
-            echo "Wait for glxgears to success..."
-            sleep 1
-        done
-    fi
 
     if [[ $(ls /tmp/.X11-unix | wc -l) == 0 ]]; then
         echo "Failed to open a display!"
@@ -1679,9 +1667,7 @@ function zhu-install-viewperf {
             cd ~/zhutest-workload.d/viewperf2020.aarch64
             tar -zxvf /mnt/linuxqa/nvtest/pynv_files/viewperf2020v3/viewperf2020v3-aarch64-rev2.tar.gz
         fi
-    fi
 
-    if [[ -z $(which xmllint) ]]; then
         sudo apt install -y libxml2 libxml2-utils
     fi
 }
