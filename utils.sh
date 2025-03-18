@@ -2541,10 +2541,17 @@ function zhu-show-interrupt-count {
     sudo trace-cmd record -e irq_handler_entry &
     tracecmd_pid=$!
 
-    echo "[3/4] Let it ($tracecmd_pid) run for 10 seconds..."
-    sleep 10
-    sudo kill -INT $tracecmd_pid
+    if [[ -z $1 ]]; then
+        echo "[3/4] Let it ($tracecmd_pid) run for 10 seconds..."
+        sleep 10
+    else
+        echo "[3/4] Wait for process $1 to quit..."
+        while [[ -d /proc/$1 ]]; do 
+            sleep 1
+        done
+    fi
 
+    sudo kill -INT $tracecmd_pid
     echo "[4/4] Clean up the ftrace filter for irq_handler_entry events"
     echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null 
 
@@ -2557,10 +2564,12 @@ function zhu-show-interrupt-count {
 
 function xxx {
     zhu-test-viewperf-maya-subtest5 &
-    zhu-show-interrupt-count
+    sleep 1
+    zhu-show-interrupt-count $(pidof viewperf)
 }
 
 function xxx2 {
     zhu-test-viewperf maya &
-    zhu-show-interrupt-count
+    sleep 1
+    zhu-show-interrupt-count $(pidof viewperf)
 }
