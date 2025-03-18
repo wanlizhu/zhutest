@@ -48,7 +48,7 @@ if sudo ls >/dev/null 2>&1; then
         fi 
 
         if ! echo "$PATH" | tr ':' '\n' | grep -q "dvs/dvsbuild"; then
-            export PATH="${P4ROOT/$P4CLIENT/wanliz-p4sw-common}/automation/dvs/dvsbuild:$PATH" 
+            export PATH="$P4ROOT/automation/dvs/dvsbuild:$PATH" 
         fi
 
         if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-systems-internal"; then
@@ -661,15 +661,11 @@ function zhu-build-nvidia-driver {
             p4 sync -f //sw/...
         fi
     fi
-    
-    if [[ ! -e $HOME/wanliz-p4sw-common ]]; then
-        P4CLIENT=wanliz-p4sw-common P4ROOT=$HOME/wanliz-p4sw-common p4 sync -f //sw/...
-    fi
 
     if [[ -d drivers ]]; then
-        time $HOME/wanliz-p4sw-common/misc/linux/unix-build \
-            --tools  $HOME/wanliz-p4sw-common/tools \
-            --devrel $HOME/wanliz-p4sw-common/devrel/SDK/inc/GL \
+        time $P4ROOT/misc/linux/unix-build \
+            --tools  $P4ROOT/tools \
+            --devrel $P4ROOT/devrel/SDK/inc/GL \
             --unshare-namespaces \
             nvmake \
             NV_COLOR_OUTPUT=1 \
@@ -677,9 +673,9 @@ function zhu-build-nvidia-driver {
             NV_COMPRESS_THREADS=$(nproc) \
             NV_FAST_PACKAGE_COMPRESSION=zstd drivers dist linux $arch $build_type -j$threads "$@"
     else
-        time $HOME/wanliz-p4sw-common/misc/linux/unix-build \
-            --tools  $HOME/wanliz-p4sw-common/tools \
-            --devrel $HOME/wanliz-p4sw-common/devrel/SDK/inc/GL \
+        time $P4ROOT/misc/linux/unix-build \
+            --tools  $P4ROOT/tools \
+            --devrel $P4ROOT/devrel/SDK/inc/GL \
             --unshare-namespaces \
             nvmake \
             NV_COLOR_OUTPUT=1 \
