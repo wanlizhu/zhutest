@@ -2563,26 +2563,24 @@ function zhu-show-interrupt-count {
 }
 
 function zhu-find-irq-handler {
-    local src=$HOME/zhutest/src/zhutest-irq-inspect.c
-    local obj=/tmp/zhutest-irq-inspect.o 
-    local mod=/tmp/zhutest-irq-inspect.ko 
+    local src_dir=$HOME/zhutest/src
+    local src=$src_dir/zhutest-irq-inspect.c
     local mod_name=zhutest_irq_inspect
+    local mod_file=${mod_name}.ko 
 
     if [[ -z "$1" ]]; then
         echo "Usage: xxx <IRQ_NUMBER>"
         return -1
     fi
 
-    sudo rm -rf $obj $mod 
-    sudo gcc -Wall -Wextra -O2 -D__KERNEL__ -DMODULE -isystem /lib/modules/$(uname -r)/build/include -c $src -o $obj && 
-    sudo ld -r $obj -o $mod 
-
-    if [[ ! -e "$mod" ]]; then
-        echo "Failed to compile kernel module: $mod"
+    sudo make -C /lib/modules/$(uname -r)/build M="$src_dir" clean
+    sudo make -C /lib/modules/$(uname -r)/build M="$src_dir" modules 
+    if [[ ! -f "${src_dir}/${mod_file}" ]]; then
+        echo "Failed to compile kernel module: ${mod_file}"
         return -1
     fi
 
-    sudo insmod $mod irq_num=$1 
+    sudo insmod $src_dir/$mod_file irq_num=$1 
     sleep 1
     sudo dmesg | tail -n 100 | grep "Zhutest: "
     sudo rmmod $mod_name
