@@ -2545,7 +2545,9 @@ function zhu-show-interrupt-count {
     echo "[4/4] Clean up the ftrace filter for irq_handler_entry events"
     echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null 
 
-    sleep 10 
+    while [[ -d /proc/$tracecmd_pid ]]; do 
+        sleep 1
+    done
     echo "The number of interrupt (irq=$gpu_irq) is: "
     trace-cmd report | grep "irq=$gpu_irq" | wc -l
 }
