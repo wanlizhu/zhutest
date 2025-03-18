@@ -174,6 +174,9 @@ function zhu-send-files {
 }
 
 function zhu-validate-display {
+    if [[ ! -d /tmp/.X11-unix ]]; then
+        return 
+    fi
     if [[ $(ls /tmp/.X11-unix | wc -l) == 0 ]]; then
         echo TODO
 
@@ -181,7 +184,7 @@ function zhu-validate-display {
             echo "Wait for Xorg to start..."
             sleep 1
         done
-        while ! $(which glxgear) >/dev/null 2>&1; do 
+        while ! $(pidof glxgears) >/dev/null 2>&1; do 
             echo "Wait for glxgears to success..."
             sleep 1
         done
