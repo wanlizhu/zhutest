@@ -2589,6 +2589,17 @@ function zhu-find-irq-handler {
     sudo rmmod $mod_name
 }
 
+function zhu-p4git-reset-hard {
+    echo "P4CLIENT=$P4CLIENT"
+    echo "P4ROOT=$P4ROOT"
+    read -p  "Please confirm the p4 client is correct! " _
+
+    pushd "$P4ROOT" >/dev/null 
+        p4 reconcile -w
+        p4 revert //...
+    popd >/dev/null 
+}
+
 function xxx {
     zhu-test-viewperf-maya-subtest5 &
     zhu-show-interrupt-count $!
