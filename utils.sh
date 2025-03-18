@@ -718,6 +718,11 @@ function zhu-install-nvidia-driver-cloudbuild {
 }
 
 function zhu-build-nvidia-driver {
+    pushd . >/dev/null
+    if [[ ! -e ./makefile.nvmk ]]; then
+        cd $P4ROOT
+    fi
+
     read -e -i amd64    -p "[1/3] Target architecture: " arch
     read -e -i release  -p "[2/3] Build type: " build_type
     read -e -i $(nproc) -p "[3/3] Number of build threads: " threads
@@ -750,6 +755,8 @@ function zhu-build-nvidia-driver {
             NV_COMPRESS_THREADS=$(nproc) \
             NV_FAST_PACKAGE_COMPRESSION=zstd linux $arch $build_type -j$threads "$@"
     fi
+
+    popd >/dev/null
 }
 
 function zhu-list-functions {
