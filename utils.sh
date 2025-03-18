@@ -608,36 +608,34 @@ function zhu-install-nvidia-driver-localbuild {
 
 function zhu-install-nvidia-driver-cloudbuild {
     zhu-mount-linuxqa || return -1
-    path="/mnt"
+    stem="/mnt"
     echo "[1] release build"
     echo "[2] daily build"
     echo "[3] dvs build"
     read -e -i 1 -p "Select: " type
 
     if [[ $type == 1 ]]; then
-        path="$path/builds/release/display/$(uname -m)"
+        stem="$stem/builds/release/display/$(uname -m)"
         read -e -i release -p "Configure (release/debug/develop): " config
-        config=$([[ $config == release ]] && echo "" || echo "/$config")
-        path="$path$config"
-        if [[ ! -d $path ]]; then
-            echo "$config build is not available for $(uname -m)!"
+        leaf=$([[ $config == release ]] && echo "" || echo "/$config")
+        if [[ ! -d $stem$leaf ]]; then
+            echo "$config build is not available under $stem!"
             return -1
         fi
-        read -p "Release version: " version
-        path="$path/$version/NVIDIA-Linux-$(uname -m)-$version.run"
+        read -p "Release version: " drv_version
+        path="$stem$leaf/$drv_version/NVIDIA-Linux-$(uname -m)-$drv_version.run"
     elif [[ $type == 2 ]]; then
-        path="$path/builds/daily/display/$(uname -m)/dev/gpu_drv/bugfix_main"
+        stem="$stem/builds/daily/display/$(uname -m)/dev/gpu_drv/bugfix_main"
         read -e -i release -p "Configure (release/debug/develop): " config
-        config=$([[ $config == release ]] && echo "" || echo "/$config")
-        path="$path$config"
-        if [[ ! -d $path ]]; then
-            echo "$config build is not available for $(uname -m)!"
+        leaf=$([[ $config == release ]] && echo "" || echo "/$config")
+        if [[ ! -d $stem$leaf ]]; then
+            echo "$config build is not available under $stem!"
             return -1
         fi
-        read -p "Date (yyyymmdd): " date
-        path="$path/${date}_*/NVIDIA-Linux-$(uname -m)-dev_gpu_drv_bugfix_main-${date}_*.run"
+        read -p "Date (yyyymmdd): " drv_date
+        path="$stem$leaf/${drv_date}_*/NVIDIA-Linux-$(uname -m)-dev_gpu_drv_bugfix_main-${drv_date}_*.run"
     elif [[ $type == 3 ]]; then
-        path="$path/dvsbuilds/gpu_drv_bugfix_main_Release_Linux_$(uname -m)_unix-build_Test_Driver"
+        path="$stem/dvsbuilds/gpu_drv_bugfix_main_Release_Linux_$(uname -m)_unix-build_Test_Driver"
         read -p "Change list number: " changelist
         path="$path/SW_$changelist.0_*"
         paths="$path/NVIDIA-Linux-$(uname -m)-DVS-internal.run"
@@ -650,6 +648,7 @@ function zhu-install-nvidia-driver-cloudbuild {
     if [[ -e $(realpath $path) ]]; then
         if [[ $1 == --dryrun ]]; then
             echo "$(realpath $path)"
+            return 
         else
             zhu-install-nvidia-driver-localbuild $(realpath $path)
         fi 
@@ -657,6 +656,33 @@ function zhu-install-nvidia-driver-cloudbuild {
         echo "$path not found!"
         return -1
     fi  
+
+    if [[ $(uname -m) == aarch64 && $stem != "/mnt" ]]; then
+        read -e -i yes -p "Install the same x86_64 build info FEX? (yes/no): " ans
+        if [[ $ans == yes ]]; then
+            stem2=${stem/$(uname -m)/x86_64}
+            read -e -i release -p "Configure (release/debug/develop): " config2
+            leaf2=$([[ $config2 == release ]] && echo "" || echo "/$config2")
+            if [[ ! -d $stem2$leaf2 ]]; then
+                echo "$config2 build is not available under $stem2!"
+                return -1
+            fi
+            if [[ $type == 1 ]]; then 
+                path2="$stem2$leaf2/$drv_version/NVIDIA-Linux-x86_64-$drv_version.run"
+            elif [[ $type == 2 ]]; then
+                path2="$stem2$leaf2/${drv_date}_*/NVIDIA-Linux-$(uname -m)-dev_gpu_drv_bugfix_main-${drv_date}_*.run"
+            else
+                return -1
+            fi
+
+            if [[ -e $(realpath $path2) ]]; then
+                zhu-install-nvidia-driver-in-fex $(realpath $path2)
+            else
+                echo "$path2 not found!"
+                return -1
+            fi  
+        fi
+    fi
 }
 
 function zhu-build-nvidia-driver {
