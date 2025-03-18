@@ -2522,3 +2522,7 @@ function zhu-nsight-graphics-gpu-trace {
     #sudo apt install -y gnumeric 
     #ssconvert xxx.xls xxx.csv 
 }
+
+function zhu-show-interrupt-count {
+    echo 
+}
