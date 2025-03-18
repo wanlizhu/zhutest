@@ -2540,7 +2540,7 @@ function zhu-show-interrupt-count {
 
     echo "[3/4] Let it ($tracecmd_pid) run for 10 seconds..."
     sleep 10
-    sudo kill $tracecmd_pid
+    sudo kill -INT $tracecmd_pid
 
     echo "[4/4] Clean up the ftrace filter for irq_handler_entry events"
     echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null 
