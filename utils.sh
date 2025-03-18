@@ -1442,10 +1442,10 @@ function zhu-install-nvidia-driver-in-fex {
     chmod +x $driver 
     $driver -x 
 
+    cd ${driver%.run}
     mkdir -p $rootfs/etc/vulkan/icd.d
     cp -vf ./nvidia_icd.json $rootfs/etc/vulkan/icd.d/nvidia_icd.json || return -1
 
-    cd ${driver%.run}
     for dso in *.so.$version; do 
         cp -vf ./$dso $rootfs/lib/x86_64-linux-gnu/$dso 
         pushd $rootfs/lib/x86_64-linux-gnu >/dev/null 
