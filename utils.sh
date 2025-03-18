@@ -2540,10 +2540,13 @@ function zhu-show-interrupt-count {
     echo "[3/4] Let it ($tracecmd_pid) run for 10 seconds..."
     sleep 10
     sudo kill $tracecmd_pid
-    count=$(trace-cmd report | grep "irq=$gpu_irq" | wc -l)
 
     echo "[4/4] Clean up the ftrace filter for irq_handler_entry events"
-    echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter
+    echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null 
 
-    echo "The number of interrupts is $count"
+    if [[ -e ./trace.dat ]]; then 
+        echo "The number of interrupts is $(trace-cmd report | grep \"irq=$gpu_irq\" | wc -l)"
+    else
+        echo "Error: trace.dat is not generated!"
+    fi
 }
