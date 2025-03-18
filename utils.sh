@@ -599,8 +599,12 @@ function zhu-install-nvidia-driver-localbuild {
         #chmod +x $(realpath $1) 
         sudo $(realpath $1) && {
             echo "Nvidia driver is installed!"
-            read -e -i yes -p "Do you want to start display manager? " start_dm
-            [[ $start_dm == yes ]] && sudo systemctl start display-manager
+            if [[ "$2" != "embedded" ]]; then
+                read -e -i yes -p "Do you want to start display manager? " start_dm
+                if [[ $start_dm == yes ]]; then 
+                    sudo systemctl start display-manager
+                fi 
+            fi 
         } || cat /var/log/nvidia-installer.log
     else
         mapfile -t files < <(find $P4ROOT/_out ~/Downloads -type f -name 'NVIDIA-*.run')
@@ -616,6 +620,12 @@ function zhu-install-nvidia-driver-localbuild {
 }
 
 function zhu-install-nvidia-driver-cloudbuild {
+    if [[ $(systemctl is-active display-manager) == active ]]; then
+        was_dm_active=yes
+    else
+        was_dm_active=no
+    fi
+
     zhu-mount-linuxqa || return -1
     stem="/mnt"
     echo "[1] release build"
@@ -659,7 +669,7 @@ function zhu-install-nvidia-driver-cloudbuild {
             echo "$(realpath $path)"
             return 
         else
-            zhu-install-nvidia-driver-localbuild $(realpath $path)
+            zhu-install-nvidia-driver-localbuild "$(realpath $path)" embedded
         fi 
     else
         echo "$path not found!"
@@ -685,13 +695,25 @@ function zhu-install-nvidia-driver-cloudbuild {
             fi
 
             if [[ -e $(realpath $path2) ]]; then
-                zhu-install-nvidia-driver-in-fex $(realpath $path2)
+                localpath="$HOME/Downloads/$(basename $path2)"
+                rm -rf $localpath 
+                rm -rf ${localpath/.run/}
+                mkdir -p $(dirname $localpath)
+                rsync -ah --progress $path2 $localpath || return -1
+                zhu-install-nvidia-driver-in-fex $localpath
             else
                 echo "$path2 not found!"
                 return -1
             fi  
         fi
     fi
+
+    if [[ $was_dm_active == yes ]]; then 
+        read -e -i yes -p "Do you want to start display manager? " start_dm
+        if [[ $start_dm == yes ]]; then 
+            sudo systemctl start display-manager
+        fi 
+    fi 
 }
 
 function zhu-build-nvidia-driver {
