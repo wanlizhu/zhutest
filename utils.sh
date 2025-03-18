@@ -2531,6 +2531,7 @@ function zhu-show-interrupt-count {
         gpu_irq=$(grep 'amdgpu' /proc/interrupts | awk '{print $1}' | cut -d: -f1 | head -n 1)
     fi
 
+    rm -rf trace.dat
     echo "[1/4] Set ftrace filter for irq_handler_entry events on the GPU IRQ"
     echo "irq == $gpu_irq" | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null
     echo "[2/4] Start recording all irq_handler_entry events (without limiting to a particular function)"
