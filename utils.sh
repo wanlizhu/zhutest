@@ -2550,3 +2550,8 @@ function zhu-show-interrupt-count {
         echo "The number of interrupts is $count"
     fi 
 }
+
+function xxx {
+    zhu-test-viewperf-maya-subtest5 &
+    zhu-show-interrupt-count
+}
