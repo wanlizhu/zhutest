@@ -86,7 +86,7 @@ function zhu-reload {
 function zhu-enable-no-password-sudo {
     if [[ $UID != "0" ]]; then
         if ! sudo grep -q "$USER ALL=(ALL) NOPASSWD:ALL" /etc/sudoers; then
-            echo "Enable sudo without password"
+            echo "Enable no-password sudo for $USER"
             echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
         fi
     fi 
