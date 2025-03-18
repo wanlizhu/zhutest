@@ -2547,7 +2547,7 @@ function zhu-show-interrupt-count {
     else
         echo "[3/4] Wait for process $1 to quit..."
         while [[ -d /proc/$1 ]]; do 
-            sleep 1
+            sleep 2
         done
     fi
 
@@ -2564,12 +2564,10 @@ function zhu-show-interrupt-count {
 
 function xxx {
     zhu-test-viewperf-maya-subtest5 &
-    sleep 1
-    zhu-show-interrupt-count $(pidof viewperf)
+    zhu-show-interrupt-count $!
 }
 
 function xxx2 {
     zhu-test-viewperf maya &
-    sleep 1
-    zhu-show-interrupt-count $(pidof viewperf)
+    zhu-show-interrupt-count $!
 }
