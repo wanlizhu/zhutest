@@ -2559,3 +2559,8 @@ function xxx {
     zhu-test-viewperf-maya-subtest5 &
     zhu-show-interrupt-count
 }
+
+function xxx2 {
+    zhu-test-viewperf maya &
+    zhu-show-interrupt-count
+}
