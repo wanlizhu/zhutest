@@ -83,6 +83,15 @@ function zhu-reload {
     fi
 }
 
+function zhu-enable-no-password-sudo {
+    if [[ $UID != "0" ]]; then
+        if ! sudo grep -q "$USER ALL=(ALL) NOPASSWD:ALL" /etc/sudoers; then
+            echo "Enable sudo without password"
+            echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
+        fi
+    fi 
+}
+
 function zhu-is-installed {
     if [[ -z $(apt list --installed 2>/dev/null | grep "$1" | grep 'installed') ]]; then
         return -1
