@@ -875,53 +875,41 @@ function zhu-find-debug-symbols-by-libs {
     done < /tmp/so.list
 }
 
-function zhu-install-amd-driver-with-symbols {
-    echo "[1] Install debuginfod service to fetch debug symbols on demand (recommend)"
-    echo "[2] Install traditional *-dbgsym packages for debug symbols"
-    echo "[3] Install both"
-    read -p "Select: " method
-    
-    if [[ $method == 1 || $method == 3 ]]; then
-        sudo apt install -y debuginfod
-        sudo apt install -y elfutils
-        if ! grep "DEBUGINFOD_URLS" ~/.bashrc; then
-            echo "export DEBUGINFOD_URLS=\"https://debuginfod.ubuntu.com/\"" >> ~/.bashrc
-            source ~/.bashrc
-        fi
-        echo "The debuginfod service is installed!"
+function zhu-install-debug-symbols {
+    sudo apt install -y debuginfod
+    sudo apt install -y elfutils
+    if [[ -z "$DEBUGINFOD_URLS" ]]; then
+        export DEBUGINFOD_URLS="https://debuginfod.ubuntu.com/"
     fi 
-
-    if [[ $method == 2 || $method == 3 ]]; then
-        # The AMDGPU driver (amdgpu) is part of the Linux kernel
-        if [[ ! -e /etc/apt/sources.list.d/ddebs.list ]]; then
-            mkdir -p /etc/apt/sources.list.d
-            sudo tee /etc/apt/sources.list.d/ddebs.list << EOF
+    
+    if [[ ! -e /etc/apt/sources.list.d/ddebs.list ]]; then
+        mkdir -p /etc/apt/sources.list.d
+        sudo tee /etc/apt/sources.list.d/ddebs.list << EOF
 deb http://ddebs.ubuntu.com/ $(lsb_release -cs) main restricted universe multiverse
 deb http://ddebs.ubuntu.com/ $(lsb_release -cs)-updates main restricted universe multiverse
 EOF
-        fi
-
         sudo apt install -y ubuntu-dbgsym-keyring  # Import the debug symbol archive key
-        sudo apt update | tee /tmp/apt-update.log
-        if [[ -z $(cat /tmp/apt-update.log | grep "http://ddebs.ubuntu.com/ $(lsb_release -cs)" | grep "does not have a Release file") ]]; then
-            sudo apt install -y linux-image-$(uname -r)-dbgsym  # This installs symbols for the kernel and its modules (including amdgpu)
-            sudo apt install -y libdrm2-dbgsym libdrm-amdgpu1-dbgsym #mesa-dbgsym
-            sudo apt install -y mesa-opencl-icd-dbgsym libgl1-mesa-dri-dbgsym libglapi-mesa-dbgsym  # Install debug symbols for OpenGL/OpenCL
-            sudo apt install -y mesa-vulkan-drivers-dbgsym  # Install debug symbols for Mesa and Vulkan drivers
-            sudo apt install -y xserver-xorg-video-amdgpu-dbgsym  # Install the Xorg AMDGPU display driver
-            sudo apt install -y libglx-mesa0-dbgsym  # Install debug symbols for libGLX_mesa.so
-            sudo apt install -y mesa-libgallium-dbgsym  # Install debug symbols for mesa-libgallium
-            #sudo apt install -y mesa-va-drivers-dbgsym mesa-vdpau-drivers-dbgsym  # Install debug symbols for video decode/encode
-            
-            if [[ ! -e /usr/lib/debug/lib/modules/$(uname -r)/kernel/drivers/gpu/drm/amd/amdgpu/amdgpu.ko && ! -e /usr/lib/debug/lib/modules/$(uname -r)/kernel/drivers/gpu/drm/amd/amdgpu/amdgpu.ko.zst ]]; then
-                echo "Debug symbols for the AMDGPU kernel driver are missing: /usr/lib/debug/lib/modules/$(uname -r)/kernel/drivers/gpu/drm/amd/amdgpu/amdgpu.ko"
-                return -1
-            fi
-            echo "Debug symbols for AMD GPU driver are installed!"
-        else
-            echo "The ddebs.ubuntu.com repo does not have debug symbols for your Ubuntu release ($(lsb_release -cs))"
-        fi
-    fi 
+        sudo apt update
+    fi
+    sudo apt install -y linux-image-$(uname -r)-dbgsym
+}
+
+function zhu-install-amd-driver-with-debug-symbols {
+    zhu-install-debug-symbols || return -1 # AMD driver is part of Linux kernel
+    sudo apt install -y libdrm2-dbgsym libdrm-amdgpu1-dbgsym #mesa-dbgsym
+    sudo apt install -y mesa-opencl-icd-dbgsym libgl1-mesa-dri-dbgsym libglapi-mesa-dbgsym  # Install debug symbols for OpenGL/OpenCL
+    sudo apt install -y mesa-vulkan-drivers-dbgsym  # Install debug symbols for Mesa and Vulkan drivers
+    sudo apt install -y xserver-xorg-video-amdgpu-dbgsym  # Install the Xorg AMDGPU display driver
+    sudo apt install -y libglx-mesa0-dbgsym  # Install debug symbols for libGLX_mesa.so
+    sudo apt install -y mesa-libgallium-dbgsym  # Install debug symbols for mesa-libgallium
+    #sudo apt install -y mesa-va-drivers-dbgsym mesa-vdpau-drivers-dbgsym  # Install debug symbols for video decode/encode
+    
+    if [[ ! -e /usr/lib/debug/lib/modules/$(uname -r)/kernel/drivers/gpu/drm/amd/amdgpu/amdgpu.ko && ! -e /usr/lib/debug/lib/modules/$(uname -r)/kernel/drivers/gpu/drm/amd/amdgpu/amdgpu.ko.zst ]]; then
+        echo "Debug symbols for the AMDGPU kernel driver are missing: /usr/lib/debug/lib/modules/$(uname -r)/kernel/drivers/gpu/drm/amd/amdgpu/amdgpu.ko"
+        return -1
+    fi
+
+    echo "Debug symbols for AMD GPU driver are installed!"
 }
 
 function zhu-show-cpu-utilization {
