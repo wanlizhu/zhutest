@@ -864,7 +864,7 @@ function zhu-find-libs-by-build-id {
     done
 }
 
-function zhu-find-debug-symbols-by-libs {
+function zhu-find-debug-symbols {
     if ! zhu-is-installed debian-goodies; then
         sudo apt install -y debian-goodies
     fi
