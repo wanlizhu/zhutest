@@ -29,8 +29,8 @@ if sudo ls >/dev/null 2>&1; then
 
     if [[ $USER == wanliz ]]; then
         export P4CLIENT=wanliz-p4sw-bugfix_main
-        export P4ROOT=$HOME/$P4CLIENT
-        export P4IGNORE=$HOME/.p4ignore 
+        export P4ROOT=/media/wanliz/wzhu-ssd-ext4-4t/$P4CLIENT
+        export P4IGNORE=/home/wanliz/.p4ignore 
         export P4PORT=p4proxy-sc.nvidia.com:2006
         export P4USER=wanliz 
 
