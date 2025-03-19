@@ -704,19 +704,28 @@ function zhu-build-nvidia-driver {
         fi 
     fi
 
-    read -e -i amd64    -p "[1/4] Target architecture: " arch
-    read -e -i release  -p "[2/4] Build type: " build_type
-    read -e -i $(nproc) -p "[3/4] Number of build threads: " threads
-    read -e -i no       -p "[4/4] Clean build? (yes/no): " cleanbuild
+    nvmake_arch=amd64
+    nvmake_config=release
+    nvmake_jobs=$(nproc)
+    nvmake_cleanbuild=no
 
-    if [[ ! -d $P4ROOT ]]; then
-        read -e -i "yes" -p "Pull the latest revision of $P4CLIENT? " pull_p4client
-        if [[ $pull_p4client == yes ]]; then
-            p4 sync -f //sw/...
-        fi
-    fi
+    while [[ $# -gt 0 ]]; do 
+        case "$1" in
+            --) shift; break ;;
+            *) 
+                case "$1" in
+                    amd64|x86) nvmake_arch=$1 ;;
+                    release|debug|develop) nvmake_config=$1 ;;
+                    -j1) nvmake_jobs=1 ;;
+                    cleanbuild) nvmake_cleanbuild=yes ;;
+                    *) echo "Unknown argument: $1"; return -1 ;;
+                esac
+                shift 
+            ;;
+        esac
+    done
 
-    if [[ $cleanbuild == yes || "$1" == sweep ]]; then
+    if [[ $nvmake_cleanbuild == yes || "$1" == sweep ]]; then
         $P4ROOT/misc/linux/unix-build \
             --tools  $P4ROOT/tools \
             --devrel $P4ROOT/devrel/SDK/inc/GL \
@@ -738,7 +747,9 @@ function zhu-build-nvidia-driver {
             NV_COLOR_OUTPUT=1 \
             NV_GUARDWORD= \
             NV_COMPRESS_THREADS=$(nproc) \
-            NV_FAST_PACKAGE_COMPRESSION=zstd drivers dist linux $arch $build_type -j$threads "$@"
+            NV_FAST_PACKAGE_COMPRESSION=zstd drivers dist linux $nvmake_arch $nvmake_config -j$nvmake_jobs "$@" \
+            && echo "[$(date)] SUCCESS -- drivers dist linux $nvmake_arch $nvmake_config -j$nvmake_jobs $@" | tee -a /tmp/nvmake.log \
+            || echo "[$(date)] FAILED  -- drivers dist linux $nvmake_arch $nvmake_config -j$nvmake_jobs $@" | tee -a /tmp/nvmake.log
     else
         time $P4ROOT/misc/linux/unix-build \
             --tools  $P4ROOT/tools \
@@ -748,7 +759,7 @@ function zhu-build-nvidia-driver {
             NV_COLOR_OUTPUT=1 \
             NV_GUARDWORD= \
             NV_COMPRESS_THREADS=$(nproc) \
-            NV_FAST_PACKAGE_COMPRESSION=zstd linux $arch $build_type -j$threads "$@"
+            NV_FAST_PACKAGE_COMPRESSION=zstd linux $nvmake_arch $nvmake_config -j$nvmake_jobs "$@"
     fi
 
     popd >/dev/null
