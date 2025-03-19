@@ -1,1 +1,0 @@
-savedcmd_/home/wanliz/zhutest/src/zhutest-irq-inspect/modules.order := {   echo /home/wanliz/zhutest/src/zhutest-irq-inspect/zhutest_irq_inspect.o; :; } > /home/wanliz/zhutest/src/zhutest-irq-inspect/modules.order

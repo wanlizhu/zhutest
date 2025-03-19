@@ -1365,7 +1365,10 @@ function zhu-install-vscode {
 
 function zhu-rebuild-dpkg-database {
     sudo rm -rf /var/lib/dpkg/*
-    sudo apt-get install --reinstall dpkg
+    sudo rm /usr/share/python3/runtime.d/*.rtupdate
+    sudo dpkg --configure -a
+    sudo apt --fix-broken install
+    sudo apt install --reinstall dpkg
     sudo apt update && sudo apt upgrade -y
 }
 
@@ -2611,33 +2614,6 @@ function zhu-show-interrupt-count {
     done
     echo "The number of interrupt (irq=$gpu_irq) is: "
     trace-cmd report | grep "irq=$gpu_irq" | wc -l
-}
-
-function zhu-find-irq-handler {
-    local src_dir=$HOME/zhutest/src/zhutest-irq-inspect
-    local mod_name=zhutest_irq_inspect
-    local mod_file=${mod_name}.ko 
-
-    if [[ -z "$1" ]]; then
-        echo "Usage: xxx <IRQ_NUMBER>"
-        return -1
-    fi
-
-    if [[ -z $(dpkg -l | grep linux-headers-$(uname -r)) ]]; then
-        sudo apt install -y linux-headers-$(uname -r)
-    fi 
-
-    sudo make -C /lib/modules/$(uname -r)/build M="$src_dir" clean
-    sudo make -C /lib/modules/$(uname -r)/build M="$src_dir" modules 
-    if [[ ! -f "${src_dir}/${mod_file}" ]]; then
-        echo "Failed to compile kernel module: ${mod_file}"
-        return -1
-    fi
-
-    sudo insmod $src_dir/$mod_file irq_num=$1 
-    sleep 1
-    sudo dmesg | tail -n 100 | grep "Zhutest: "
-    sudo rmmod $mod_name
 }
 
 function zhu-p4git-reset-hard {
