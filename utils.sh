@@ -664,7 +664,11 @@ function zhu-install-nvidia-driver-cloudbuild {
         read -e -i release -p "Configure (release/debug/develop): " config
         subdir=$([[ $config == release ]] && echo "" || echo "/$config")
         read -e -i current -p "Build date (yyyymmdd): " drv_date
-        path="$path$subdir/${drv_date}*/NVIDIA-Linux-$(uname -m)-rel_gpu_drv_r${major}_r${major}_00-${drv_date}_*.run"
+        if [[ $drv_date == current ]]; then
+            path="$path$subdir/current/NVIDIA-Linux-$(uname -m)-rel_gpu_drv_r${major}_r${major}_00-*.run"
+        else
+            path="$path$subdir/${drv_date}_*/NVIDIA-Linux-$(uname -m)-rel_gpu_drv_r${major}_r${major}_00-${drv_date}_*.run"
+        fi 
     elif [[ $type == 4 ]]; then
         path="$path/dvsbuilds/gpu_drv_bugfix_main_Release_Linux_$(uname -m)_unix-build_Test_Driver"
         read -p "Change list number: " changelist
@@ -676,7 +680,7 @@ function zhu-install-nvidia-driver-cloudbuild {
         return -1
     fi
 
-    echo $path 
+    echo $(realpath $path) 
     return 
 
     if [[ -e $(realpath $path) ]]; then
