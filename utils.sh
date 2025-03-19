@@ -578,7 +578,7 @@ function zhu-install-nvidia-driver-localbuild {
         fi
 
         #chmod +x $(realpath $1) 
-        rm -rf /var/log/nvidia-installer.log
+        sudo rm -rf /var/log/nvidia-installer.log
         sudo $(realpath $1) && {
             echo "Nvidia driver is installed!"
             if [[ "$2" != "embedded" ]]; then
