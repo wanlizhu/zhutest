@@ -369,7 +369,16 @@ function zhu-start-bare-xsession {
             $SUDO kill -15 $(pidof Xorg)
             sleep 1
         fi 
+
         $SUDO screen -dmS bare-xsession X :0
+
+        sleep 1
+        if [[ -z $(pidof Xorg) ]]; then
+            echo "Failed to start up a new Xorg session!"
+            return -1
+        else
+            echo "Xorg $(pidof Xorg) has started!"
+        fi
     else
         echo "Please run via SSH/TTY session!"
         return -1
