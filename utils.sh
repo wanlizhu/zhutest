@@ -716,12 +716,15 @@ function zhu-build-nvidia-driver {
         fi
     fi
 
-    if [[ $cleanbuild == yes ]]; then
+    if [[ $cleanbuild == yes || "$1" == sweep ]]; then
         $P4ROOT/misc/linux/unix-build \
             --tools  $P4ROOT/tools \
             --devrel $P4ROOT/devrel/SDK/inc/GL \
             --unshare-namespaces \
             nvmake sweep 
+        if [[ "$1" == sweep ]]; then
+            return 
+        fi
     fi
 
     sudo apt install -y libelf-dev &>/dev/null 
