@@ -566,7 +566,19 @@ function zhu-download-nvidia-driver {
 function zhu-install-nvidia-driver-localbuild {
     if [[ -e $1 ]]; then
         sudo systemctl stop display-manager 
+        if [[ ! -z $(pidof Xorg) ]]; then
+            echo "Xorg $(pidof Xorg) is still running..."
+            read -e -i yes -p "Kill this Xorg process? (yes/no): " killXorg
+            if [[ $killXorg == yes ]]; then
+                sudo kill -15 $(pidof Xorg)
+                sleep 1
+            else
+                return -1
+            fi
+        fi
+
         #chmod +x $(realpath $1) 
+        rm -rf /var/log/nvidia-installer.log
         sudo $(realpath $1) && {
             echo "Nvidia driver is installed!"
             if [[ "$2" != "embedded" ]]; then
