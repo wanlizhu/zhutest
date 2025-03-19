@@ -698,7 +698,10 @@ function zhu-install-nvidia-driver-cloudbuild {
 function zhu-build-nvidia-driver {
     pushd . >/dev/null
     if [[ ! -e ./makefile.nvmk ]]; then
-        cd $P4ROOT
+        read -e -i yes -p "Cd to $P4ROOT? (yes/no): " cdroot
+        if [[ $cdroot == yes ]]; then
+            cd $P4ROOT
+        fi 
     fi
 
     read -e -i amd64    -p "[1/4] Target architecture: " arch
