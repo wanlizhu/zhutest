@@ -876,6 +876,10 @@ function zhu-find-debug-symbols-by-libs {
 }
 
 function zhu-install-debug-symbols {
+    if [[ $(ulimit -c) == 0 ]]; then
+        ulimit -c unlimited
+    fi
+    sudo apt install -y debian-goodies
     sudo apt install -y debuginfod
     sudo apt install -y elfutils
     if [[ -z "$DEBUGINFOD_URLS" ]]; then
@@ -892,6 +896,7 @@ EOF
         sudo apt update
     fi
     sudo apt install -y linux-image-$(uname -r)-dbgsym
+    sudo apt install -y libc6-dbg
 }
 
 function zhu-install-amd-driver-with-debug-symbols {
