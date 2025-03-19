@@ -34,7 +34,7 @@ if sudo ls >/dev/null 2>&1; then
         export P4PORT=p4proxy-sc.nvidia.com:2006
         export P4USER=wanliz 
 
-        if [[ ! -e $P4IGNORE ]]; then
+        if [[ ! -e $P4IGNORE && -d $(dirname $P4IGNORE) ]]; then
             echo "_out" > $P4IGNORE
             echo ".git" >> $P4IGNORE
             echo ".vscode" >> $P4IGNORE
