@@ -1075,7 +1075,7 @@ function zhu-lscpu {
         fi
 
         # Print out
-        printf "${style}%-4s %-4s %-8s %-8s %-6s${reset}\n" \
+        printf "${style}%-4s %-4s %-6s %-6s %-6s${reset}\n" \
                "$cpu" "$core" "$maxmhz" "$mhz" "$online"
     done
 }
