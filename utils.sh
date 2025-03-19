@@ -897,6 +897,7 @@ EOF
     fi
     sudo apt install -y linux-image-$(uname -r)-dbgsym
     sudo apt install -y libc6-dbg
+    sudo apt install -y gdb 
 }
 
 function zhu-install-amd-driver-with-debug-symbols {
