@@ -582,7 +582,13 @@ function zhu-download-nvidia-driver {
 
 function zhu-install-nvidia-driver-localbuild {
     if [[ -e $1 ]]; then
-        sudo systemctl stop display-manager 
+        if [[ $(systemctl is-active display-manager) == active ]]; then
+            was_dm_active=yes
+            sudo systemctl stop display-manager 
+        else
+            was_dm_active=no
+        fi
+
         if [[ ! -z $(pidof Xorg) ]]; then
             echo "Xorg $(pidof Xorg) is still running..."
             read -e -i yes -p "Kill this Xorg process? (yes/no): " killXorg
@@ -594,17 +600,21 @@ function zhu-install-nvidia-driver-localbuild {
             fi
         fi
 
-        #chmod +x $(realpath $1) 
+        if [[ "$(realpath $1)" != "/mnt/linuxqa/"* ]]; then
+            chmod +x $(realpath $1) 
+        fi 
+
         sudo rm -rf /var/log/nvidia-installer.log
-        sudo $(realpath $1) && {
-            echo "Nvidia driver is installed!"
-            if [[ "$2" != "embedded" ]]; then
-                read -e -i yes -p "Do you want to start display manager? " start_dm
-                if [[ $start_dm == yes ]]; then 
-                    sudo systemctl start display-manager
-                fi 
+        sudo $(realpath $1) \
+            && echo "Nvidia driver is installed!" \
+            || cat /var/log/nvidia-installer.log
+
+        if [[ $was_dm_active == yes ]]; then 
+            read -e -i yes -p "Do you want to start display manager? " start_dm
+            if [[ $start_dm == yes ]]; then 
+                sudo systemctl start display-manager
             fi 
-        } || cat /var/log/nvidia-installer.log
+        fi 
     else
         mapfile -t files < <(find $P4ROOT/_out ~/Downloads -type f -name 'NVIDIA-*.run')
         ((${#files[@]})) || { echo "No nvidia .run found"; return -1; }
@@ -619,41 +629,44 @@ function zhu-install-nvidia-driver-localbuild {
 }
 
 function zhu-install-nvidia-driver-cloudbuild {
-    if [[ $(systemctl is-active display-manager) == active ]]; then
-        was_dm_active=yes
-    else
-        was_dm_active=no
-    fi
-
     zhu-mount-linuxqa || return -1
-    stem="/mnt"
+    path="/mnt"
     echo "[1] release build"
-    echo "[2] daily build"
-    echo "[3] dvs build"
+    echo "[2] daily dev build"
+    echo "[3] daily rel build"
+    echo "[4] dvs build"
     read -e -i 1 -p "Select: " type
 
     if [[ $type == 1 ]]; then
-        stem="$stem/builds/release/display/$(uname -m)"
+        path="$path/builds/release/display/$(uname -m)"
         read -e -i release -p "Configure (release/debug/develop): " config
-        leaf=$([[ $config == release ]] && echo "" || echo "/$config")
-        if [[ ! -d $stem$leaf ]]; then
-            echo "$config build is not available under $stem!"
+        subdir=$([[ $config == release ]] && echo "" || echo "/$config")
+        if [[ ! -d $path$subdir ]]; then
+            echo "$config build is not available under $path!"
             return -1
         fi
         read -p "Release version: " drv_version
-        path="$stem$leaf/$drv_version/NVIDIA-Linux-$(uname -m)-$drv_version.run"
+        path="$path$subdir/$drv_version/NVIDIA-Linux-$(uname -m)-$drv_version.run"
     elif [[ $type == 2 ]]; then
-        stem="$stem/builds/daily/display/$(uname -m)/dev/gpu_drv/bugfix_main"
+        path="$path/builds/daily/display/$(uname -m)/dev/gpu_drv/bugfix_main"
         read -e -i release -p "Configure (release/debug/develop): " config
-        leaf=$([[ $config == release ]] && echo "" || echo "/$config")
-        if [[ ! -d $stem$leaf ]]; then
-            echo "$config build is not available under $stem!"
+        subdir=$([[ $config == release ]] && echo "" || echo "/$config")
+        if [[ ! -d $path$subdir ]]; then
+            echo "$config build is not available under $path!"
             return -1
         fi
-        read -p "Date (yyyymmdd): " drv_date
-        path="$stem$leaf/${drv_date}_*/NVIDIA-Linux-$(uname -m)-dev_gpu_drv_bugfix_main-${drv_date}_*.run"
+        read -p "Build date (yyyymmdd): " drv_date
+        path="$path$subdir/${drv_date}_*/NVIDIA-Linux-$(uname -m)-dev_gpu_drv_bugfix_main-${drv_date}_*.run"
     elif [[ $type == 3 ]]; then
-        path="$stem/dvsbuilds/gpu_drv_bugfix_main_Release_Linux_$(uname -m)_unix-build_Test_Driver"
+        path="$path/builds/daily/display/$(uname -m)/rel/gpu_drv"
+        read -p "Major version: " major
+        path="$path/r$major/r${major}_00"
+        read -e -i release -p "Configure (release/debug/develop): " config
+        subdir=$([[ $config == release ]] && echo "" || echo "/$config")
+        read -e -i current -p "Build date (yyyymmdd): " drv_date
+        path="$path$subdir/${drv_date}*/NVIDIA-Linux-$(uname -m)-rel_gpu_drv_r${major}_r${major}_00-${drv_date}_*.run"
+    elif [[ $type == 4 ]]; then
+        path="$path/dvsbuilds/gpu_drv_bugfix_main_Release_Linux_$(uname -m)_unix-build_Test_Driver"
         read -p "Change list number: " changelist
         path="$path/SW_$changelist.0_*"
         paths="$path/NVIDIA-Linux-$(uname -m)-DVS-internal.run"
@@ -663,56 +676,22 @@ function zhu-install-nvidia-driver-cloudbuild {
         return -1
     fi
 
+    echo $path 
+    return 
+
     if [[ -e $(realpath $path) ]]; then
         if [[ $1 == --dryrun ]]; then
             echo "$(realpath $path)"
             return 
         else
-            zhu-install-nvidia-driver-localbuild "$(realpath $path)" embedded
+            zhu-install-nvidia-driver-localbuild "$(realpath $path)" 
+            echo 
+            echo "Nvidia driver installed: $path"
         fi 
     else
         echo "$path not found!"
         return -1
     fi  
-
-    if [[ $(uname -m) == aarch64 && $stem != "/mnt" ]]; then
-        read -e -i yes -p "Install the same x86_64 build info FEX? (yes/no): " ans
-        if [[ $ans == yes ]]; then
-            stem2=${stem/$(uname -m)/x86_64}
-            read -e -i release -p "Configure (release/debug/develop): " config2
-            leaf2=$([[ $config2 == release ]] && echo "" || echo "/$config2")
-            if [[ ! -d $stem2$leaf2 ]]; then
-                echo "$config2 build is not available under $stem2!"
-                return -1
-            fi
-            if [[ $type == 1 ]]; then 
-                path2="$stem2$leaf2/$drv_version/NVIDIA-Linux-x86_64-$drv_version.run"
-            elif [[ $type == 2 ]]; then
-                path2="$stem2$leaf2/${drv_date}_*/NVIDIA-Linux-$(uname -m)-dev_gpu_drv_bugfix_main-${drv_date}_*.run"
-            else
-                return -1
-            fi
-
-            if [[ -e $(realpath $path2) ]]; then
-                localpath="$HOME/Downloads/$(basename $path2)"
-                rm -rf $localpath 
-                rm -rf ${localpath/.run/}
-                mkdir -p $(dirname $localpath)
-                rsync -ah --progress $path2 $localpath || return -1
-                zhu-install-nvidia-driver-in-fex $localpath
-            else
-                echo "$path2 not found!"
-                return -1
-            fi  
-        fi
-    fi
-
-    if [[ $was_dm_active == yes ]]; then 
-        read -e -i yes -p "Do you want to start display manager? " start_dm
-        if [[ $start_dm == yes ]]; then 
-            sudo systemctl start display-manager
-        fi 
-    fi 
 }
 
 function zhu-build-nvidia-driver {
