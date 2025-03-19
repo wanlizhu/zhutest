@@ -351,19 +351,25 @@ function zhu-start-gdm3 {
 function zhu-start-bare-xsession {
     # When run via SSH/TTY session
     if [[ ! -z $(who am i) ]]; then 
+        if [[ $EUID == 0 ]]; then
+            SUDO=""
+        else
+            SUDO="sudo"
+        fi
         #xset -dpms
         #xset s off 
         #[[ -e /etc/X11/xorg.conf && -z $(grep '"DPMS" "false"' /etc/X11/xorg.conf) ]] && sudo sed -i 's/"DPMS"/"DPMS" "false"/g' /etc/X11/xorg.conf
-        sudo sed -i 's/console/anybody/g' /etc/X11/Xwrapper.config
+
+        $SUDO sed -i 's/console/anybody/g' /etc/X11/Xwrapper.config
         if [[ $(systemctl is-active display-manager) == active ]]; then
-            sudo systemctl stop display-manager
+            $SUDO systemctl stop display-manager
             sleep 1
         fi 
         if [[ ! -z $(pidof Xorg) ]]; then
-            sudo kill -15 $(pidof Xorg)
+            $SUDO kill -15 $(pidof Xorg)
             sleep 1
         fi 
-        sudo screen -dmS bare-xsession X :0
+        $SUDO screen -dmS bare-xsession X :0
     else
         echo "Please run via SSH/TTY session!"
         return -1
