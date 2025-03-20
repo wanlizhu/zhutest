@@ -1055,49 +1055,7 @@ function zhu-enable-nvidia-gpu-all {
 }
 
 function zhu-lscpu {
-    bold='\033[1m'
-    dim='\033[2m'
-    reset='\033[0m'
-    header_style='\033[1;37;44m'
-    text_color='\033[38;5;250m'
-    red_text_color='\033[38;5;196m'
-    bg_colors=('\033[48;5;234m' '\033[48;5;239m')
-    strike='\033[9m'  
-
-    # Find P-cores (cores with multiple CPUs)
-    declare -A core_counts
-    while IFS=' ' read -r cpu core; do 
-        ((core_counts[$core]++))
-    done < <(lscpu -e=cpu,core | tail -n +2)
-
-    # Show header
-    echo -e "${header_style}CPU  CORE MAXMHZ    MHZ      ONLINE${reset}"
-
-    # Show cpu data
-    local color_idx=0 last_core=-1
-    lscpu -e=cpu,core,maxmhz,mhz,online | tail -n +2 | \
-    while IFS=' ' read -r cpu core maxmhz mhz online; do 
-        # Choose background color
-        if [[ "$core" != "$last_core" ]]; then
-            color_idx=$(( (color_idx + 1) % ${#bg_colors[@]} ))
-            last_core=$core 
-        fi
-
-        # Finalize style
-        if [[ $online == "yes" ]]; then
-            if [[ ${core_counts[$core]} -gt 1 ]]; then
-                style="${bg_colors[$color_idx]}${red_text_color}${bold}"
-            else
-                style="${bg_colors[$color_idx]}${text_color}"
-            fi
-        else
-            style="${bg_colors[$color_idx]}${text_color}${dim}${strike}"
-        fi
-
-        # Print out
-        printf "${style}%-4s %-4s %-6s %-6s %-6s${reset}\n" \
-               "$cpu" "$core" "$maxmhz" "$mhz" "$online"
-    done
+    lscpu -e=cpu,core,maxmhz,mhz,online
 }
 
 function zhu-disable-cpu-cores {
