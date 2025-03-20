@@ -269,7 +269,7 @@ function zhu-perftop {
     else
         cpu=$1
     fi
-    sudo perf top -C $1 --sort comm,dso
+    sudo perf top -C $cpu --sort comm,dso
 }
 
 function zhu-perf-diff {
