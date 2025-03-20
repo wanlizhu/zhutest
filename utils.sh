@@ -118,7 +118,7 @@ function zhu-connect-nvidia-vpn {
         if [[ ! -z $(which google-chrome) ]]; then
             echo "[1] google-chrome"
             echo "[2] firefox"
-            read -e -i 1 -p "Select a browser to complete SSO Auth: " selection
+            read -p "Select a browser to complete SSO Auth: " selection
             if [[ $selection == 1 ]]; then
                 browser=$(which googlr-chrome)
             elif [[ $selection == 2 ]]; then
@@ -582,7 +582,7 @@ function zhu-install-nvidia-driver-cloudbuild {
     echo "[2] daily bugfix_main build"
     echo "[3] daily r123_00 build"
     echo "[4] dvs build"
-    read -e -i 1 -p "Select: " type
+    read -p "Select: " type
 
     if [[ $type == 1 ]]; then
         path="$path/builds/release/display/$(uname -m)"
@@ -1937,7 +1937,7 @@ function zhu-start-vnc-server-for-headless-system {
     fi 
 
     echo "[1] xfce4"
-    read -e -i 1 -p "What session to start in virtual desktop: " ans
+    read -p "What session to start in virtual desktop (1 or 2): " ans
 
     if [[ $ans == 1 ]]; then
         desktop_session=/usr/bin/xfce4-session
