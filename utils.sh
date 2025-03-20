@@ -747,8 +747,8 @@ function zhu-build-nvidia-driver {
             NV_GUARDWORD= \
             NV_COMPRESS_THREADS=$(nproc) \
             NV_FAST_PACKAGE_COMPRESSION=zstd drivers dist linux $nvmake_arch $nvmake_config -j$nvmake_jobs "$@" \
-            && echo "[$(date)] SUCCESS -- drivers dist linux $nvmake_arch $nvmake_config -j$nvmake_jobs $@" | tee -a /tmp/nvmake.log \
-            || echo "[$(date)] FAILED  -- drivers dist linux $nvmake_arch $nvmake_config -j$nvmake_jobs $@" | tee -a /tmp/nvmake.log
+            && echo "[$(date)] Nvmake success -- drivers dist linux $nvmake_arch $nvmake_config -j$nvmake_jobs $@" | tee -a /tmp/nvmake.log \
+            || echo "[$(date)] Nvmake failed  -- drivers dist linux $nvmake_arch $nvmake_config -j$nvmake_jobs $@" | tee -a /tmp/nvmake.log
     else
         time $P4ROOT/misc/linux/unix-build \
             --tools  $P4ROOT/tools \
