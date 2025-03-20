@@ -102,7 +102,7 @@ function zhu-is-installed {
 
 function zhu-connect-nvidia-vpn {
     if [[ -z $(which openconnect) ]]; then
-        sudo apt install -y openconnect
+        sudo apt install -y openconnect  || return -1
     fi
 
     if [[ ! -z $(pidof openconnect) ]]; then
@@ -151,10 +151,10 @@ function zhu-connect-nvidia-vpn {
 
 function zhu-send-files {
     if [[ -z $(which sshpass) ]]; then
-        sudo apt install -y sshpass
+        sudo apt install -y sshpass  || return -1
     fi
     if [[ -z $(which fzf) ]]; then
-        sudo apt install -y fzf 
+        sudo apt install -y fzf  || return -1
     fi 
 
     if [[ ! -e ~/.zhutest.client ]]; then
@@ -216,17 +216,17 @@ function zhu-install-pts {
     tar -zxvf phoronix-test-suite-${latest_tag:1}.tar.gz
     cd phoronix-test-suite
     sudo ./install-sh
-    sudo apt install -y php-cli php-xml
+    sudo apt install -y php-cli php-xml || return -1
     popd >/dev/null 
 }
 
 function zhu-build-perf {
     read -e -i yes -p "Rebuild perf to link against libtraceevent? (yes/no): " rebuildperf
     if [[ $rebuildperf == yes ]]; then 
-        sudo apt install -y systemtap-sdt-dev libperl-dev libbabeltrace-dev libcapstone-dev openjdk-8-jdk libpfm4-dev
-        sudo apt install -y libunwind-dev binutils-dev
-        sudo apt install -y libtraceevent-dev libtracefs-dev
-        sudo apt install -y flex bison libelf-dev libdw-dev libiberty-dev libslang2-dev libunwind-dev
+        sudo apt install -y systemtap-sdt-dev libperl-dev libbabeltrace-dev libcapstone-dev openjdk-8-jdk libpfm4-dev || return -1
+        sudo apt install -y libunwind-dev binutils-dev || return -1
+        sudo apt install -y libtraceevent-dev libtracefs-dev || return -1
+        sudo apt install -y flex bison libelf-dev libdw-dev libiberty-dev libslang2-dev libunwind-dev || return -1
         git clone --depth=1 https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git ~/linux-kernel-torvalds.git || return -1
         pushd ~/linux-kernel-torvalds.git/tools/perf >/dev/null 
         make clean && make && sudo cp -vf perf /usr/bin/perf 
@@ -267,10 +267,10 @@ function zhu-perftop {
 }
 
 function zhu-install-ubuntu-desktop {
-    sudo apt install -y ubuntu-desktop
-    sudo apt install -y gdm3
-    sudo systemctl set-default graphical.target
-    sudo systemctl start gdm3
+    sudo apt install -y ubuntu-desktop || return -1
+    sudo apt install -y gdm3 || return -1
+    sudo systemctl set-default graphical.target || return -1
+    sudo systemctl start gdm3 || return -1
 }
 
 function zhu-perf-diff {
@@ -454,10 +454,10 @@ function zhu-interrupt-event {
 
 function zhu-mount-linuxqa {
     if [[ -z $(which showmount) ]]; then
-        sudo apt install -y nfs-common
+        sudo apt install -y nfs-common || return -1
     fi
     if [[ -z $(which python) ]]; then
-        sudo apt install -y python-is-python3
+        sudo apt install -y python-is-python3 || return -1
     fi
 
     showmount -e linuxqa.nvidia.com >/dev/null || {
@@ -520,7 +520,7 @@ function zhu-sync {
 
 function zhu-download-nvidia-driver {
     if [[ -z $(apt list --installed 2>/dev/null | grep python3-pymysql) ]]; then 
-        sudo apt install -y python3-pymysql axel 
+        sudo apt install -y python3-pymysql axel  || return -1
     fi
 
     #builds/daily/display/x86_64/dev/gpu_drv/bugfix_main ~/Downloads 
@@ -756,7 +756,7 @@ function zhu-decrypt {
 }
 
 function zhu-install-nsight-graphics {
-    sudo apt install -y cifs-utils
+    sudo apt install -y cifs-utils || return -1
     sudo mkdir -p /mnt/NomadBuilds
     if ! mountpoint -q /mnt/NomadBuilds; then
         sudo mount -t cifs -o username='wanliz@nvidia.com' //devrel/share/Devtools/NomadBuilds /mnt/NomadBuilds || return -1
@@ -838,7 +838,7 @@ function zhu-find-libs-by-build-id {
 
 function zhu-find-debug-symbols {
     if ! zhu-is-installed debian-goodies; then
-        sudo apt install -y debian-goodies
+        sudo apt install -y debian-goodies || return -1
     fi
 
     find /usr/lib -type f -name $1* | tee /tmp/so.list
@@ -851,9 +851,9 @@ function zhu-install-debug-symbols {
     if [[ $(ulimit -c) == 0 ]]; then
         ulimit -c unlimited
     fi
-    sudo apt install -y debian-goodies
-    sudo apt install -y debuginfod
-    sudo apt install -y elfutils
+    sudo apt install -y debian-goodies || return -1
+    sudo apt install -y debuginfod || return -1
+    sudo apt install -y elfutils || return -1
     if [[ -z "$DEBUGINFOD_URLS" ]]; then
         export DEBUGINFOD_URLS="https://debuginfod.ubuntu.com/"
     fi 
@@ -864,22 +864,22 @@ function zhu-install-debug-symbols {
 deb http://ddebs.ubuntu.com/ $(lsb_release -cs) main restricted universe multiverse
 deb http://ddebs.ubuntu.com/ $(lsb_release -cs)-updates main restricted universe multiverse
 EOF
-        sudo apt install -y ubuntu-dbgsym-keyring  # Import the debug symbol archive key
+        sudo apt install -y ubuntu-dbgsym-keyring || return -1  # Import the debug symbol archive key
         sudo apt update
     fi
-    sudo apt install -y linux-image-$(uname -r)-dbgsym
-    sudo apt install -y libc6-dbg
-    sudo apt install -y gdb 
+    sudo apt install -y linux-image-$(uname -r)-dbgsym || return -1
+    sudo apt install -y libc6-dbg || return -1
+    sudo apt install -y gdb  || return -1
 }
 
 function zhu-install-amd-driver-with-debug-symbols {
     zhu-install-debug-symbols || return -1 # AMD driver is part of Linux kernel
-    sudo apt install -y libdrm2-dbgsym libdrm-amdgpu1-dbgsym #mesa-dbgsym
-    sudo apt install -y mesa-opencl-icd-dbgsym libgl1-mesa-dri-dbgsym libglapi-mesa-dbgsym  # Install debug symbols for OpenGL/OpenCL
-    sudo apt install -y mesa-vulkan-drivers-dbgsym  # Install debug symbols for Mesa and Vulkan drivers
-    sudo apt install -y xserver-xorg-video-amdgpu-dbgsym  # Install the Xorg AMDGPU display driver
-    sudo apt install -y libglx-mesa0-dbgsym  # Install debug symbols for libGLX_mesa.so
-    sudo apt install -y mesa-libgallium-dbgsym  # Install debug symbols for mesa-libgallium
+    sudo apt install -y libdrm2-dbgsym libdrm-amdgpu1-dbgsym || return -1 #mesa-dbgsym
+    sudo apt install -y mesa-opencl-icd-dbgsym libgl1-mesa-dri-dbgsym libglapi-mesa-dbgsym || return -1  # Install debug symbols for OpenGL/OpenCL
+    sudo apt install -y mesa-vulkan-drivers-dbgsym || return -1  # Install debug symbols for Mesa and Vulkan drivers
+    sudo apt install -y xserver-xorg-video-amdgpu-dbgsym || return -1 # Install the Xorg AMDGPU display driver
+    sudo apt install -y libglx-mesa0-dbgsym || return -1 # Install debug symbols for libGLX_mesa.so
+    sudo apt install -y mesa-libgallium-dbgsym || return -1 # Install debug symbols for mesa-libgallium
     #sudo apt install -y mesa-va-drivers-dbgsym mesa-vdpau-drivers-dbgsym  # Install debug symbols for video decode/encode
     
     if [[ ! -e /usr/lib/debug/lib/modules/$(uname -r)/kernel/drivers/gpu/drm/amd/amdgpu/amdgpu.ko && ! -e /usr/lib/debug/lib/modules/$(uname -r)/kernel/drivers/gpu/drm/amd/amdgpu/amdgpu.ko.zst ]]; then
@@ -910,7 +910,7 @@ function zhu-show-cpu-utilization {
     fi
 
     if [[ -z $(which bc) ]]; then
-        sudo apt install -y bc 
+        sudo apt install -y bc  || return -1
     fi
 
     file="/tmp/cpu-utilization.log"
@@ -927,7 +927,7 @@ function zhu-show-gpu-utilization {
     fi
 
     if [[ -z $(which bc) ]]; then
-        sudo apt install -y bc
+        sudo apt install -y bc || return -1
     fi
 
     freq=20  # Can be less than 1
@@ -1096,7 +1096,9 @@ function zhu-install-fex {
         libpixman-1-dev libslirp-dev debootstrap git nasm \
         ninja-build build-essential clang lld \
         xxhash libxxhash-dev patchelf\
-        qtbase5-dev qt5-qmake qml-module-qtquick-controls qml-module-qtquick-controls2 qml-module-qtquick-dialogs qml-module-qtquick-layouts qtdeclarative5-dev qtquickcontrols2-5-dev
+        qtbase5-dev qt5-qmake qml-module-qtquick-controls \
+        qml-module-qtquick-controls2 qml-module-qtquick-dialogs \
+        qml-module-qtquick-layouts qtdeclarative5-dev qtquickcontrols2-5-dev || return -1
     git clone --recursive https://github.com/FEX-Emu/FEX.git ~/FEX.git || return -1
     #~/FEX.git/Scripts/InstallFEX.py 
 
@@ -1292,9 +1294,9 @@ function zhu-install-vscode {
         rm -f /tmp/packages.microsoft.gpg
     fi 
 
-    sudo apt install apt-transport-https
+    sudo apt install apt-transport-https  || return -1
     sudo apt update
-    sudo apt install code # or code-insiders
+    sudo apt install code || return -1 # or code-insiders
 }
 
 function zhu-rebuild-dpkg-database {
@@ -1302,7 +1304,7 @@ function zhu-rebuild-dpkg-database {
     sudo rm /usr/share/python3/runtime.d/*.rtupdate
     sudo dpkg --configure -a
     sudo apt --fix-broken install
-    sudo apt install --reinstall dpkg
+    sudo apt install --reinstall dpkg  
     sudo apt update && sudo apt upgrade -y
 }
 
@@ -1362,7 +1364,7 @@ function zhu-chroot-in-fex {
     rootfs="$HOME/.fex-emu/RootFS/$ubuntu"
 
     if [[ -z $(which patchelf) ]]; then
-        sudo apt install -y patchelf
+        sudo apt install -y patchelf || return -1
     fi
 
     if [[ ! -e $rootfs/chroot.py ]]; then 
@@ -1429,7 +1431,7 @@ function zhu-config-in-fex {
 
 function zhu-sudo-in-fex {
     if [[ -z $(which jq) ]]; then
-        sudo apt install -y jq 
+        sudo apt install -y jq || return -1
     fi 
 
     ubuntu=$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)
@@ -1852,7 +1854,7 @@ function zhu-check-xauthority {
         fi
 
         if [[ -z $(which glxgears) ]]; then
-            sudo apt install -y mesa-utils 
+            sudo apt install -y mesa-utils || return -1
         fi
 
         glxgears & 
@@ -1880,9 +1882,9 @@ function zhu-startx-with-openbox {
         fi
     fi
 
-    sudo apt install -y xorg openbox 
+    sudo apt install -y xorg openbox || return -1
     if [[ -z $(which screen) ]]; then
-        sudo apt install -y screen 
+        sudo apt install -y screen  || return -1
     fi
 
     if [[ -e ~/.xinitrc ]]; then
@@ -1928,12 +1930,12 @@ function zhu-start-vnc-server-for-headless-system {
     fi  
 
     if [[ -z $(which screen) ]]; then
-        sudo apt install -y screen 
+        sudo apt install -y screen || return -1
     fi
 
     if [[ -z $(dpkg -l | grep tigervnc-standalone-server) ]]; then
-        sudo apt install -y tigervnc-standalone-server
-        sudo apt install -y tigervnc-common
+        sudo apt install -y tigervnc-standalone-server || return -1
+        sudo apt install -y tigervnc-common || return -1
     fi 
 
     echo "[1] xfce4"
@@ -1942,7 +1944,7 @@ function zhu-start-vnc-server-for-headless-system {
     if [[ $ans == 1 ]]; then
         desktop_session=/usr/bin/xfce4-session
         if [[ -z $(dpkg -l | grep xfce4-session) ]]; then
-            sudo apt install -y xfce4-session
+            sudo apt install -y xfce4-session || return -1
         fi 
     else
         echo "Invalid input!"
@@ -2007,7 +2009,7 @@ function zhu-start-vnc-server-for-physical-display {
         read -p "Select: " selection
 
         if [[ -z $(which screen) ]]; then
-            sudo apt install -y screen 
+            sudo apt install -y screen || return -1
         fi
 
         if [[ $selection == 1 ]]; then
@@ -2033,7 +2035,7 @@ function zhu-start-vnc-server-for-physical-display {
     done
 
     if [[ -z $(dpkg -l | grep x11vnc) ]]; then
-        sudo apt install -y x11vnc
+        sudo apt install -y x11vnc || return -1
     fi 
 
     x11vnc -storepasswd
@@ -2086,7 +2088,7 @@ function zhu-enable-x11-forwarding {
     fi
 
     if ! dpkg -l | grep -q xauth; then
-        sudo apt install -y xauth 
+        sudo apt install -y xauth || return -1
     fi
 
     sudo sed -i '/^#*X11Forwarding[[:space:]]/cX11Forwarding yes' /etc/ssh/sshd_config
@@ -2103,7 +2105,7 @@ function zhu-share-folder-via-nfs {
     fi
 
     if [[ -z $(dpkg -l | grep "^ii  openbox ") ]]; then
-        sudo apt install -y nfs-kernel-server
+        sudo apt install -y nfs-kernel-server || return -1
     fi
 
     if [[ -e /etc/exports ]]; then 
@@ -2171,17 +2173,21 @@ function zhu-vulkan-api-capture {
             git clone --recursive https://github.com/LunarG/gfxreconstruct.git ~/gfxreconstruct.git 
         fi
 
-        sudo apt install -y git cmake build-essential libx11-xcb-dev libxcb-keysyms1-dev libwayland-dev libxrandr-dev zlib1g-dev liblz4-dev libzstd-dev
-        sudo apt install -y g++-multilib libx11-xcb-dev:i386 libxcb-keysyms1-dev:i386 libwayland-dev:i386 libxrandr-dev:i386 zlib1g-dev:i386 liblz4-dev:i386 libzstd-dev:i386
+        sudo apt install -y git cmake build-essential libx11-xcb-dev \
+            libxcb-keysyms1-dev libwayland-dev libxrandr-dev \
+            zlib1g-dev liblz4-dev libzstd-dev || return -1
+        sudo apt install -y g++-multilib libx11-xcb-dev:i386 \
+            libxcb-keysyms1-dev:i386 libwayland-dev:i386 libxrandr-dev:i386 \
+            zlib1g-dev:i386 liblz4-dev:i386 libzstd-dev:i386 || return -1
         if [[ $(uname -m) == aarch64 ]]; then
-            sudo apt install -y g++-aarch64-linux-gnu
+            sudo apt install -y g++-aarch64-linux-gnu || return -1
             arch=arm64
         else
             arch=x64
         fi
 
         pushd . >/dev/null 
-        cd ~/gfxreconstruct.git 
+        cd ~/gfxreconstruct.git || return -1
         git submodule update --init
         python3 scripts/build.py --arch $arch --config release --parallel $(nproc) --skip-check-code-style --skip-tests --skip-d3d12-support 
         echo "gfxreconstruct is compiled!"
