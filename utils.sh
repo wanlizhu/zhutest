@@ -370,7 +370,7 @@ function zhu-start-bare-xsession {
             sleep 1
         fi 
 
-        $SUDO screen -dmS bare-xsession X :0
+        $SUDO screen -dmS bare-xsession X :0 +iglx
 
         sleep 1
         if [[ -z $(pidof Xorg) ]]; then
@@ -1056,6 +1056,10 @@ function zhu-enable-nvidia-gpu-all {
 
 function zhu-lscpu {
     lscpu -e=cpu,core,maxmhz,mhz,online
+}
+
+function zhu-show-xorg {
+    ps -ef | grep '[X]org'
 }
 
 function zhu-disable-cpu-cores {
