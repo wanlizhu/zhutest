@@ -229,14 +229,16 @@ function zhu-install-perf {
         sudo apt install -y libtraceevent-dev >/dev/null 2>&1
     fi 
 
-    # Rebuild tools/perf to link against libtraceevent
     sudo perf stat -e irq:irq_handler_entry sleep 1 >/dev/null 2>&1 || {
-        sudo apt install -y libtraceevent-dev libtracefs-dev
-        sudo apt install -y flex bison libelf-dev libdw-dev libiberty-dev libslang2-dev libunwind-dev
-        git clone --depth=1 https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git ~/linux-kernel-torvalds.git || return -1
-        pushd ~/linux-kernel-torvalds.git/tools/perf >/dev/null 
-        make clean && make && sudo cp -vf perf $(which perf)
-        popd >/dev/null
+        read -e -i yes -p "Rebuild perf to link against libtraceevent? (yes/no): " rebuildperf
+        if [[ $rebuildperf == yes ]]; then 
+            sudo apt install -y libtraceevent-dev libtracefs-dev
+            sudo apt install -y flex bison libelf-dev libdw-dev libiberty-dev libslang2-dev libunwind-dev
+            git clone --depth=1 https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git ~/linux-kernel-torvalds.git || return -1
+            pushd ~/linux-kernel-torvalds.git/tools/perf >/dev/null 
+            make clean && make && sudo cp -vf perf $(which perf)
+            popd >/dev/null
+        fi 
     }
 }
 
