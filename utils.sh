@@ -420,92 +420,6 @@ function zhu-start-openbox {
     fi
 }
 
-function zhu-test-maya-high-interrupt-count-on-gdm3 {
-    zhu-validate-display || return -1
-    zhu-install-perf  || return -1
-    rm -rf /tmp/fps.log 
-
-    if [[ -z $(which trace-cmd) ]]; then
-        sudo apt install -y trace-cmd
-    fi
-
-    # Round 1 for the number of interrupts
-    zhu-test-viewperf-maya-subtest5 &
-    mayapid=$!
-    sleep 2
-
-    rm -rf trace.dat 
-    if lsmod | grep -q nvidia; then
-        nvidia_irq=$(grep 'nvidia' /proc/interrupts | awk '{print $1}' | cut -d: -f1 | head -1)
-        echo "irq == $nvidia_irq" | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter
-        sudo trace-cmd record -p function -l nvidia_isr -e irq_handler_entry &
-        tracecmd_pid=$!
-    else
-        amdgpu_irq=$(grep 'amdgpu' /proc/interrupts | awk '{print $1}' | cut -d: -f1 | head -1)
-        echo "irq == $amdgpu_irq" | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter
-        sudo trace-cmd record -p function -l amdgpu_irq_handler -e irq_handler_entry &
-        tracecmd_pid=$!
-    fi
-
-    wait $mayapid 
-    sudo kill -SIGINT $tracecmd_pid 
-    sleep 2
-
-    if lsmod | grep -q nvidia; then
-        nvidia_irq=$(grep 'nvidia' /proc/interrupts | awk '{print $1}' | cut -d: -f1 | head -1)
-        count=$(trace-cmd report | grep -i nvidia | grep "irq=$nvidia_irq" | wc -l)
-        echo "The number of interrupts is $count" > /tmp/xxx.log
-    else
-        echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter
-        amdgpu_irq=$(grep 'amdgpu' /proc/interrupts | awk '{print $1}' | cut -d: -f1 | head -1)
-        count=$(trace-cmd report | grep -i amdgpu | grep "irq=$amdgpu_irq" | wc -l)
-        echo "The number of interrupts is $count" > /tmp/xxx.log
-    fi
-
-    # Round 2 for the time cost of interrupt handler (nvidia_isr/amdgpu_irq_handler)
-    zhu-test-viewperf-maya-subtest5 &
-    mayapid=$!
-    sleep 2
-
-    rm -rf latency.log
-    if lsmod | grep -q nvidia; then
-        irq_handler=nvidia_isr
-    else
-        irq_handler=amdgpu_irq_handler
-    fi
-
-    echo function | sudo tee /sys/kernel/debug/tracing/current_tracer
-    echo $irq_handler | sudo tee /sys/kernel/debug/tracing/set_ftrace_filter
-    echo 1 | sudo tee /sys/kernel/debug/tracing/tracing_on
-    sudo cat /sys/kernel/debug/tracing/trace_pipe > latency.log &
-    tracepipe_pid=$!
-    wait $mayapid
-    echo 0 | sudo tee /sys/kernel/debug/tracing/tracing_on
-    sudo kill -SIGINT $tracepipe_pid
-    sleep 2
-
-    if lsmod | grep -q nvidia; then
-        cputime_ns=$(awk '/nvidia_isr/ {gsub(/[^0-9]/,"",$3); sum+=$3} END {print sum}' latency.log)
-    else
-        cputime_ns=$(awk '/amdgpu_irq_handler/ {gsub(/[^0-9]/,"",$3); sum+=$3} END {print sum}' latency.log)
-    fi
-    cputime_ms=$((cputime_ns / 1000000))
-    cputime_us=$((cputime_ns / 1000))
-    echo "Total CPU time in $irq_handler is ${cputime_ms}ms (${cputime_us}us) (${cputime_ns}ns)" >> /tmp/xxx.log
-    
-    zhu-test-viewperf-maya-subtest5 & 
-    mayapid=$!
-    sleep 2
-
-    zhu-generate-perf-and-flamegraph
-    #zhu-interrupt-event
-    wait $mayapid
-
-    echo
-    cat /tmp/fps.log 
-    cat /tmp/xxx.log
-}
-
 function zhu-disable-nvidia-interrupt-handler {
     echo "options nvidia NVreg_EnableMSI=0" | sudo tee /etc/modprobe.d/nvidia-disable-interrupt-handler.conf
     sudo update-initramfs -u
@@ -1696,7 +1610,10 @@ function zhu-test-viewperf-catia {
     pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
     mkdir -p results/catia-06 
     rm -rf results/catia-06/results.xml
-    ./viewperf/bin/viewperf viewsets/catia/config/catia.xml -resolution 1920x1080 \
+    
+    zhu-ask-for-taskset
+
+    $TASKSET ./viewperf/bin/viewperf viewsets/catia/config/catia.xml -resolution 1920x1080 \
         && cat results/catia-06/results.xml \
         || echo "Failed to run viewsets/catia"
     popd >/dev/null 
@@ -1709,7 +1626,10 @@ function zhu-test-viewperf-creo {
     pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
     mkdir -p results/creo-03 
     rm -rf results/creo-03/results.xml
-    ./viewperf/bin/viewperf viewsets/creo/config/creo.xml -resolution 1920x1080 \
+    
+    zhu-ask-for-taskset
+
+    $TASKSET ./viewperf/bin/viewperf viewsets/creo/config/creo.xml -resolution 1920x1080 \
         && cat results/creo-03/results.xml \
         || echo "Failed to run viewsets/creo"
     popd >/dev/null 
@@ -1722,7 +1642,10 @@ function zhu-test-viewperf-energy {
     pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
     mkdir -p results/energy-03 
     rm -rf results/energy-03/results.xml
-    ./viewperf/bin/viewperf viewsets/energy/config/energy.xml -resolution 1920x1080 \
+    
+    zhu-ask-for-taskset
+
+    $TASKSET ./viewperf/bin/viewperf viewsets/energy/config/energy.xml -resolution 1920x1080 \
         && cat results/energy-03/results.xml \
         || echo "Failed to run viewsets/energy"
     popd >/dev/null 
@@ -1735,7 +1658,10 @@ function zhu-test-viewperf-maya {
     pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
     mkdir -p results/maya-06 
     rm -rf results/maya-06/results.xml
-    ./viewperf/bin/viewperf viewsets/maya/config/maya.xml -resolution 1920x1080 \
+    
+    zhu-ask-for-taskset
+
+    $TASKSET ./viewperf/bin/viewperf viewsets/maya/config/maya.xml -resolution 1920x1080 \
         && cat results/maya-06/results.xml \
         || echo "Failed to run viewsets/maya"
     popd >/dev/null 
@@ -1748,7 +1674,10 @@ function zhu-test-viewperf-medical {
     pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
     mkdir -p results/medical-03 
     rm -rf results/medical-03/results.xml
-    ./viewperf/bin/viewperf viewsets/medical/config/medical.xml -resolution 1920x1080 \
+    
+    zhu-ask-for-taskset
+
+    $TASKSET ./viewperf/bin/viewperf viewsets/medical/config/medical.xml -resolution 1920x1080 \
         && cat results/medical-03/results.xml \
         || echo "Failed to run viewsets/medical"
     popd >/dev/null 
@@ -1761,7 +1690,10 @@ function zhu-test-viewperf-snx {
     pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
     mkdir -p results/snx-04 
     rm -rf results/snx-04/results.xml
-    ./viewperf/bin/viewperf viewsets/snx/config/snx.xml -resolution 1920x1080 \
+    
+    zhu-ask-for-taskset
+
+    $TASKSET ./viewperf/bin/viewperf viewsets/snx/config/snx.xml -resolution 1920x1080 \
         && cat results/snx-04/results.xml \
         || echo "Failed to run viewsets/snx"
     popd >/dev/null 
@@ -1774,7 +1706,10 @@ function zhu-test-viewperf-sw {
     pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
     mkdir -p results/solidworks-07
     rm -rf results/solidworks-07/results.xml
-    ./viewperf/bin/viewperf viewsets/sw/config/sw.xml -resolution 1920x1080 \
+    
+    zhu-ask-for-taskset
+
+    $TASKSET ./viewperf/bin/viewperf viewsets/sw/config/sw.xml -resolution 1920x1080 \
         && cat results/solidworks-07/results.xml \
         || echo "Failed to run viewsets/sw"
     popd >/dev/null 
@@ -1807,6 +1742,14 @@ function zhu-test-viewperf-in-gui {
     done
 }
 
+function zhu-ask-for-taskset {
+    TASKSET=""
+    read -p "Pin the test process into CPU of ID (null to skip): " cpu_id
+    if [[ ! -z "$cpu_id" ]]; then
+        TASKSET="taskset -c $cpu_id"
+    fi
+}
+
 function zhu-test-viewperf-maya-subtest5 {
     zhu-validate-display || return -1
     zhu-install-viewperf || return -1 
@@ -1830,7 +1773,9 @@ function zhu-test-viewperf-maya-subtest5 {
 EOF
     fi
 
-    ./viewperf/bin/viewperf viewsets/maya/config/subtest5.xml -resolution 1920x1080 && {
+    zhu-ask-for-taskset
+
+    $TASKSET ./viewperf/bin/viewperf viewsets/maya/config/subtest5.xml -resolution 1920x1080 && {
         cat results/maya-06/results.xml | grep FPS | xmllint --xpath 'string(//Test/@FPS)' - >> /tmp/fps.log 
         echo "Viewperf Maya-06/subtest5 result FPS: $(cat /tmp/fps.log | tail -1)"
     }
