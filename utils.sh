@@ -254,7 +254,12 @@ function zhu-install-perf {
 
 function zhu-perftop {
     zhu-install-perf || return -1
-    sudo perf top --sort comm,dso
+    if [[ -z $1 ]]; then
+        read -p "CPU id to monitor: " cpu
+    else
+        cpu=$1
+    fi
+    sudo perf top -C $1 --sort comm,dso
 }
 
 function zhu-perf-diff {
