@@ -258,8 +258,13 @@ function zhu-perftop {
         read -p "CPU id to monitor: " cpu
         read -e -i yes -p "Pin a running process to CPU $cpu? (yes/no): " ans
         if [[ $ans == yes ]]; then
-            read -p "PID: " pid
-            taskset -pc $cpu $pid 
+            read -p "Process name: " proc_name
+            if [[ -z $(pidof $proc_name) ]]; then
+                echo "Failed to find PID by name $proc_name"
+                return -1
+            else
+                taskset -pc $cpu $(pidof $proc_name)
+            fi 
         fi
     else
         cpu=$1
