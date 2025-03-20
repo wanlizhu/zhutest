@@ -1744,7 +1744,7 @@ function zhu-test-viewperf-in-gui {
 
 function zhu-ask-for-taskset {
     TASKSET=""
-    read -p "Pin the test process into CPU of ID (null to skip): " cpu_id
+    read -p "Pin the testing process to a specific CPU (ID or blank to skip): " cpu_id
     if [[ ! -z "$cpu_id" ]]; then
         TASKSET="taskset -c $cpu_id"
     fi
