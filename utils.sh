@@ -222,7 +222,10 @@ function zhu-install-pts {
 
 function zhu-install-perf {
     if ! zhu-is-installed linux-tools-$(uname -r); then 
-        sudo apt install -y linux-tools-$(uname -r) linux-tools-generic >/dev/null 2>&1
+        sudo apt install -y linux-tools-$(uname -r) linux-tools-generic >/tmp/apt.log 2>&1 || {
+            cat /tmp/apt.log
+            return -1
+        }
     fi 
 
     if ! zhu-is-installed libtraceevent-dev; then 
