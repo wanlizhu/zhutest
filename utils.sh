@@ -1824,7 +1824,7 @@ function zhu-list-steam-games {
 
 function zhu-check-xauthority {
     # Call via SSH session
-    if [[ $XDG_SESSION_TYPE == tty ]]; then
+    if [[ -z $XDG_SESSION_TYPE || $XDG_SESSION_TYPE == tty ]]; then
         # When X11 forwarding is enabled
         if [[ $DISPLAY == *"localhost"* ]]; then
             export XAUTHORITY=~/.Xauthority
