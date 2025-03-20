@@ -1304,7 +1304,7 @@ function zhu-rebuild-dpkg-database {
     sudo rm /usr/share/python3/runtime.d/*.rtupdate
     sudo dpkg --configure -a
     sudo apt --fix-broken install
-    sudo apt install --reinstall dpkg  
+    sudo apt install --reinstall -y dpkg  
     sudo apt update && sudo apt upgrade -y
 }
 
