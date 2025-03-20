@@ -579,8 +579,8 @@ function zhu-install-nvidia-driver-cloudbuild {
     zhu-mount-linuxqa || return -1
     path="/mnt"
     echo "[1] release build"
-    echo "[2] daily dev build"
-    echo "[3] daily rel build"
+    echo "[2] daily bugfix_main build"
+    echo "[3] daily r123_00 build"
     echo "[4] dvs build"
     read -e -i 1 -p "Select: " type
 
