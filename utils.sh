@@ -256,6 +256,11 @@ function zhu-perftop {
     zhu-install-perf || return -1
     if [[ -z $1 ]]; then
         read -p "CPU id to monitor: " cpu
+        read -e -i yes -p "Pin a running process to CPU $cpu? (yes/no): " ans
+        if [[ $ans == yes ]]; then
+            read -p "PID: " pid
+            taskset -pc $cpu $pid 
+        fi
     else
         cpu=$1
     fi
