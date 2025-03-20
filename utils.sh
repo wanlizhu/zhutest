@@ -220,29 +220,41 @@ function zhu-install-pts {
     popd >/dev/null 
 }
 
+function zhu-build-perf {
+    read -e -i yes -p "Rebuild perf to link against libtraceevent? (yes/no): " rebuildperf
+    if [[ $rebuildperf == yes ]]; then 
+        sudo apt install -y systemtap-sdt-dev libperl-dev libbabeltrace-dev libcapstone-dev openjdk-8-jdk libpfm4-dev
+        sudo apt install -y libunwind-dev binutils-dev
+        sudo apt install -y libtraceevent-dev libtracefs-dev
+        sudo apt install -y flex bison libelf-dev libdw-dev libiberty-dev libslang2-dev libunwind-dev
+        git clone --depth=1 https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git ~/linux-kernel-torvalds.git || return -1
+        pushd ~/linux-kernel-torvalds.git/tools/perf >/dev/null 
+        make clean && make && sudo cp -vf perf /usr/bin/perf 
+        popd >/dev/null
+    fi 
+}
+
 function zhu-install-perf {
-    if ! zhu-is-installed linux-tools-$(uname -r); then 
-        sudo apt install -y linux-tools-$(uname -r) linux-tools-generic >/tmp/apt.log 2>&1 || {
-            cat /tmp/apt.log
-            return -1
-        }
-    fi 
-
-    if ! zhu-is-installed libtraceevent-dev; then 
-        sudo apt install -y libtraceevent-dev >/dev/null 2>&1
-    fi 
-
-    sudo perf stat -e irq:irq_handler_entry sleep 1 >/dev/null 2>&1 || {
-        read -e -i yes -p "Rebuild perf to link against libtraceevent? (yes/no): " rebuildperf
-        if [[ $rebuildperf == yes ]]; then 
-            sudo apt install -y libtraceevent-dev libtracefs-dev
-            sudo apt install -y flex bison libelf-dev libdw-dev libiberty-dev libslang2-dev libunwind-dev
-            git clone --depth=1 https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git ~/linux-kernel-torvalds.git || return -1
-            pushd ~/linux-kernel-torvalds.git/tools/perf >/dev/null 
-            make clean && make && sudo cp -vf perf $(which perf)
-            popd >/dev/null
+    if [[ -z $(which perf) || "$1" == -f ]]; then
+        if ! zhu-is-installed linux-tools-$(uname -r); then 
+            sudo apt install -y linux-tools-$(uname -r) linux-tools-generic >/tmp/apt.log 2>&1 || {
+                cat /tmp/apt.log
+                zhu-build-perf
+                return 
+            }
         fi 
-    }
+
+        if ! zhu-is-installed libtraceevent-dev; then 
+            sudo apt install -y libtraceevent-dev >/dev/null 2>&1
+        fi 
+
+        sudo perf stat -e irq:irq_handler_entry sleep 1 >/dev/null 2>&1 || zhu-build-perf 
+    fi 
+}
+
+function zhu-perftop {
+    zhu-install-perf || return -1
+    sudo perf top --sort comm,dso
 }
 
 function zhu-perf-diff {
