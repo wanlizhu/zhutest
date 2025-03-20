@@ -266,6 +266,13 @@ function zhu-perftop {
     sudo perf top -C $cpu --sort comm,dso
 }
 
+function zhu-install-ubuntu-desktop {
+    sudo apt install -y ubuntu-desktop
+    sudo apt install -y gdm3
+    sudo systemctl set-default graphical.target
+    sudo systemctl start gdm3
+}
+
 function zhu-perf-diff {
     if [[ -d $1 ]]; then
         perfdir1=$(realpath $1)
