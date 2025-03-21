@@ -1990,10 +1990,14 @@ WantedBy=multi-user.target
         #zhu-check-xauthority || return -1
         export DISPLAY=:$dp 
         /usr/bin/tigervncserver -kill :$dp >/dev/null 2>&1
-        #screen -dmS tigervncserver /usr/bin/tigervncserver $vncserver_args :$dp 
-        /usr/bin/tigervncserver $vncserver_args :$dp 
-        sleep 1
-        /usr/bin/tigervncserver -list 
+        read -e -i no -p "Run tigervncserver a in detached session? (yes/no): " ans
+        if [[ $ans == yes ]]; then 
+            screen -dmS tigervncserver /usr/bin/tigervncserver $vncserver_args :$dp
+            sleep 1
+            /usr/bin/tigervncserver -list 
+        else 
+            /usr/bin/tigervncserver $vncserver_args :$dp 
+        fi 
     fi
 }
 
@@ -2070,9 +2074,9 @@ WantedBy=multi-user.target
         echo "x11vnc.service is running and scheduled as auto-start!"
     else
         zhu-check-xauthority || return -1
-        read -e -i no -p "Run x11vncserver a in detached session? (yes/no): " ans
+        read -e -i no -p "Run x11vnc a in detached session? (yes/no): " ans
         if [[ $ans == yes ]]; then 
-            $SUDO screen -dmS x11vncserver /usr/bin/x11vnc $x11vnc_args
+            $SUDO screen -dmS x11vnc /usr/bin/x11vnc $x11vnc_args
         else
             $SUDO /usr/bin/x11vnc $x11vnc_args
         fi 
