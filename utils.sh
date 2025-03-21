@@ -1358,6 +1358,12 @@ function zhu-install-nvidia-driver-in-fex {
     popd >/dev/null 
 }
 
+function zhu-fix-snap-readonly-filesystem-issue {
+    mount | grep snap
+    echo
+    echo "unmount all snap filesystem from the list above using e.g. 'umount -lf /var/snap/***'" 
+}
+
 function zhu-chroot-in-fex {
     which jq >/dev/null || sudo apt install -y jq 
     ubuntu=$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)
@@ -2061,7 +2067,12 @@ WantedBy=multi-user.target
         echo "x11vnc.service is running and scheduled as auto-start!"
     else
         zhu-check-xauthority || return -1
-        screen -dmS x11vncserver /usr/bin/x11vnc $x11vnc_args
+        read -e -i no -p "Run x11vncserver a in detached session? (yes/no): " ans
+        if [[ $ans == yes ]]; then 
+            screen -dmS x11vncserver /usr/bin/x11vnc $x11vnc_args
+        else
+            /usr/bin/x11vnc $x11vnc_args
+        fi 
     fi
 }
 
