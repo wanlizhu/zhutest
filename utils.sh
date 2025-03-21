@@ -1367,145 +1367,129 @@ function zhu-fix-snap-readonly-filesystem-issue {
     echo "unmount all snap filesystem from the list above using e.g. 'umount -lf /var/snap/***'" 
 }
 
-function zhu-chroot-in-fex {
+function zhu-fex-emu {
     which jq >/dev/null || sudo apt install -y jq 
+    which patchelf >/dev/null || sudo apt install -y patchelf
     ubuntu=$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)
     rootfs="$HOME/.fex-emu/RootFS/$ubuntu"
-
-    if [[ -z $(which patchelf) ]]; then
-        sudo apt install -y patchelf || return -1
-    fi
-
+    
     if [[ ! -e $rootfs/chroot.py ]]; then 
         wget  -O $rootfs/chroot.py https://raw.githubusercontent.com/FEX-Emu/RootFS/refs/heads/main/Scripts/chroot.py 
         chmod +x $rootfs/chroot.py 
     fi 
- 
-    #if [[ $(systemctl is-active apparmor) == active ]]; then
-    #    sudo systemctl stop apparmor
-    #    sudo systemctl disable apparmor
-    #    sudo apt purge apparmor
-    #fi 
-    # TODO: stop apparmor before launching chroot
 
-    #if [[ -e /etc/resolv.conf && -e $rootfs/etc/resolv.conf ]]; then 
-    #    while IFS= read -r line; do 
-    #        if ! grep -q "$line" $rootfs/etc/resolv.conf; then
-    #            echo "line" >> $rootfs/etc/resolv.conf
-    #        fi
-    #    done < /etc/resolv.conf
-    #fi 
-    # TODO: append the nameserver from native host into rootfs
+    if [[ -z $(grep "native arm64 host" $rootfs/usr/lib/systemd/resolv.conf) ]]; then 
+        echo "# Inherit nameserver list from native arm64 host" >> $rootfs/usr/lib/systemd/resolv.conf
+        cat /etc/resolv.conf >> $rootfs/usr/lib/systemd/resolv.conf
+    fi
 
-    #if [[ -e /etc/apt/sources.list.d/ubuntu.sources ]]; then
-    #    mkdir -p $rootfs/etc/apt/sources.list.d
-    #    echo "" >> $rootfs/etc/apt/sources.list.d/ubuntu.sources
-    #    echo "# Imported from native arm64 filesystem" >> $rootfs/etc/apt/sources.list.d/ubuntu.sources
-    #    cat /etc/apt/sources.list.d/ubuntu.sources >> $rootfs/etc/apt/sources.list.d/ubuntu.sources
-    #fi 
+    if [[ -z $(grep "native arm64 host" $rootfs/etc/apt/sources.list.d/ubuntu.sources) ]]; then
+        echo "# Inherit apt sources from native arm64 host" >> $rootfs/etc/apt/sources.list.d/ubuntu.sources
+        cat /etc/apt/sources.list.d/ubuntu.sources >> $rootfs/etc/apt/sources.list.d/ubuntu.sources
+    fi
 
-    pushd $rootfs 
+    pushd $rootfs || return -1
     ./chroot.py chroot 
     popd 
 }
 
-function zhu-config-in-fex {
-    uname -m >/dev/null 2>&1
-    if [[ $(uname -m) != "x86_64" ]]; then
-        echo "Run this function in FEX started by chroot!"
-        return -1
-    fi
-    if [[ $UID != 0 ]]; then
-        echo "Must run as root!"
-        return -1
-    fi
+#function zhu-config-in-fex {
+#    uname -m >/dev/null 2>&1
+#    if [[ $(uname -m) != "x86_64" ]]; then
+#        echo "Run this function in FEX started by chroot!"
+#        return -1
+#    fi
+#    if [[ $UID != 0 ]]; then
+#        echo "Must run as root!"
+#        return -1
+#    fi
+#
+#    apt install -y sudo
+#    apt install -y bsdutils
+#    apt install -y dbus-x11
+#    apt install -y vim 
+#    apt install -y libprotobuf-dev 
+#    apt install -y nfs-common 
+#
+#    apt reinstall -y passwd
+#    apt reinstall -y util-linux
+#    apt reinstall -y mount
+#    apt reinstall -y bubblewrap
+#
+#    if [[ ! -d /home/wanliz ]]; then 
+#        echo "Add new user: wanliz in FEX"
+#        adduser wanliz
+#    fi 
+#}
 
-    apt install -y sudo
-    apt install -y bsdutils
-    apt install -y dbus-x11
-    apt install -y vim 
-    apt install -y libprotobuf-dev 
-    apt install -y nfs-common 
+#function zhu-sudo-in-fex {
+#    if [[ -z $(which jq) ]]; then
+#        sudo apt install -y jq || return -1
+#    fi 
+#
+#    ubuntu=$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)
+#    rootfs="$HOME/.fex-emu/RootFS/$ubuntu"
+#
+#    if [[ -z $1 ]]; then
+#        read -p "chroot to $rootfs? (yes/no): " ans
+#        if [[ $ans == yes ]]; then
+#            zhu-chroot-in-fex
+#        fi
+#    else
+#        program=$1
+#        shift  
+#        if [[ ! -z $program && -e $rootfs$program ]]; then
+#            program=$rootfs$program
+#        elif [[ ! -z $program && ! "$program" =~ "/" ]]; then
+#            program=$(find $rootfs/usr/bin -type f -executable -name $program)
+#        else
+#            program=''
+#        fi
+#
+#        if [[ -e $program ]]; then
+#            echo "FEX_ROOTFS=$rootfs FEXInterpreter $program $@"
+#            read -p "Press [ENTER] to continue: " _
+#            sudo FEX_ROOTFS=$rootfs FEXInterpreter $program "$@"
+#        else
+#            echo "$program doesn't exist in $rootfs"
+#            return -1
+#        fi
+#    fi
+#}
 
-    apt reinstall -y passwd
-    apt reinstall -y util-linux
-    apt reinstall -y mount
-    apt reinstall -y bubblewrap
-
-    if [[ ! -d /home/wanliz ]]; then 
-        echo "Add new user: wanliz in FEX"
-        adduser wanliz
-    fi 
-}
-
-function zhu-sudo-in-fex {
-    if [[ -z $(which jq) ]]; then
-        sudo apt install -y jq || return -1
-    fi 
-
-    ubuntu=$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)
-    rootfs="$HOME/.fex-emu/RootFS/$ubuntu"
-
-    if [[ -z $1 ]]; then
-        read -p "chroot to $rootfs? (yes/no): " ans
-        if [[ $ans == yes ]]; then
-            zhu-chroot-in-fex
-        fi
-    else
-        program=$1
-        shift  
-        if [[ ! -z $program && -e $rootfs$program ]]; then
-            program=$rootfs$program
-        elif [[ ! -z $program && ! "$program" =~ "/" ]]; then
-            program=$(find $rootfs/usr/bin -type f -executable -name $program)
-        else
-            program=''
-        fi
-
-        if [[ -e $program ]]; then
-            echo "FEX_ROOTFS=$rootfs FEXInterpreter $program $@"
-            read -p "Press [ENTER] to continue: " _
-            sudo FEX_ROOTFS=$rootfs FEXInterpreter $program "$@"
-        else
-            echo "$program doesn't exist in $rootfs"
-            return -1
-        fi
-    fi
-}
-
-function zhu-fetch-packages-in-fex {
-    [[ -z $(which jq) ]] && sudo apt install -y jq 
-    rootfs="~/.fex-emu/$(jq -r '.Config.RootFS' ~/.fex-emu/Config.json)"
-
-    if [[ ! -e ~/.zhurc.data.server ]]; then
-        read -p "Data server IP: " ip
-        read -e -i wanliz -p "Data server username: " user
-        read -s -p "Data server password: " passwd
-        echo "$user@$ip $passwd" > ~/.zhurc.data.server
-    fi
-
-    remote=$(cat ~/.zhurc.data.server | awk '{print $1}')
-    passwd=$(cat ~/.zhurc.data.server | awk '{print $2}')
-
-    sshpass -p "$passwd" ssh $remote "dpkg -L $1" >/tmp/dpkg.log || return -1
-    count=0
-    while IFS= read -r line; do
-        if [[ ! -d $line ]]; then
-            echo "$line"
-            $((count++))
-        fi 
-    done < /tmp/dpkg.log
-    read -e -i yes -p "Fetch these $count files into $rootfs? (yes/no): " ans
-    if [[ $ans != yes ]]; then
-        return -1
-    fi 
-
-    while IFS= read -r line; do
-        if [[ ! -d $line ]]; then
-            sshpass -p "$passwd" rsync -ah --progress $remote:$line $rootfs$line 
-        fi 
-    done < /tmp/dpkg.log 
-}
+#function zhu-fetch-packages-in-fex {
+#    [[ -z $(which jq) ]] && sudo apt install -y jq 
+#    rootfs="~/.fex-emu/$(jq -r '.Config.RootFS' ~/.fex-emu/Config.json)"
+#
+#    if [[ ! -e ~/.zhurc.data.server ]]; then
+#        read -p "Data server IP: " ip
+#        read -e -i wanliz -p "Data server username: " user
+#        read -s -p "Data server password: " passwd
+#        echo "$user@$ip $passwd" > ~/.zhurc.data.server
+#    fi
+#
+#    remote=$(cat ~/.zhurc.data.server | awk '{print $1}')
+#    passwd=$(cat ~/.zhurc.data.server | awk '{print $2}')
+#
+#    sshpass -p "$passwd" ssh $remote "dpkg -L $1" >/tmp/dpkg.log || return -1
+#    count=0
+#    while IFS= read -r line; do
+#        if [[ ! -d $line ]]; then
+#            echo "$line"
+#            $((count++))
+#        fi 
+#    done < /tmp/dpkg.log
+#    read -e -i yes -p "Fetch these $count files into $rootfs? (yes/no): " ans
+#    if [[ $ans != yes ]]; then
+#        return -1
+#    fi 
+#
+#    while IFS= read -r line; do
+#        if [[ ! -d $line ]]; then
+#            sshpass -p "$passwd" rsync -ah --progress $remote:$line $rootfs$line 
+#        fi 
+#    done < /tmp/dpkg.log 
+#}
 
 function zhu-install-unigine-heaven {
     zhu-validate-display || return -1
