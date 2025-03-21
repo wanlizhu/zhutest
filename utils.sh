@@ -1383,9 +1383,9 @@ function zhu-fex-emu {
         cat /etc/resolv.conf >> $rootfs/usr/lib/systemd/resolv.conf
     fi
 
-    if [[ -z $(grep "native arm64 host" $rootfs/run/systemd/resolve/stub-resolv.conf) ]]; then 
-        echo "# Inherit nameserver list from native arm64 host" >> $rootfs/run/systemd/resolve/stub-resolv.conf
-        cat /etc/resolv.conf >> $rootfs/run/systemd/resolve/stub-resolv.conf
+    if [[ -z $(grep "native arm64 host" $rootfs/chroot/run/systemd/resolve/stub-resolv.conf) ]]; then 
+        echo "# Inherit nameserver list from native arm64 host" >> $rootfs/chroot/run/systemd/resolve/stub-resolv.conf
+        cat /etc/resolv.conf >> $rootfs/chroot/run/systemd/resolve/stub-resolv.conf
     fi
 
     if [[ -z $(grep "native arm64 host" $rootfs/etc/apt/sources.list.d/ubuntu.sources) ]]; then
