@@ -1948,17 +1948,9 @@ function zhu-start-vnc-server-for-headless-system {
         sudo apt install -y tigervnc-common || return -1
     fi 
 
-    echo "[1] xfce4"
-    read -p "What session to start in virtual desktop (1 or 2): " ans
-
-    if [[ $ans == 1 ]]; then
-        desktop_session=/usr/bin/xfce4-session
-        if [[ -z $(dpkg -l | grep xfce4-session) ]]; then
-            sudo apt install -y xfce4-session || return -1
-        fi 
-    else
-        echo "Invalid input!"
-        return -1
+    desktop_session=/usr/bin/xfce4-session
+    if [[ -z $(dpkg -l | grep xfce4-session) ]]; then
+        sudo apt install -y xfce4-session || return -1
     fi 
 
     mkdir -p ~/.vnc
