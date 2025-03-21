@@ -2047,6 +2047,12 @@ function zhu-start-vnc-server-for-physical-display {
 
     x11vnc -storepasswd
     x11vnc_args="-auth guess -forever --loop -noxdamage -repeat -rfbauth $HOME/.vnc/passwd -rfbport 5900 -display :0 -shared"
+    xorg_user=$(ps -o user -p $(pidof Xorg) | tail -1)
+    if [[ $xorg_user == root ]]; then
+        SUDO="sudo"
+    else
+        SUDO=""
+    fi
 
     read -e -i no -p "Autostart on boot? (yes/no): " autostart
     if [[ $autostart == yes ]]; then
@@ -2070,9 +2076,9 @@ WantedBy=multi-user.target
         zhu-check-xauthority || return -1
         read -e -i no -p "Run x11vncserver a in detached session? (yes/no): " ans
         if [[ $ans == yes ]]; then 
-            screen -dmS x11vncserver /usr/bin/x11vnc $x11vnc_args
+            $SUDO screen -dmS x11vncserver /usr/bin/x11vnc $x11vnc_args
         else
-            /usr/bin/x11vnc $x11vnc_args
+            $SUDO /usr/bin/x11vnc $x11vnc_args
         fi 
     fi
 }
