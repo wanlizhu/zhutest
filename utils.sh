@@ -1383,6 +1383,10 @@ function zhu-fex-emu {
         cat /etc/resolv.conf >> $rootfs/usr/lib/systemd/resolv.conf
     fi
 
+    if [[ ! -e $rootfs/etc/resolv.conf ]]; then
+        cp $rootfs/usr/lib/systemd/resolv.conf $rootfs/etc/resolv.conf
+    fi
+
     if [[ -z $(grep "native arm64 host" $rootfs/etc/apt/sources.list.d/ubuntu.sources) ]]; then
         echo "# Inherit apt sources from native arm64 host" >> $rootfs/etc/apt/sources.list.d/ubuntu.sources
         cat /etc/apt/sources.list.d/ubuntu.sources >> $rootfs/etc/apt/sources.list.d/ubuntu.sources
