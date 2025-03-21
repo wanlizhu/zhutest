@@ -1831,6 +1831,7 @@ function zhu-list-steam-games {
 }
 
 function zhu-check-xauthority {
+    echo "Checking Xauthority..."
     # Call via SSH session
     if [[ -z $XDG_SESSION_TYPE || $XDG_SESSION_TYPE == tty ]]; then
         # When X11 forwarding is enabled
