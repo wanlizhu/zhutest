@@ -1404,9 +1404,9 @@ function zhu-chroot-in-fex {
     #    cat /etc/apt/sources.list.d/ubuntu.sources >> $rootfs/etc/apt/sources.list.d/ubuntu.sources
     #fi 
 
-    pushd $rootfs >/dev/null
+    pushd $rootfs 
     ./chroot.py chroot 
-    popd >/dev/null 
+    popd 
 }
 
 function zhu-config-in-fex {
