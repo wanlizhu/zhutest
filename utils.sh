@@ -1932,7 +1932,7 @@ function zhu-start-vnc-server-for-headless-system {
         sudo apt install -y screen || return -1
     fi
 
-    if [[ -z $(dpkg -l | grep tigervnc-standalone-server) ]]; then
+    if [[ -z $(which tigervncserver) ]]; then
         sudo apt install -y tigervnc-standalone-server || return -1
         sudo apt install -y tigervnc-common || return -1
     fi 
