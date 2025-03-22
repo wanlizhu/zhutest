@@ -1951,7 +1951,7 @@ exec $desktop_session
     chmod +x ~/.vnc/xstartup
 
     read -p "Start virtual desktop on display 0 or 1: " dp
-    vncserver_args="-localhost no :$dp -geometry 3840x2160 -depth 24"
+    vncserver_args="-localhost no :$dp -geometry 1920x1080 -depth 24"
 
     read -e -i no -p "Autostart on boot? (yes/no): " autostart
     if [[ $autostart == yes ]]; then
