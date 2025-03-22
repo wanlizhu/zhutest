@@ -120,7 +120,7 @@ function zhu-connect-nvidia-vpn {
             echo "[2] firefox"
             read -p "Select a browser to complete SSO Auth: " selection
             if [[ $selection == 1 ]]; then
-                browser=$(which googlr-chrome)
+                browser=$(which google-chrome)
             elif [[ $selection == 2 ]]; then
                 browser=$(which firefox)
             else
