@@ -2605,6 +2605,8 @@ function zhu-p4git-reset-hard {
     popd >/dev/null 
 }
 
+# Doesn't work
+# glxgears is not using those fake api
 function zhu-null-driver {
     if [[ ! -d ~/zhutest/src/zhutest-null-driver ]]; then
         git clone https://github.com/wanlizhu/zhutest ~/zhutest || return -1
