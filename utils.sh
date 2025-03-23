@@ -2672,3 +2672,7 @@ function zhu-null-driver {
 function zhu-uniq {
     awk '!seen[$0]++'
 }
+
+function zhu-apitrace-list-api {
+    apitrace dump $1 | awk '{print $2}' | awk -F'(' '{print $1}' | awk '!seen[$0]++'
+}
