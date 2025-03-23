@@ -1767,6 +1767,30 @@ function zhu-ask-for-taskset {
     fi
 }
 
+
+function zhu-test-viewperf-maya-subtest5 {
+    zhu-validate-display || return -1
+    zhu-install-viewperf || return -1 
+
+    pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
+    mkdir -p results/catia-06
+
+    if [[ ! -e viewsets/maya/config/subtest5.xml ]]; then
+        cat <<EOF > viewsets/maya/config/subtest5.xml
+
+EOF
+    fi
+
+    zhu-ask-for-taskset
+
+    $TASKSET ./viewperf/bin/viewperf viewsets/maya/config/subtest5.xml -resolution 1920x1080 && {
+        cat results/maya-06/results.xml | grep FPS | xmllint --xpath 'string(//Test/@FPS)' - >> /tmp/fps.log 
+        echo "Viewperf Maya-06/subtest5 result FPS: $(cat /tmp/fps.log | tail -1)"
+    }
+
+    popd >/dev/null
+}
+
 function zhu-test-viewperf-maya-subtest5 {
     zhu-validate-display || return -1
     zhu-install-viewperf || return -1 
