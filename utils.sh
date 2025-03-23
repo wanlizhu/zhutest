@@ -2613,7 +2613,7 @@ function zhu-null-driver {
     fi
 
     rm -rf /tmp/zhutest-null-driver.so
-    gcc -c ~/zhutest/src/zhutest-null/glad.c -fPIC -o /tmp/glad.a &&
+    gcc -c ~/zhutest/src/zhutest-null-driver/glad.c -fPIC -o /tmp/glad.a &&
     g++ -shared -fPIC -o /tmp/zhutest-null-driver.so ~/zhutest/src/zhutest-null-driver/dsomain.cpp -ldl -lGL -lX11 /tmp/glad.a &&
     echo "Generated /tmp/zhutest-null-driver.so" || return -1
 
