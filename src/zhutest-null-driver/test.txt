@@ -1,9 +1,0 @@
-typedef void (APIENTRYP PFNGLVERTEX2FPROC)(GLfloat x, GLfloat y);
-GLAPI PFNGLVERTEX2FPROC glad_glVertex2f;
-#define glVertex2f glad_glVertex2f
-typedef void (APIENTRYP PFNGLVERTEX2FVPROC)(const GLfloat *v);
-GLAPI PFNGLVERTEX2FVPROC glad_glVertex2fv;
-#define glVertex2fv glad_glVertex2fv
-typedef void (APIENTRYP PFNGLVERTEX2IPROC)(GLint x, GLint y);
-GLAPI PFNGLVERTEX2IPROC glad_glVertex2i;
-#define glVertex2i glad_glVertex2i

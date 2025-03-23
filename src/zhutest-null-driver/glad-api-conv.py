@@ -40,7 +40,6 @@ def convert_definitions(lines):
         # Extract the function name from the #define line.
         m_define = define_re.match(line3)
         if not m_define:
-            sys.stderr.write(f"Skipping unrecognized format in: {line3}\n")
             i += 3
             continue
 
