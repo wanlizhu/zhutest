@@ -32,7 +32,6 @@ def convert_definitions(lines):
         # Extract return type and parameters from the typedef line.
         m_typedef = typedef_re.match(line1)
         if not m_typedef:
-            sys.stderr.write(f"Skipping unrecognized format in: {line1}\n")
             i += 3
             continue
 
