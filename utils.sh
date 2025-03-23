@@ -2670,5 +2670,5 @@ function zhu-null-driver {
 }
 
 function zhu-uniq {
-    awk '!seen[$0]++' $1
+    awk '!seen[$0]++'
 }
