@@ -2609,10 +2609,9 @@ function zhu-null-driver {
     if [[ ! -d ~/zhutest/src/zhutest-null-driver ]]; then
         git clone https://github.com/wanlizhu/zhutest ~/zhutest || return -1
     fi
-    if [[ ! -e ~/zhutest/src/zhutest-null-driver/glad-exports.h ]]; then
-        rootdir=~/zhutest/src/zhutest-null-driver
-        cat $rootdir/glad.h | $rootdir/glad-api-conv.py > $rootdir/gen-glad-exports.h || return -1
-    fi
+    
+    rootdir=~/zhutest/src/zhutest-null-driver
+    cat $rootdir/glad.h | $rootdir/glad-api-conv.py > /tmp/gen-glad-exports.h || return -1
 
     rm -rf /tmp/zhutest-null-driver.so
     gcc -c ~/zhutest/src/zhutest-null-driver/glad.c -fPIC -o /tmp/glad.a &&
