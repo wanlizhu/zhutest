@@ -1,5 +1,9 @@
 #include "glad.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #undef glCullFace
 void glCullFace(GLenum mode) {}
 
@@ -1650,3 +1654,6 @@ void glMultiDrawElementsIndirectCount(GLenum mode, GLenum type, const void *indi
 #undef glPolygonOffsetClamp
 void glPolygonOffsetClamp(GLfloat factor, GLfloat units, GLfloat clamp) {}
 
+#ifdef __cplusplus
+}
+#endif
