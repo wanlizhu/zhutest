@@ -2668,3 +2668,7 @@ function zhu-null-driver {
         __GL_SYNC_TO_VBLANK=0 vblank_mode=0 LD_PRELOAD=/tmp/zhutest-null-driver.so "$@"
     fi 
 }
+
+function zhu-uniq {
+    awk '!seen[$0]++' $1
+}
