@@ -1775,17 +1775,27 @@ function zhu-test-viewperf-catia-subtest1 {
     pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
     mkdir -p results/catia-06
 
-    if [[ ! -e viewsets/maya/config/subtest5.xml ]]; then
-        cat <<EOF > viewsets/maya/config/subtest5.xml
-
+    if [[ ! -e viewsets/catia/config/subtest1.xml ]]; then
+        cat <<EOF > viewsets/catia/config/subtest1.xml
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE SPECGWPG>
+<SPECGWPG Name="SPECviewperf" Version="v2.0" AppName="Dassault Syst&#xE8;mes CATIA V5 and 3DExperience" Results="results.xml" Log="log.txt">
+    <Viewset Name="catia-06" Library="catia" Directory="catia" Threads="-1" Options="" Version="2.0">
+        <Window Resolution="3840x2160" Height="2120" Width="3800" X="10" Y="20" Suffix="-4k"/>
+        <Window Resolution="1920x1080" Height="1060" Width="1900" X="10" Y="20"/>
+        <Test Name="catiav5test1" Index="1" Weight="14.28" Seconds="15.0" Description='Catia V5 loft jet - shaded with edges'>
+            <Grab Name="CATIA_V5_loft_jet1.png" Frames="1" X="0" Y="0"/>
+        </Test>
+    </Viewset>
+</SPECGWPG>
 EOF
     fi
 
     zhu-ask-for-taskset
 
-    $TASKSET ./viewperf/bin/viewperf viewsets/maya/config/subtest5.xml -resolution 1920x1080 && {
-        cat results/maya-06/results.xml | grep FPS | xmllint --xpath 'string(//Test/@FPS)' - >> /tmp/fps.log 
-        echo "Viewperf Maya-06/subtest5 result FPS: $(cat /tmp/fps.log | tail -1)"
+    $TASKSET ./viewperf/bin/viewperf viewsets/catia/config/subtest1.xml -resolution 1920x1080 && {
+        cat results/catia-06/results.xml | grep FPS | xmllint --xpath 'string(//Test/@FPS)' - >> /tmp/fps.log 
+        echo "Viewperf Catia-06:subtest1 result FPS: $(cat /tmp/fps.log | tail -1)"
     }
 
     popd >/dev/null
@@ -1818,7 +1828,7 @@ EOF
 
     $TASKSET ./viewperf/bin/viewperf viewsets/maya/config/subtest5.xml -resolution 1920x1080 && {
         cat results/maya-06/results.xml | grep FPS | xmllint --xpath 'string(//Test/@FPS)' - >> /tmp/fps.log 
-        echo "Viewperf Maya-06/subtest5 result FPS: $(cat /tmp/fps.log | tail -1)"
+        echo "Viewperf Maya-06:subtest5 result FPS: $(cat /tmp/fps.log | tail -1)"
     }
 
     popd >/dev/null
