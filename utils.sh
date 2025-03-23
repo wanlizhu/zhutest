@@ -63,6 +63,10 @@ if sudo ls >/dev/null 2>&1; then
             export PATH="~/gfxreconstruct.git/build/linux/x64/output/bin:$PATH"
         fi
 
+        if ! echo "$PATH" | tr ':' '\n' | grep -q "apitrace.$(uname -m)"; then
+            export PATH="~/apitrace.$(uname -m)/bin:$PATH"
+        fi
+
         if [[ $(uname -m) == aarch64 ]]; then
             if [[ -e $HOME/.fex-emu/Config.json ]]; then
                 which jq >/dev/null || sudo apt install -y jq 
