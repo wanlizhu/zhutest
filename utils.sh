@@ -2603,7 +2603,7 @@ function zhu-p4git-reset-hard {
     popd >/dev/null 
 }
 
-function zhu-run-with-null-driver {
+function zhu-null-driver {
     if [[ ! -d ~/zhutest/src/zhutest-null-driver ]]; then
         git clone https://github.com/wanlizhu/zhutest ~/zhutest || return -1
     fi
