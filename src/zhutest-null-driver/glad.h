@@ -43,6 +43,8 @@
 #define GLAPIENTRY APIENTRY
 #endif
 
+#include "khrplatform.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
