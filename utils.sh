@@ -737,12 +737,12 @@ function zhu-enable-nvidia-gsp {
 
 function zhu-show-gpufps {
     if [[ ! -d ~/zhutest ]]; then
-        git clone --depth 1 https://github.com/wanlizhu/zhutest ~/zhutest
+        git clone https://github.com/wanlizhu/zhutest ~/zhutest || return -1
     fi
 
     rm -rf /tmp/zhutest-gpufps.so
-    gcc -c ~/zhutest/src/glad.c -fPIC -o /tmp/glad.a &&
-    g++ -shared -fPIC -o /tmp/zhutest-gpufps.so ~/zhutest/src/dsomain.cpp -ldl -lGL -lX11 /tmp/glad.a &&
+    gcc -c ~/zhutest/src/zhutest-gpufps/glad.c -fPIC -o /tmp/glad.a &&
+    g++ -shared -fPIC -o /tmp/zhutest-gpufps.so ~/zhutest/src/zhutest-gpufps/dsomain.cpp -ldl -lGL -lX11 /tmp/glad.a &&
     echo "Generated /tmp/zhutest-gpufps.so" || return -1
 
     __GL_SYNC_TO_VBLANK=0 vblank_mode=0 LD_PRELOAD=/tmp/zhutest-gpufps.so "$@"
@@ -2603,7 +2603,7 @@ function zhu-p4git-reset-hard {
     popd >/dev/null 
 }
 
-function zhu-create-null-driver {
+function zhu-run-with-null-driver {
     if [[ ! -d ~/zhutest/src/zhutest-null-driver ]]; then
         git clone https://github.com/wanlizhu/zhutest ~/zhutest || return -1
     fi
@@ -2612,4 +2612,10 @@ function zhu-create-null-driver {
         cat $rootdir/glad.h | $rootdir/glad-api-conv.py > $rootdir/glad-exports.h || return -1
     fi
 
+    rm -rf /tmp/zhutest-null-driver.so
+    gcc -c ~/zhutest/src/zhutest-null/glad.c -fPIC -o /tmp/glad.a &&
+    g++ -shared -fPIC -o /tmp/zhutest-null-driver.so ~/zhutest/src/zhutest-null-driver/dsomain.cpp -ldl -lGL -lX11 /tmp/glad.a &&
+    echo "Generated /tmp/zhutest-null-driver.so" || return -1
+
+    __GL_SYNC_TO_VBLANK=0 vblank_mode=0 LD_PRELOAD=/tmp/zhutest-null-driver.so "$@"
 }
