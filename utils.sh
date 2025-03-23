@@ -1768,7 +1768,7 @@ function zhu-ask-for-taskset {
 }
 
 
-function zhu-test-viewperf-maya-subtest5 {
+function zhu-test-viewperf-catia-subtest1 {
     zhu-validate-display || return -1
     zhu-install-viewperf || return -1 
 
