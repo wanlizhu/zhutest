@@ -2611,11 +2611,11 @@ function zhu-null-driver {
     fi
     
     rootdir=~/zhutest/src/zhutest-null-driver
-    cat $rootdir/glad.h | $rootdir/glad-api-conv.py > /tmp/gen-glad-exports.h || return -1
+    cat $rootdir/glad.h | $rootdir/glad-api-conv.py > /tmp/glad-exports.h || return -1
 
     rm -rf /tmp/zhutest-null-driver.so
     gcc -c ~/zhutest/src/zhutest-null-driver/glad.c -fPIC -o /tmp/glad.a &&
-    g++ -shared -fPIC -o /tmp/zhutest-null-driver.so ~/zhutest/src/zhutest-null-driver/dsomain.cpp -ldl -lGL -lX11 /tmp/glad.a &&
+    g++ -shared -fPIC -I$rootdir -o /tmp/zhutest-null-driver.so $rootdir/dsomain.cpp -ldl -lGL -lX11 /tmp/glad.a &&
     echo "Generated /tmp/zhutest-null-driver.so" || return -1
 
     if [[ ! -z $1 ]]; then
