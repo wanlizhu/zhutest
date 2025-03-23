@@ -745,7 +745,9 @@ function zhu-gpufps {
     g++ -shared -fPIC -o /tmp/zhutest-gpufps.so ~/zhutest/src/zhutest-gpufps/dsomain.cpp -ldl -lGL -lX11 /tmp/glad.a &&
     echo "Generated /tmp/zhutest-gpufps.so" || return -1
 
-    __GL_SYNC_TO_VBLANK=0 vblank_mode=0 LD_PRELOAD=/tmp/zhutest-gpufps.so "$@"
+    if [[ ! -z $1 ]]; then
+        __GL_SYNC_TO_VBLANK=0 vblank_mode=0 LD_PRELOAD=/tmp/zhutest-gpufps.so "$@"
+    fi 
 }
 
 function zhu-encrypt {
@@ -2609,7 +2611,7 @@ function zhu-null-driver {
     fi
     if [[ ! -e ~/zhutest/src/zhutest-null-driver/glad-exports.h ]]; then
         rootdir=~/zhutest/src/zhutest-null-driver
-        cat $rootdir/glad.h | $rootdir/glad-api-conv.py > $rootdir/glad-exports.h || return -1
+        cat $rootdir/glad.h | $rootdir/glad-api-conv.py > $rootdir/gen-glad-exports.h || return -1
     fi
 
     rm -rf /tmp/zhutest-null-driver.so
@@ -2617,5 +2619,7 @@ function zhu-null-driver {
     g++ -shared -fPIC -o /tmp/zhutest-null-driver.so ~/zhutest/src/zhutest-null-driver/dsomain.cpp -ldl -lGL -lX11 /tmp/glad.a &&
     echo "Generated /tmp/zhutest-null-driver.so" || return -1
 
-    __GL_SYNC_TO_VBLANK=0 vblank_mode=0 LD_PRELOAD=/tmp/zhutest-null-driver.so "$@"
+    if [[ ! -z $1 ]]; then
+        __GL_SYNC_TO_VBLANK=0 vblank_mode=0 LD_PRELOAD=/tmp/zhutest-null-driver.so "$@"
+    fi 
 }

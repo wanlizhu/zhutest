@@ -13,8 +13,8 @@ define_re = re.compile(
 def convert_definitions(lines):
     print('#include "glad.h"')
     print('')
-    print('#ifdef __cplusplus'
-          'extern "C" {'
+    print('#ifdef __cplusplus\n'
+          'extern "C" {\n'
           '#endif')
     print('')
     output = []
@@ -60,8 +60,8 @@ def convert_definitions(lines):
         output.append('')
         i += 3
     
-    print('#ifdef __cplusplus'
-          '}'
+    print('#ifdef __cplusplus\n'
+          '}\n'
           '#endif')
     print('')
     return output
