@@ -2609,7 +2609,7 @@ function zhu-create-null-driver {
     fi
     if [[ ! -e ~/zhutest/src/zhutest-null-driver/glad-exports.h ]]; then
         rootdir=~/zhutest/src/zhutest-null-driver
-        cat $rootdir/glad.h | $rootdir/glad-api-conv.py > $rootdir/glad-exports.h || return -1
+        cat $rootdir/glad.h | $rootdir/glad-api-conv.py > /tmp/glad-exports.h || return -1
     fi
-    
+
 }

@@ -11,6 +11,8 @@ define_re = re.compile(
 )
 
 def convert_definitions(lines):
+    print('#include "glad.h"')
+    print('')
     output = []
     i = 0
     while i < len(lines):
@@ -44,6 +46,7 @@ def convert_definitions(lines):
             continue
 
         func_name = m_define.group(1)
+        output.append(f"#undef {func_name}")
 
         # Build the function declaration.
         if ret_type == "void":
@@ -51,6 +54,7 @@ def convert_definitions(lines):
         else:
             decl = f"{ret_type} {func_name}({params});"
         output.append(decl)
+        output.append('')
         i += 3
     return output
 
