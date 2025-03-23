@@ -742,7 +742,7 @@ function zhu-show-gpufps {
 
     rm -rf /tmp/zhutest-gpufps.so
     gcc -c ~/zhutest/src/glad.c -fPIC -o /tmp/glad.a &&
-    g++ -shared -fPIC -o /tmp/zhutest-gpufps.so ~/zhutest/src/zhutest-gpufps.cpp -ldl -lGL -lX11 /tmp/glad.a &&
+    g++ -shared -fPIC -o /tmp/zhutest-gpufps.so ~/zhutest/src/dsomain.cpp -ldl -lGL -lX11 /tmp/glad.a &&
     echo "Generated /tmp/zhutest-gpufps.so" || return -1
 
     __GL_SYNC_TO_VBLANK=0 vblank_mode=0 LD_PRELOAD=/tmp/zhutest-gpufps.so "$@"
@@ -2603,13 +2603,13 @@ function zhu-p4git-reset-hard {
     popd >/dev/null 
 }
 
-function xxx {
-    zhu-test-viewperf-maya-subtest5 &
-    zhu-show-interrupt-count $!
+function zhu-create-null-driver {
+    if [[ ! -d ~/zhutest/src/zhutest-null-driver ]]; then
+        git clone https://github.com/wanlizhu/zhutest ~/zhutest || return -1
+    fi
+    if [[ ! -e ~/zhutest/src/zhutest-null-driver/glad-exports.h ]]; then
+        rootdir=~/zhutest/src/zhutest-null-driver
+        cat $rootdir/glad.h | $rootdir/glad-api-conv.py > $rootdir/glad-exports.h || return -1
+    fi
+    
 }
-
-function xxx2 {
-    zhu-test-viewperf maya &
-    zhu-show-interrupt-count $!
-}
-
