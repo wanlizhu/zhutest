@@ -1791,12 +1791,15 @@ function zhu-test-viewperf-catia-subtest1 {
 EOF
     fi
 
-    zhu-ask-for-taskset
-
-    $TASKSET ./viewperf/bin/viewperf viewsets/catia/config/subtest1.xml -resolution 1920x1080 && {
-        cat results/catia-06/results.xml | grep FPS | xmllint --xpath 'string(//Test/@FPS)' - >> /tmp/fps.log 
-        echo "Viewperf Catia-06:subtest1 result FPS: $(cat /tmp/fps.log | tail -1)"
-    }
+    if [[ $1 == --dryrun ]]; then
+        echo "./viewperf/bin/viewperf viewsets/catia/config/subtest1.xml -resolution 1920x1080"
+    else
+        zhu-ask-for-taskset
+        $TASKSET ./viewperf/bin/viewperf viewsets/catia/config/subtest1.xml -resolution 1920x1080 && {
+            cat results/catia-06/results.xml | grep FPS | xmllint --xpath 'string(//Test/@FPS)' - >> /tmp/fps.log 
+            echo "Viewperf Catia-06:subtest1 result FPS: $(cat /tmp/fps.log | tail -1)"
+        }
+    fi
 
     popd >/dev/null
 }
@@ -1824,12 +1827,15 @@ function zhu-test-viewperf-maya-subtest5 {
 EOF
     fi
 
-    zhu-ask-for-taskset
-
-    $TASKSET ./viewperf/bin/viewperf viewsets/maya/config/subtest5.xml -resolution 1920x1080 && {
-        cat results/maya-06/results.xml | grep FPS | xmllint --xpath 'string(//Test/@FPS)' - >> /tmp/fps.log 
-        echo "Viewperf Maya-06:subtest5 result FPS: $(cat /tmp/fps.log | tail -1)"
-    }
+    if [[ $1 == --dryrun ]]; then
+        echo "./viewperf/bin/viewperf viewsets/maya/config/subtest5.xml -resolution 1920x1080 "
+    else
+        zhu-ask-for-taskset
+        $TASKSET ./viewperf/bin/viewperf viewsets/maya/config/subtest5.xml -resolution 1920x1080 && {
+            cat results/maya-06/results.xml | grep FPS | xmllint --xpath 'string(//Test/@FPS)' - >> /tmp/fps.log 
+            echo "Viewperf Maya-06:subtest5 result FPS: $(cat /tmp/fps.log | tail -1)"
+        }
+    fi 
 
     popd >/dev/null
 }
