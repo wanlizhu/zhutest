@@ -735,7 +735,7 @@ function zhu-enable-nvidia-gsp {
     echo "[Action Required] Reboot system to activate changes!"
 }
 
-function zhu-show-gpufps {
+function zhu-gpufps {
     if [[ ! -d ~/zhutest ]]; then
         git clone https://github.com/wanlizhu/zhutest ~/zhutest || return -1
     fi
