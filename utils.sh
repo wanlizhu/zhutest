@@ -2597,9 +2597,21 @@ function zhu-data-visualize {
 }
 
 function zhu-nsight-graphics-gpu-trace {
-    ngfx --activity "GPU Trace Profiler" --exe "/home/wanliz/zhutest-workload.d/viewperf2020.x86_64/viewperf/bin/viewperf" --args "viewsets/maya/config/subtest5.xml -resolution 1920x1080" --dir "/home/wanliz/zhutest-workload.d/viewperf2020.x86_64" --start-after-frames 1000 --limit-to-frames 1 --auto-export --architecture "Ampere GA10x" --metric-set-name "Throughput Metrics" --multi-pass-metrics --set-gpu-clocks base --disable-nvtx-ranges 1
-    #sudo apt install -y gnumeric 
-    #ssconvert xxx.xls xxx.csv 
+    exe="$1"; shift 
+    args="$@"
+    dir="$(pwd)"
+    architecture="Ampere GA10x"
+    metric_set_name="Throughput Metrics"
+    start_after_frames=500
+
+    read -e -i "$exe"  -p "--exe: "  exe
+    read -e -i "$args" -p "--args: " args
+    read -e -i "$dir"  -p "--dir: " dir
+    read -e -i "$architecture" -p "--architecture: " architecture
+    read -e -i "$metric_set_name" -p "--metric_set_name: " metric_set_name
+    read -e -i "$start_after_frames" -p "--start_after_frames: " start_after_frames
+
+    ngfx --activity "GPU Trace Profiler" --exe "$exe" --args "$args" --dir "$dir" --start-after-frames $start_after_frames --limit-to-frames 1 --auto-export --architecture "$architecture" --metric-set-name "$metric_set_name" --multi-pass-metrics --set-gpu-clocks base --disable-nvtx-ranges 1
 }
 
 function zhu-show-interrupt-count {
