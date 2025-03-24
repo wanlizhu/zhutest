@@ -1211,6 +1211,11 @@ function zhu-install-3dmark-wildlife {
 
 function zhu-test-3dmark-wildlife {
     zhu-install-3dmark-wildlife || return -1
+    if [[ $1 == --dryrun ]]; then
+        chmod +x $HOME/zhutest-workload.d/3dmark-wildlife-1.1.2.1/bin/linux/x64/workload
+        echo "cd $HOME/zhutest-workload.d/3dmark-wildlife-1.1.2.1 && ./bin/linux/x64/workload --in=settings/gt1.json --out=result.json"
+        return
+    fi
 
     pushd ~/zhutest-workload.d/3dmark-wildlife-1.1.2.1 || return -1
     rm -rf result.json
@@ -1224,25 +1229,13 @@ function zhu-test-3dmark-wildlife {
     popd >/dev/null 
 }
 
-function zhu-install-3dmark-steelnomad {
-    zhu-validate-display || return -1
-
-    if [[ ! -e ~/zhutest-workload.d/3dmark-steelnomad-1.0.0 ]]; then
-        which rsync >/dev/null || sudo apt install -y rsync
-        which unzip >/dev/null || sudo apt install -y unzip 
-        mkdir -p ~/zhutest-workload.d/3dmark-steelnomad-1.0.0 
-        pushd ~/zhutest-workload.d/3dmark-steelnomad-1.0.0 >/dev/null  
-        unzip /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Disco_Steel_Nomad/3dmark-disco-1.0.0-bin.zip || return -1
-        popd >/dev/null 
-    fi
-
-    if [[ $(uname -m) == "aarch64" ]]; then
-        zhu-install-fex || return -1
-    fi
-}
-
 function zhu-test-3dmark-steelnomad {
     zhu-install-3dmark-steelnomad || return -1
+
+    if [[ $1 == --dryrun ]]; then
+        echo TODO
+        return
+    fi
 
     pushd ~/zhutest-workload.d/3dmark-steelnomad-1.0.0 || return -1
     rm -rf result_vulkan.json
@@ -1258,6 +1251,12 @@ function zhu-test-3dmark-steelnomad {
 
 function zhu-install-3dmark-solarbay {
     zhu-validate-display || return -1
+
+    if [[ $1 == --dryrun ]]; then
+        chmod +x $HOME/zhutest-workload.d/3dmark-solarbay-1.0.5.3/bin/linux/x64/dev_player
+        echo "cd $HOME/zhutest-workload.d/3dmark-solarbay-1.0.5.3 && ./bin/linux/x64/dev_player --out=result.json --asset_root=assets_desktop --timeline=timelines/pogo_timeline.txt"
+        return
+    fi
 
     if [[ ! -e ~/zhutest-workload.d/3dmark-solarbay-1.0.5.3 ]]; then
         which rsync >/dev/null || sudo apt install -y rsync
