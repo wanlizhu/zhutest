@@ -2709,3 +2709,26 @@ function zhu-uniq {
 function zhu-apitrace-list-api {
     apitrace dump $1 | awk '{print $2}' | awk -F'(' '{print $1}' | awk '!seen[$0]++'
 }
+
+function zhu-run-in-proton {
+    read -e -i 172.16.179.143 -p "Rsync 'Proton 9.0 (Beta)' from: " host_ip
+    read -e -i wanliz -p "As user: " user
+
+    mkdir -p ~/.steam/steam/steamapps/common/'Proton 9.0 (Beta)'
+    rsync -ah --progress $user@$host_ip:/home/$user/.steam/steam/steamapps/common/'Proton 9.0 (Beta)'/ ~/.steam/steam/steamapps/common/'Proton 9.0 (Beta)'/ || return -1
+    ln -sf ~/.steam/steam/steamapps/common/'Proton 9.0 (Beta)' ~/.steam/steam/steamapps/common/proton_9.0_beta
+
+    export proton_dir=$HOME/.steam/steam/steamapps/common/proton_9.0_beta
+    export PATH="$proton_dir/files/bin:$PATH"
+    export LD_LIBRARY_PATH="$proton_dir/files/lib64:$proton_dir/files/lib:$LD_LIBRARY_PATH"
+    export STEAM_COMPAT_DATA_PATH="$proton_dir/prefix"
+    export PROTON_VR_RUNTIME=0
+    export WINEDLLOVERRIDES='d3d12=n,d3d12core=n,d3d11=n,d3d10core=n,d3d9=n,dxgi=n' 
+    export WINEDLLPATH="$proton_dir/files/lib64/wine:$proton_dir/files/lib/wine"
+    export WINEPREFIX="$proton_dir/prefix"
+    export WINE_DISABLE_FULLSCREEN_HACK=1
+    export __GL_SHADER_DISK_CACHE=0
+    export __GL_SYNC_TO_VBLANK=0
+
+    $proton_dir/files/bin/wine "$@"
+}
