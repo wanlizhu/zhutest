@@ -1610,13 +1610,13 @@ function zhu-install-viewperf {
 }
 
 function zhu-test-viewperf {
-    zhu-test-viewperf-catia 
-    zhu-test-viewperf-creo 
-    zhu-test-viewperf-energy 
-    zhu-test-viewperf-maya 
-    zhu-test-viewperf-medical 
-    zhu-test-viewperf-snx 
-    zhu-test-viewperf-sw 
+    zhu-test-viewperf-catia "$@"
+    zhu-test-viewperf-creo "$@"
+    zhu-test-viewperf-energy "$@" 
+    zhu-test-viewperf-maya "$@" 
+    zhu-test-viewperf-medical "$@" 
+    zhu-test-viewperf-snx "$@" 
+    zhu-test-viewperf-sw "$@" 
 }
 
 function zhu-test-viewperf-catia {
@@ -1627,7 +1627,9 @@ function zhu-test-viewperf-catia {
     mkdir -p results/catia-06 
     rm -rf results/catia-06/results.xml
     
-    zhu-ask-for-taskset
+    if [[ "$1" != --notaskset ]]; then
+        zhu-ask-for-taskset
+    fi 
 
     $TASKSET ./viewperf/bin/viewperf viewsets/catia/config/catia.xml -resolution 1920x1080 \
         && cat results/catia-06/results.xml \
@@ -1643,7 +1645,9 @@ function zhu-test-viewperf-creo {
     mkdir -p results/creo-03 
     rm -rf results/creo-03/results.xml
     
-    zhu-ask-for-taskset
+    if [[ "$1" != --notaskset ]]; then
+        zhu-ask-for-taskset
+    fi 
 
     $TASKSET ./viewperf/bin/viewperf viewsets/creo/config/creo.xml -resolution 1920x1080 \
         && cat results/creo-03/results.xml \
@@ -1659,7 +1663,9 @@ function zhu-test-viewperf-energy {
     mkdir -p results/energy-03 
     rm -rf results/energy-03/results.xml
     
-    zhu-ask-for-taskset
+    if [[ "$1" != --notaskset ]]; then
+        zhu-ask-for-taskset
+    fi 
 
     $TASKSET ./viewperf/bin/viewperf viewsets/energy/config/energy.xml -resolution 1920x1080 \
         && cat results/energy-03/results.xml \
@@ -1675,7 +1681,9 @@ function zhu-test-viewperf-maya {
     mkdir -p results/maya-06 
     rm -rf results/maya-06/results.xml
     
-    zhu-ask-for-taskset
+    if [[ "$1" != --notaskset ]]; then
+        zhu-ask-for-taskset
+    fi 
 
     $TASKSET ./viewperf/bin/viewperf viewsets/maya/config/maya.xml -resolution 1920x1080 \
         && cat results/maya-06/results.xml \
@@ -1691,7 +1699,9 @@ function zhu-test-viewperf-medical {
     mkdir -p results/medical-03 
     rm -rf results/medical-03/results.xml
     
-    zhu-ask-for-taskset
+    if [[ "$1" != --notaskset ]]; then
+        zhu-ask-for-taskset
+    fi 
 
     $TASKSET ./viewperf/bin/viewperf viewsets/medical/config/medical.xml -resolution 1920x1080 \
         && cat results/medical-03/results.xml \
@@ -1707,7 +1717,9 @@ function zhu-test-viewperf-snx {
     mkdir -p results/snx-04 
     rm -rf results/snx-04/results.xml
     
-    zhu-ask-for-taskset
+    if [[ "$1" != --notaskset ]]; then
+        zhu-ask-for-taskset
+    fi 
 
     $TASKSET ./viewperf/bin/viewperf viewsets/snx/config/snx.xml -resolution 1920x1080 \
         && cat results/snx-04/results.xml \
@@ -1723,7 +1735,9 @@ function zhu-test-viewperf-sw {
     mkdir -p results/solidworks-07
     rm -rf results/solidworks-07/results.xml
     
-    zhu-ask-for-taskset
+    if [[ "$1" != --notaskset ]]; then
+        zhu-ask-for-taskset
+    fi 
 
     $TASKSET ./viewperf/bin/viewperf viewsets/sw/config/sw.xml -resolution 1920x1080 \
         && cat results/solidworks-07/results.xml \
