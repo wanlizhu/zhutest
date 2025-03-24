@@ -2711,11 +2711,13 @@ function zhu-apitrace-list-api {
 }
 
 function zhu-run-in-proton {
-    read -e -i 172.16.179.143 -p "Rsync 'Proton 9.0 (Beta)' from: " host_ip
-    read -e -i wanliz -p "As user: " user
-
-    mkdir -p ~/.steam/steam/steamapps/common/'Proton 9.0 (Beta)'
-    rsync -ah --progress $user@$host_ip:/home/$user/.steam/steam/steamapps/common/'Proton 9.0 (Beta)'/ ~/.steam/steam/steamapps/common/'Proton 9.0 (Beta)'/ || return -1
+    if [[ ! -d ~/.steam/steam/steamapps/common/'Proton 9.0 (Beta)' ]]; then
+        read -e -i 172.16.179.143 -p "Rsync 'Proton 9.0 (Beta)' from: " host_ip
+        read -e -i wanliz -p "As user: " user
+        mkdir -p ~/.steam/steam/steamapps/common/'Proton 9.0 (Beta)'
+        rsync -ah --progress $user@$host_ip:/home/$user/.steam/steam/steamapps/common/'Proton 9.0 (Beta)'/ ~/.steam/steam/steamapps/common/'Proton 9.0 (Beta)'/ || return -1
+    fi 
+    
     ln -sf ~/.steam/steam/steamapps/common/'Proton 9.0 (Beta)' ~/.steam/steam/steamapps/common/proton_9.0_beta
 
     export proton_dir=$HOME/.steam/steam/steamapps/common/proton_9.0_beta
