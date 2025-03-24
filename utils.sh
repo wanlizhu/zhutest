@@ -1736,26 +1736,27 @@ function zhu-test-viewperf-in-gui {
     zhu-install-viewperf || return -1 
 
     # Start all viewsets in viewperf GUI
-    ~/zhutest-workload.d/viewperf2020.$(uname -m)/RunViewperf || return -1
-    zhu-cursor-click-on-window "SPECviewperf 2020 v3.0" 441 550
-    window_id=$(cat /tmp/zhu-activate-window)
+    ~/zhutest-workload.d/viewperf2020.$(uname -m)/RunViewperf 
+
+    #zhu-cursor-click-on-window "SPECviewperf 2020 v3.0" 441 550
+    #window_id=$(cat /tmp/zhu-activate-window)
 
     # Wait all viewsets to complete
-    while [[ ! -z $(pidof viewperf) ]]; do
-        sleep 5
-    done 
+    #while [[ ! -z $(pidof viewperf) ]]; do
+    #    sleep 5
+    #done 
 
     # Close the configuration window
-    xdotool mousemove --window $window_id 620 21 click 1
+    #xdotool mousemove --window $window_id 620 21 click 1
 
     # Find the result directory 
-    result_dir=$(find ~/Documents/SPECresults/SPECviewperf2020 -mindepth 1 -maxdepth 1 -type d -printf "%T@ %p\n" | sort -n | tail -n 1 | awk '{print $2}')
-    sed -i '1s/^.*$/Compositor,FPS/' "$result_dir/resultCSV.csv"
-    mapfile -d '' csv_parts < <(awk 'BEGIN {RS="(\n\n|\n[[:space:]]*\n)"; ORS="\0"} {print}' "$result_dir/resultCSV.csv")
-    for i in "${!csv_parts[@]}"; do 
-        echo "${csv_parts[i]}" | column -s, -t
-        echo 
-    done
+    #result_dir=$(find ~/Documents/SPECresults/SPECviewperf2020 -mindepth 1 -maxdepth 1 -type d -printf "%T@ %p\n" | sort -n | tail -n 1 | awk '{print $2}')
+    #sed -i '1s/^.*$/Compositor,FPS/' "$result_dir/resultCSV.csv"
+    #mapfile -d '' csv_parts < <(awk 'BEGIN {RS="(\n\n|\n[[:space:]]*\n)"; ORS="\0"} {print}' "$result_dir/resultCSV.csv")
+    #for i in "${!csv_parts[@]}"; do 
+    #    echo "${csv_parts[i]}" | column -s, -t
+    #    echo 
+    #done
 }
 
 function zhu-ask-for-taskset {
