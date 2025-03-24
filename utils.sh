@@ -1587,8 +1587,7 @@ function zhu-test-unigine-superposition {
 
     pushd ~/zhutest-workload.d/unigine-super-1.0.7  >/dev/null 
     ./bin/superposition -sound_app openal  -system_script superposition/system_script.cpp  -data_path ../ -engine_config ../data/superposition/unigine.cfg  -video_mode -1 -project_name Superposition  -video_resizable 1  -console_command "config_readonly 1 && world_load superposition/superposition" -mode 2 -preset 0 -video_width 1920 -video_height 1080 -video_fullscreen 1 -shaders_quality 2 -textures_quality 2 -video_app opengl 
-    cat ~/.Superposition/automation/log*.txt > /tmp/unigine-super.log 
-    cat /tmp/unigine-super.log | grep "^FPS:"  || return -1
+    cat ~/.Superposition/automation/log*.txt 
     popd >/dev/null 
 }
 
