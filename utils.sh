@@ -2722,10 +2722,10 @@ function zhu-run-in-proton {
 
     export proton_dir=$HOME/.steam/steam/steamapps/common/proton_9.0_beta
     export PATH="$proton_dir/files/bin:$PATH"
-    export LD_LIBRARY_PATH="$proton_dir/files/lib64:$proton_dir/files/lib:$LD_LIBRARY_PATH"
+    export LD_LIBRARY_PATH="$proton_dir/files/lib64:$proton_dir/files/lib64/wine/x86_64-unix:$proton_dir/files/lib:$proton_dir/files/lib/wine/i386-unix:$LD_LIBRARY_PATH"
     export STEAM_COMPAT_DATA_PATH="$proton_dir/prefix"
     export PROTON_VR_RUNTIME=0
-    export WINEDLLPATH="$proton_dir/files/lib64/wine:$proton_dir/files/lib/wine"
+    export WINEDLLPATH="$proton_dir/files/lib64/wine:$proton_dir/files/lib64/wine/dxvk:$proton_dir/files/lib64/wine/nvapi:$proton_dir/files/lib64/wine/vkd3d-proton:$proton_dir/files/lib64/wine/x86_64-windows:$proton_dir/files/lib64/vkd3d:$proton_dir/files/lib/wine:$proton_dir/files/lib/wine/dxvk:$proton_dir/files/lib/wine/nvapi:$proton_dir/files/lib/wine/vkd3d-proton:$proton_dir/files/lib/wine/i386-windows:$proton_dir/files/lib/vkd3d"
     export WINEPREFIX="$proton_dir/prefix"
     export WINE_DISABLE_FULLSCREEN_HACK=1
     export __GL_SHADER_DISK_CACHE=0
