@@ -640,8 +640,15 @@ function zhu-install-nvidia-driver-cloudbuild {
             return 
         else
             zhu-install-nvidia-driver-localbuild "$(realpath $path)" 
-            echo 
-            echo "Nvidia driver installed: $(realpath $path)"
+            if [[ $(uname -m) == aarch64 ]]; then
+                echo 
+                driver="$(realpath $path)"
+                echo "${driver//aarch64/x86_64}"
+                read -e -i yes -p "Install this x86_64 build into FEX rootfs? (yes/no): " ans
+                if [[ $ans == yes ]]; then
+                    zhu-install-nvidia-driver-localbuild  "${driver//aarch64/x86_64}"
+                fi
+            fi
         fi 
     else
         echo "$path not found!"
