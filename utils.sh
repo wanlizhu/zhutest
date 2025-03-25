@@ -2089,8 +2089,8 @@ function zhu-check-vncserver {
 function zhu-start-vnc-server-for-headless-system {
     if [[ ! -z $(zhu-check-vncserver) ]]; then
         zhu-check-vncserver
-        echo "VNC server is already running..."
-        return 
+        echo "A valid VNC server is already running..."
+        read -p "Press [ENTER] to continue: " _
     fi  
 
     if [[ -z $(which screen) ]]; then
@@ -2155,8 +2155,8 @@ WantedBy=multi-user.target
 function zhu-start-vnc-server-for-physical-display {
     if [[ ! -z $(zhu-check-vncserver) ]]; then
         zhu-check-vncserver
-        echo "VNC server is already running..."
-        return 
+        echo "A valid VNC server is already running..."
+        read -p "Press [ENTER] to continue: " _
     fi  
 
     if [[ -z $(pidof Xorg) ]]; then
