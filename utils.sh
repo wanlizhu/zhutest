@@ -1349,7 +1349,7 @@ function zhu-install-nvidia-driver-in-fex {
     cd $(dirname $1) 
     driver=$(realpath $1)
     chmod +x $driver 
-    $driver -x 
+    $driver -x || return -1
 
     cd ${driver%.run}
     mkdir -p $rootfs/etc/vulkan/icd.d
@@ -1439,6 +1439,15 @@ function zhu-config-linux-kernel {
 }
 
 function zhu-disable-apparmor {
+    if [[ ! -e /etc/default/grub ]]; then
+        if [[ $(uname -m) == x86_64 ]]; then
+            sudo apt install --reinstall grub-efi grub-efi-amd64 grub-efi-amd64-bin
+        elif [[ $(uname -m) == aarch64 ]]; then 
+            sudo apt install --reinstall grub-efi grub-efi-arm64 grub-efi-arm64-bin
+        fi
+        sudo update-grub
+    fi
+
     sudo aa-teardown
     sudo systemctl stop apparmor
     sudo systemctl disable apparmor 
@@ -2130,7 +2139,6 @@ WantedBy=multi-user.target
         sudo systemctl enable tigervncserver@$dp.service
         sudo systemctl start tigervncserver@$dp.service
     else
-        #zhu-check-xauthority || return -1
         export DISPLAY=:$dp 
         /usr/bin/tigervncserver -kill :$dp >/dev/null 2>&1
         read -e -i yes -p "Run tigervncserver a in detached session? (yes/no): " ans
@@ -2188,8 +2196,14 @@ function zhu-start-vnc-server-for-physical-display {
         sudo apt install -y x11vnc || return -1
     fi 
 
+    zhu-check-xauthority || return -1
+    if [[ ! -e $XAUTHORITY ]]; then
+        echo "XAUTHORITY=\"$XAUTHORITY\" doesn't exist!"
+        return -1
+    fi
+
     x11vnc -storepasswd
-    x11vnc_args="-auth guess -forever --loop -noxdamage -repeat -rfbauth $HOME/.vnc/passwd -rfbport 5900 -display :0 -shared"
+    x11vnc_args="-auth $XAUTHORITY -forever --loop -noxdamage -repeat -rfbauth $HOME/.vnc/passwd -rfbport 5900 -display :0 -shared"
     xorg_user=$(ps -o user -p $(pidof Xorg) | tail -1)
     if [[ $xorg_user == root ]]; then
         SUDO="sudo"
@@ -2216,7 +2230,6 @@ WantedBy=multi-user.target
         sudo systemctl start x11vnc.service 
         echo "x11vnc.service is running and scheduled as auto-start!"
     else
-        zhu-check-xauthority || return -1
         read -e -i yes -p "Run x11vnc a in detached session? (yes/no): " ans
         if [[ $ans == yes ]]; then 
             $SUDO screen -dmS x11vnc /usr/bin/x11vnc $x11vnc_args
