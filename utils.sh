@@ -2103,7 +2103,7 @@ function zhu-start-vnc-server-for-headless-system {
     fi 
 
     desktop_session=/usr/bin/xfce4-session
-    sudo apt install -y xfce4-session &>/dev/null || return -1
+    sudo apt install -y xfce4-session || return -1
 
     mkdir -p ~/.vnc
     tigervncpasswd
