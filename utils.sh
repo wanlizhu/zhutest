@@ -1449,6 +1449,7 @@ EOML
     else
         echo "Existing: $rootfs/zhu-fex-emu-config.sh"
     fi
+    chmod +x $rootfs/zhu-fex-emu-config.sh
 }
 
 #function zhu-config-in-fex {
