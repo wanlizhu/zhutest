@@ -2005,15 +2005,13 @@ function zhu-check-xauthority {
                 active_auth=$(ps aux | grep '[X]org' | grep -oP '(?<=-auth )[^ ]+')
                 if [[ -z $active_auth ]]; then
                     echo "\"ps aux | grep '[X]org'\" returns no auth path"
+                    export XAUTHORITY=""
                 else
                     sudo cp $active_auth ~/.Xauthority
                     sudo chown $USER:$(id -gn) ~/.Xauthority
                     chmod 600 ~/.Xauthority
+                    export XAUTHORITY=$HOME/.Xauthority
                 fi 
-            fi
-
-            if [[ -z $XAUTHORITY && -e ~/.Xauthority ]]; then
-                export XAUTHORITY=~/.Xauthority
             fi
         fi
 
@@ -2197,13 +2195,14 @@ function zhu-start-vnc-server-for-physical-display {
     fi 
 
     zhu-check-xauthority || return -1
-    if [[ ! -e $XAUTHORITY ]]; then
-        echo "XAUTHORITY=\"$XAUTHORITY\" doesn't exist!"
-        return -1
+    if [[ -z $XAUTHORITY ]]; then
+        auth_args=""
+    else
+        auth_args="-auth $XAUTHORITY"
     fi
 
     x11vnc -storepasswd
-    x11vnc_args="-auth $XAUTHORITY -forever --loop -noxdamage -repeat -rfbauth $HOME/.vnc/passwd -rfbport 5900 -display :0 -shared"
+    x11vnc_args="$auth_args -forever --loop -noxdamage -repeat -rfbauth $HOME/.vnc/passwd -rfbport 5900 -display :0 -shared"
     xorg_user=$(ps -o user -p $(pidof Xorg) | tail -1)
     if [[ $xorg_user == root ]]; then
         SUDO="sudo"
