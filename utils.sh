@@ -643,10 +643,13 @@ function zhu-install-nvidia-driver-cloudbuild {
             if [[ $(uname -m) == aarch64 ]]; then
                 echo 
                 driver="$(realpath $path)"
-                echo "${driver//aarch64/x86_64}"
+                driver="${driver//aarch64/x86_64}"
+                echo "$driver"
                 read -e -i yes -p "Install this x86_64 build into FEX rootfs? (yes/no): " ans
                 if [[ $ans == yes ]]; then
-                    zhu-install-nvidia-driver-localbuild  "${driver//aarch64/x86_64}"
+                    mkdir -p $HOME/Downloads
+                    rsync -ah --progress $driver $HOME/Downloads/$(basename $driver) || return -1
+                    zhu-install-nvidia-driver-in-fex $HOME/Downloads/$(basename $driver)
                 fi
             fi
         fi 
