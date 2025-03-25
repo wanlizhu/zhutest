@@ -1403,6 +1403,40 @@ function zhu-fex-emu {
     popd 
 }
 
+function zhu-disable-apparmor {
+    sudo aa-teardown
+    sudo systemctl stop apparmor
+    sudo systemctl disable apparmor 
+    sudo systemctl mask apparmor
+    echo "Todo: append 'apparmor=0' to GRUB_CMDLINE_LINUX_DEFAULT"
+    read -p "Press [ENTER] to continue: " _
+    sudo vim /etc/default/grub 
+    sudo update-grub 
+    sudo update-initramfs -u
+    read -p "Press [ENTER] to reboot: " _
+    sudo reboot 
+}
+
+function zhu-check-apparmor {
+    cat /sys/module/apparmor/parameters/enabled 
+    echo 
+    sudo aa-status
+}
+
+function zhu-fex-emu-config {
+    apt update
+    apt reinstall passwd -y
+    apt reinstall util-linux -y
+    apt reinstall mount -y 
+    apt install vim -y
+    apt install bsdutils -y
+    apt install nfs-common -y
+    apt install steam -y
+    if [[ ! -d /home/nvidia ]]; then
+        adduser nvidia
+    fi 
+}
+
 #function zhu-config-in-fex {
 #    uname -m >/dev/null 2>&1
 #    if [[ $(uname -m) != "x86_64" ]]; then
