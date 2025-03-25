@@ -409,6 +409,7 @@ function zhu-start-bare-xsession {
 
         read -e -i yes -p "Run X server in a detached session? (yes/no): " ans
         if [[ $ans == yes ]]; then
+            export XAUTHORITY=""
             $SUDO screen -dmS bare-xsession X :0 +iglx
             sleep 1
             if [[ -z $(pidof Xorg) ]]; then
@@ -417,6 +418,7 @@ function zhu-start-bare-xsession {
                 echo "Xorg $(pidof Xorg) has started!"
             fi
         else
+            export XAUTHORITY=""
             $SUDO X :0 +iglx
         fi 
     else
