@@ -1432,23 +1432,11 @@ function zhu-fex-emu-config {
     rootfs="$HOME/.fex-emu/RootFS/$ubuntu"
 
     if [[ ! -e $rootfs/zhu-fex-emu-config.sh ]]; then 
-        cat <<EOF > $rootfs/zhu-fex-emu-config.sh 
-apt update
-apt reinstall passwd -y
-apt reinstall util-linux -y
-apt reinstall mount -y 
-apt install vim -y
-apt install bsdutils -y
-apt install nfs-common -y
-apt install steam -y
-if [[ ! -d /home/nvidia ]]; then
-    adduser nvidia
-fi 
-EOF 
+        
         echo "Generated: $rootfs/zhu-fex-emu-config.sh"
     else
         echo "Existing: $rootfs/zhu-fex-emu-config.sh"
-    fi 
+    fi
 }
 
 #function zhu-config-in-fex {
