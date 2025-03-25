@@ -1419,7 +1419,7 @@ function zhu-config-linux-kernel {
     echo "The current kernel:"
     uname -r 
     echo 
-    echo "Todo: change GRUB_DEFAULT in /etc/default/grub"
+    echo "Todo: change GRUB_DEFAULT in /etc/default/grub (e.g. 'Advanced options for Ubuntu>Ubuntu, with xxx')"
     read -p "Press [ENTER] to continue: " _
     sudo vim /etc/default/grub
     sudo update-grub 
