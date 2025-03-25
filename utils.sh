@@ -1407,7 +1407,7 @@ function zhu-config-linux-kernel {
     if [[ ! -e /etc/default/grub ]]; then
         if [[ $(uname -m) == x86_64 ]]; then
             sudo apt install --reinstall grub-efi grub-efi-amd64 grub-efi-amd64-bin
-        elif [[ $(uname -m) == aarch64 ]]
+        elif [[ $(uname -m) == aarch64 ]]; then 
             sudo apt install --reinstall grub-efi grub-efi-arm64 grub-efi-arm64-bin
         fi
         sudo update-grub
