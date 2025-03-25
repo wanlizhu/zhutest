@@ -1403,12 +1403,40 @@ function zhu-fex-emu {
     popd 
 }
 
+function zhu-config-linux-kernel {
+    echo "All installed kernels: "
+    cat /boot/grub/grub.cfg | grep "menuentry '" | grep -v "'Ubuntu'" | grep -v "'UEFI Firmware Settings'" | grep -v "recovery mode" | awk -F"'" '{print $2}'
+    echo 
+    echo "The current kernel:"
+    uname -r 
+    echo 
+    echo "Todo: change GRUB_DEFAULT in /etc/default/grub"
+    read -p "Press [ENTER] to continue: " _
+    sudo vim /etc/default/grub
+    sudo update-grub 
+    sudo update-initramfs -u
+    read -p "Press [ENTER] to reboot: " _
+    sudo reboot 
+}
+
 function zhu-disable-apparmor {
     sudo aa-teardown
     sudo systemctl stop apparmor
     sudo systemctl disable apparmor 
     sudo systemctl mask apparmor
-    echo "Todo: append 'apparmor=0' to GRUB_CMDLINE_LINUX_DEFAULT"
+    echo; echo "Todo: append 'apparmor=0' to GRUB_CMDLINE_LINUX_DEFAULT"
+    read -p "Press [ENTER] to continue: " _
+    sudo vim /etc/default/grub 
+    sudo update-grub 
+    sudo update-initramfs -u
+    read -p "Press [ENTER] to reboot: " _
+    sudo reboot 
+}
+
+function zhu-enable-apparmor {
+    sudo systemctl enable apparmor 
+    sudo systemctl unmask apparmor
+    echo; echo "Todo: remove 'apparmor=0' from GRUB_CMDLINE_LINUX_DEFAULT"
     read -p "Press [ENTER] to continue: " _
     sudo vim /etc/default/grub 
     sudo update-grub 
