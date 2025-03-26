@@ -1441,38 +1441,39 @@ function zhu-config-linux-kernel {
 }
 
 function zhu-disable-apparmor {
-    if [[ ! -e /etc/default/grub ]]; then
-        if [[ $(uname -m) == x86_64 ]]; then
-            sudo apt install --reinstall grub-efi grub-efi-amd64 grub-efi-amd64-bin
-        elif [[ $(uname -m) == aarch64 ]]; then 
-            sudo apt install --reinstall grub-efi grub-efi-arm64 grub-efi-arm64-bin
-        fi
-        sudo update-grub
+    if [[ $USER == wanliz ]]; then
+        sudo aa-teardown
+        sudo systemctl stop apparmor
+        sudo systemctl disable apparmor 
+        sudo systemctl mask apparmor
+        echo; echo "Todo: append 'apparmor=0' to GRUB_CMDLINE_LINUX_DEFAULT"
+        read -p "Press [ENTER] to continue: " _
+        sudo vim /etc/default/grub 
+        sudo update-grub 
+        sudo update-initramfs -u
+        read -p "Press [ENTER] to reboot: " _
+        sudo reboot 
+    elif [[ -d /boot/loader/entries ]]; then
+        for entryfile in $(ls /boot/loader/entries/*); do 
+            if [[ -z $(grep "apparmor=0" $entryfile) ]]; then
+                sudo sed -i 's/console=ttyS0/console=ttyS0 apparmor=0/g' $entryfile
+            fi
+        done 
     fi
-
-    sudo aa-teardown
-    sudo systemctl stop apparmor
-    sudo systemctl disable apparmor 
-    sudo systemctl mask apparmor
-    echo; echo "Todo: append 'apparmor=0' to GRUB_CMDLINE_LINUX_DEFAULT"
-    read -p "Press [ENTER] to continue: " _
-    sudo vim /etc/default/grub 
-    sudo update-grub 
-    sudo update-initramfs -u
-    read -p "Press [ENTER] to reboot: " _
-    sudo reboot 
 }
 
 function zhu-enable-apparmor {
-    sudo systemctl enable apparmor 
-    sudo systemctl unmask apparmor
-    echo; echo "Todo: remove 'apparmor=0' from GRUB_CMDLINE_LINUX_DEFAULT"
-    read -p "Press [ENTER] to continue: " _
-    sudo vim /etc/default/grub 
-    sudo update-grub 
-    sudo update-initramfs -u
-    read -p "Press [ENTER] to reboot: " _
-    sudo reboot 
+    if [[ $USER == wanliz ]]; then
+        sudo systemctl enable apparmor 
+        sudo systemctl unmask apparmor
+        echo; echo "Todo: remove 'apparmor=0' from GRUB_CMDLINE_LINUX_DEFAULT"
+        read -p "Press [ENTER] to continue: " _
+        sudo vim /etc/default/grub 
+        sudo update-grub 
+        sudo update-initramfs -u
+        read -p "Press [ENTER] to reboot: " _
+        sudo reboot 
+    fi 
 }
 
 function zhu-check-apparmor {
