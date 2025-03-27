@@ -96,6 +96,18 @@ function zhu-enable-no-password-sudo {
     fi 
 }
 
+function zhu-setup-nvidia-ddns {
+    sudo mkdir -p /etc/dhcp/dhclient-exit-hooks.d
+    sudo cp ~/zhutest/etc/ddns-for-dhcp /etc/dhcp/dhclient-exit-hooks.d/ddns
+    sudo chmod 755 /etc/dhcp/dhclient-exit-hooks.d/ddns
+
+    sudo mkdir -p /etc/NetworkManager/dispatcher.d
+    sudo cp ~/zhutest/etc/ddns-for-networkmanager /etc/NetworkManager/dispatcher.d/ddns
+    sudo chmod 755 /etc/NetworkManager/dispatcher.d/ddns
+
+    echo "Todo: reboot your system to apply changes!"
+}
+
 function zhu-is-installed {
     if [[ -z $(apt list --installed 2>/dev/null | grep "$1" | grep 'installed') ]]; then
         return -1

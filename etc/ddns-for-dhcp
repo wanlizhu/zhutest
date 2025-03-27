@@ -1,0 +1,69 @@
+# Update ddns
+domain=client.nvidia.com
+ttl=300
+logname=ddns
+ 
+do_nsupdate () {
+    logger -t $logname "Starting ddns update"
+    nsu_script=$(/bin/mktemp -t nsupdate_XXXXX)
+    fqdn="$(hostname).$domain"
+    cat <<_END_OF_SCRIPT_ >$nsu_script
+prereq yxdomain $fqdn
+update delete $fqdn
+show
+send
+update add $fqdn $ttl A $new_ip_address
+show
+send
+_END_OF_SCRIPT_
+    echo "nsupdate script written to $nsu_script" | logger -t $logname
+    echo "$(/usr/bin/nsupdate $nsu_script)" | logger -t $logname
+}
+ 
+run_refresh() {
+  env > /dev/shm/exit-env
+  logger -t $logname "Reason: $reason"
+  logger -t $logname "Interface: $interface"
+  new=$(/usr/bin/env | grep new_)
+  echo "new=$new" | logger -t $logname
+  old=$(/usr/bin/env | grep old_)
+  echo "old=$old" | logger -t $logname
+  if [ "$interface" != "eth0" ]; then # only allow a particular interface
+    echo "reject $interface"
+    #return
+  fi  
+  # only do anything if we have an ip address and a real hostname
+  if test -n "$new_ip_address" -a "$(/usr/bin/expr substr $(hostname) 1 5)" != "dhcp-" -a "$(hostname)" != "localhost"
+  then
+    # check if we are already in dns
+    dnsip=$(/usr/bin/dig +short $(hostname).$domain)
+    hn=$(hostname)
+    if test -n "$dnsip"
+    then
+      if test "$dnsip" = "$new_ip_address"
+      then
+        logger -t $logname "New address ($new_ip_address) matches DNS:"
+        logger -t $logname "$(/usr/bin/host $hn.$domain)"
+        do_nsupdate
+      else
+        logger -t $logname "New address ($new_ip_address) different than DNS:"
+        logger -t $logname "$(/usr/bin/host $hn.$domain)"
+        do_nsupdate
+      fi
+    else
+      logger -t $logname "Not in DNS at all"
+      logger -t $logname "$(/usr/bin/host $hn.$domain)"
+      do_nsupdate
+    fi
+  fi
+}
+ 
+refresh_ip() {
+	case $reason in
+		BOUND|RENEW|REBIND|REBOOT|EXPIRE|FAIL|RELEASE|STOP)
+			run_refresh
+			;;
+	esac
+}
+ 
+refresh_ip
