@@ -2856,14 +2856,7 @@ function zhu-run-in-proton {
 }
 
 function zhu-ssh-test-machine {
-    if [[ -z $(which sshpass) ]]; then
-        sudo apt install -y sshpass
-    fi
-    if [[ ! -e ~/.zhutest.passwd.test ]]; then
-        read -s -p "Password: " passwd
-        echo -n "$passwd" > ~/.zhutest.passwd.test
-    fi
-    sshpass -f ~/.zhutest.passwd.test ssh wanliz@wanliz-test.client.nvidia.com
+    ssh wanliz@wanliz-test.client.nvidia.com
 }
 
 function zhu-rsync-zhutest-workload {
