@@ -373,7 +373,7 @@ function zhu-generate-perf-and-flamegraph {
     fi
 
     if [[ -z $frequency ]]; then
-        frequency=5
+        frequency=5000
     fi
 
     data_path=$output_dir/perf.data
@@ -738,7 +738,7 @@ function zhu-build-nvidia-driver {
     popd >/dev/null
 }
 
-function zhu-list-functions {
+function zhu-lsfunc {
     declare -f | grep 'zhu-' | grep -v declare | grep '()'
 }
 
