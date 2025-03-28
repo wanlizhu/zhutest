@@ -2854,3 +2854,15 @@ function zhu-run-in-proton {
 
     $proton_dir/files/bin/wine "$@"
 }
+
+function zhu-rsync-zhutest-workload {
+    read -e -i wanliz-test.client.nvidia.com -p "Rsync from remote host: " host_ip
+    read -e -i wanliz -p "As user: " user
+    time rsync -ah --progress $user@$host_ip:/home/$user/zhutest-workload.d/ $HOME/zhutest-workload.d 
+}
+
+function zhu-rsync-p4sw-bugfix_main {
+    read -e -i wanliz-test.client.nvidia.com -p "Rsync from remote host: " host_ip
+    read -e -i wanliz -p "As user: " user
+    time rsync -ah --progress --exclude="_out/" --exclude=".git/" --exclude=".vscode/" $user@$host_ip:/home/$user/zhutest-workload.d/ $HOME/zhutest-workload.d 
+}
