@@ -2861,7 +2861,7 @@ function zhu-ssh-test-machine {
     fi
     if [[ ! -e ~/.zhutest.passwd.test ]]; then
         read -s -p "Password: " passwd
-        echo "$passwd" > ~/.zhutest.passwd.test
+        echo -n "$passwd" > ~/.zhutest.passwd.test
     fi
     sshpass -f ~/.zhutest.passwd.test ssh wanliz@wanliz-test.client.nvidia.com
 }
