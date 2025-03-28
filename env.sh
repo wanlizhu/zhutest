@@ -11,7 +11,53 @@ if [[ -z $DISPLAY ]]; then
     fi
 fi
 
-if sudo ls >/dev/null 2>&1; then
+if [[ $USER == wanliz ]]; then
+    export P4CLIENT=wanliz-p4sw-bugfix_main
+    export P4ROOT=/media/wanliz/wzhu-ssd-ext4-4t/$P4CLIENT
+    export P4IGNORE=/home/wanliz/.p4ignore 
+    export P4PORT=p4proxy-sc.nvidia.com:2006
+    export P4USER=wanliz 
+
+    if [[ ! -e $P4IGNORE && -d $(dirname $P4IGNORE) ]]; then
+        echo "_out" > $P4IGNORE
+        echo ".git" >> $P4IGNORE
+        echo ".vscode" >> $P4IGNORE
+    fi
+
+    if [[ $UID != "0" ]]; then
+        if ! sudo grep -q "$USER ALL=(ALL) NOPASSWD:ALL" /etc/sudoers; then
+            echo "Enable sudo without password"
+            echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
+        fi
+    fi 
+
+    if ! echo "$PATH" | tr ':' '\n' | grep -q "dvs/dvsbuild"; then
+        export PATH="$P4ROOT/automation/dvs/dvsbuild:$PATH" 
+    fi
+
+    if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-systems-internal"; then
+        export PATH="~/nsight-systems-internal/current/host-linux-x64:$PATH" 
+    fi
+
+    if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-graphics-internal"; then
+        export PATH="~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64:$PATH"
+    fi
+
+    if ! echo "$PATH" | tr ':' '\n' | grep -q "gfxreconstruct.git"; then
+        export PATH="~/gfxreconstruct.git/build/linux/x64/output/bin:$PATH"
+    fi
+
+    if ! echo "$PATH" | tr ':' '\n' | grep -q "apitrace.$(uname -m)"; then
+        export PATH="~/apitrace.$(uname -m)/bin:$PATH"
+    fi
+
+    if [[ $(uname -m) == aarch64 ]]; then
+        if [[ -e $HOME/.fex-emu/Config.json ]]; then
+            which jq >/dev/null || sudo apt install -y jq 
+            export rootfs="$HOME/.fex-emu/RootFS/$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)"
+        fi 
+    fi
+
     if [[ $DISPLAY == *"localhost"* ]]; then
         # When X11 forwarding is enabled
         export XAUTHORITY=~/.Xauthority
@@ -26,57 +72,7 @@ if sudo ls >/dev/null 2>&1; then
     if [[ $XDG_SESSION_TYPE == x11 ]]; then
         xhost + >/dev/null 2>&1
     fi
-
-    if [[ $USER == wanliz ]]; then
-        export P4CLIENT=wanliz-p4sw-bugfix_main
-        export P4ROOT=/media/wanliz/wzhu-ssd-ext4-4t/$P4CLIENT
-        export P4IGNORE=/home/wanliz/.p4ignore 
-        export P4PORT=p4proxy-sc.nvidia.com:2006
-        export P4USER=wanliz 
-
-        if [[ ! -e $P4IGNORE && -d $(dirname $P4IGNORE) ]]; then
-            echo "_out" > $P4IGNORE
-            echo ".git" >> $P4IGNORE
-            echo ".vscode" >> $P4IGNORE
-        fi
-
-        if [[ $UID != "0" ]]; then
-            if ! sudo grep -q "$USER ALL=(ALL) NOPASSWD:ALL" /etc/sudoers; then
-                echo "Enable sudo without password"
-                echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
-            fi
-        fi 
-
-        if ! echo "$PATH" | tr ':' '\n' | grep -q "dvs/dvsbuild"; then
-            export PATH="$P4ROOT/automation/dvs/dvsbuild:$PATH" 
-        fi
-
-        if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-systems-internal"; then
-            export PATH="~/nsight-systems-internal/current/host-linux-x64:$PATH" 
-        fi
-
-        if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-graphics-internal"; then
-            export PATH="~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64:$PATH"
-        fi
-
-        if ! echo "$PATH" | tr ':' '\n' | grep -q "gfxreconstruct.git"; then
-            export PATH="~/gfxreconstruct.git/build/linux/x64/output/bin:$PATH"
-        fi
-
-        if ! echo "$PATH" | tr ':' '\n' | grep -q "apitrace.$(uname -m)"; then
-            export PATH="~/apitrace.$(uname -m)/bin:$PATH"
-        fi
-
-        if [[ $(uname -m) == aarch64 ]]; then
-            if [[ -e $HOME/.fex-emu/Config.json ]]; then
-                which jq >/dev/null || sudo apt install -y jq 
-                export rootfs="$HOME/.fex-emu/RootFS/$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)"
-            fi 
-        fi
-    fi
-else # if `sudo ls` failed
-    echo "Running inside FEX, config nothing!" >/dev/null 
-fi 
+fi
 
 function zhu-reload {
     if [[ -e ~/zhutest/utils.sh ]]; then
