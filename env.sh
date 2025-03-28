@@ -2866,3 +2866,7 @@ function zhu-rsync-p4sw-bugfix_main {
     read -e -i wanliz -p "As user: " user
     time rsync -ah --progress --exclude="_out/" --exclude=".git/" --exclude=".vscode/" $user@$host_ip:/home/$user/wanliz-p4sw-bugfix_main/ $HOME/wanliz-p4sw-bugfix_main 
 }
+
+function zhu-ttyacm0 {
+    sudo screen /dev/ttyACM0 115200
+}
