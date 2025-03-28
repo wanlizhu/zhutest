@@ -75,11 +75,11 @@ if [[ $USER == wanliz ]]; then
 fi
 
 function zhu-reload {
-    if [[ -e ~/zhutest/utils.sh ]]; then
-        source ~/zhutest/utils.sh
-        echo "~/zhutest/utils.sh sourced!"
+    if [[ -e ~/zhutest/env.sh ]]; then
+        source ~/zhutest/env.sh
+        echo "~/zhutest/env.sh sourced!"
     else
-        echo "~/zhutest/utils.sh doesn't exist!"
+        echo "~/zhutest/env.sh doesn't exist!"
     fi
 }
 
