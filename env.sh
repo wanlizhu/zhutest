@@ -696,7 +696,7 @@ function zhu-build-nvidia-driver {
                     release|debug|develop) nvmake_config=$1 ;;
                     -j1) nvmake_jobs=1 ;;
                     cleanbuild) nvmake_cleanbuild=yes ;;
-                    *) echo "Ignore argument: $1" ;;
+                    *) echo "Ignoring argument: $1" ;;
                 esac
                 shift 
             ;;
