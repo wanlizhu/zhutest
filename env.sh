@@ -373,7 +373,7 @@ function zhu-generate-perf-and-flamegraph {
     fi
 
     if [[ -z $frequency ]]; then
-        frequency=5
+        frequency=5000
     fi
 
     data_path=$output_dir/perf.data
@@ -738,7 +738,7 @@ function zhu-build-nvidia-driver {
     popd >/dev/null
 }
 
-function zhu-list-functions {
+function zhu-lsfunc {
     declare -f | grep 'zhu-' | grep -v declare | grep '()'
 }
 
@@ -2864,4 +2864,20 @@ function zhu-ssh-test-machine {
         echo "$passwd" > ~/.zhutest.passwd.test
     fi
     sshpass -p ~/.zhutest.passwd.test ssh wanliz@wanliz-test.client.nvidia.com
+}
+
+function zhu-rsync-zhutest-workload {
+    read -e -i wanliz-test.client.nvidia.com -p "Rsync from remote host: " host_ip
+    read -e -i wanliz -p "As user: " user
+    time rsync -ah --progress $user@$host_ip:/home/$user/zhutest-workload.d/ $HOME/zhutest-workload.d 
+}
+
+function zhu-rsync-p4sw-bugfix_main {
+    read -e -i wanliz-test.client.nvidia.com -p "Rsync from remote host: " host_ip
+    read -e -i wanliz -p "As user: " user
+    time rsync -ah --progress --exclude="_out/" --exclude=".git/" --exclude=".vscode/" $user@$host_ip:/home/$user/wanliz-p4sw-bugfix_main/ $HOME/wanliz-p4sw-bugfix_main 
+}
+
+function zhu-ttyacm0 {
+    sudo screen /dev/ttyACM0 115200
 }
