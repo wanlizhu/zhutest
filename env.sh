@@ -545,51 +545,44 @@ function zhu-download-nvidia-driver {
 }
 
 function zhu-install-nvidia-driver-localbuild {
-    if [[ -e $1 ]]; then
-        if [[ $(systemctl is-active display-manager) == active ]]; then
-            was_dm_active=yes
-            sudo systemctl stop display-manager 
-        else
-            was_dm_active=no
-        fi
+    if [[ ! -e $1 ]]; then
+        echo "Error: $1 doesn't exist!"
+        return -1
+    fi 
 
-        if [[ ! -z $(pidof Xorg) ]]; then
-            echo "Xorg $(pidof Xorg) is still running..."
-            read -e -i yes -p "Kill this Xorg process? (yes/no): " killXorg
-            if [[ $killXorg == yes ]]; then
-                sudo kill -15 $(pidof Xorg)
-                sleep 1
-            else
-                return -1
-            fi
-        fi
-
-        if [[ "$(realpath $1)" != "/mnt/linuxqa/"* ]]; then
-            chmod +x $(realpath $1) 
-        fi 
-
-        sudo rm -rf /var/log/nvidia-installer.log
-        sudo $(realpath $1) \
-            && echo "Nvidia driver is installed!" \
-            || cat /var/log/nvidia-installer.log
-
-        if [[ $was_dm_active == yes ]]; then 
-            read -e -i yes -p "Do you want to start display manager? " start_dm
-            if [[ $start_dm == yes ]]; then 
-                sudo systemctl start display-manager
-            fi 
-        fi 
+    if [[ $(systemctl is-active display-manager) == active ]]; then
+        was_dm_active=yes
+        sudo systemctl stop display-manager 
     else
-        mapfile -t files < <(find $P4ROOT/_out ~/Downloads -type f -name 'NVIDIA-*.run')
-        ((${#files[@]})) || { echo "No nvidia .run found"; return -1; }
-        select file in "${files[@]}"; do 
-            [[ $file ]] && { 
-                zhu-install-nvidia-driver-localbuild $file 
-                return 
-            }
-            echo "Invalid choice, try again"
-        done
+        was_dm_active=no
     fi
+
+    if [[ ! -z $(pidof Xorg) ]]; then
+        echo "Xorg $(pidof Xorg) is still running..."
+        read -e -i yes -p "Kill this Xorg process? (yes/no): " killXorg
+        if [[ $killXorg == yes ]]; then
+            sudo kill -15 $(pidof Xorg)
+            sleep 1
+        else
+            return -1
+        fi
+    fi
+
+    if [[ "$(realpath $1)" != "/mnt/linuxqa/"* ]]; then
+        chmod +x $(realpath $1) 
+    fi 
+
+    sudo rm -rf /var/log/nvidia-installer.log
+    sudo $(realpath $1) \
+        && echo "Nvidia driver is installed!" \
+        || cat /var/log/nvidia-installer.log
+
+    if [[ $was_dm_active == yes ]]; then 
+        read -e -i yes -p "Do you want to start display manager? " start_dm
+        if [[ $start_dm == yes ]]; then 
+            sudo systemctl start display-manager
+        fi 
+    fi 
 }
 
 function zhu-install-nvidia-driver-cloudbuild {
