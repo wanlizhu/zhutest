@@ -2863,7 +2863,7 @@ function zhu-ssh-test-machine {
         read -s -p "Password: " passwd
         echo "$passwd" > ~/.zhutest.passwd.test
     fi
-    sshpass -p ~/.zhutest.passwd.test ssh wanliz@wanliz-test.client.nvidia.com
+    sshpass -f ~/.zhutest.passwd.test ssh wanliz@wanliz-test.client.nvidia.com
 }
 
 function zhu-rsync-zhutest-workload {
