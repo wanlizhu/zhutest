@@ -665,16 +665,27 @@ function zhu-install-nvidia-driver-cloudbuild {
 function zhu-build-nvidia-driver {
     pushd . >/dev/null
     if [[ ! -e ./makefile.nvmk ]]; then
-        read -e -i yes -p "Cd to $P4ROOT? (yes/no): " cdroot
+        read -e -i yes -p "Change CWD to $P4ROOT? (yes/no): " cdroot
         if [[ $cdroot == yes ]]; then
             cd $P4ROOT
         fi 
+    fi
+
+    if [[ -d drivers ]]; then
+        nvmake_more_args="drivers dist"
+    else
+        nvmake_more_args=""
     fi
 
     nvmake_arch=amd64
     nvmake_config=release
     nvmake_jobs=$(nproc)
     nvmake_cleanbuild=no
+
+    if [[ -z "$1" ]]; then
+        echo "nvmake $nvmake_more_args linux $nvmake_arch $nvmake_config -j$nvmake_jobs"
+        read -p "Press [ENTER] to continue: " _
+    fi 
 
     while [[ $# -gt 0 ]]; do 
         case "$1" in
@@ -704,29 +715,17 @@ function zhu-build-nvidia-driver {
 
     sudo apt install -y libelf-dev &>/dev/null 
 
-    if [[ -d drivers ]]; then
-        time $P4ROOT/misc/linux/unix-build \
-            --tools  $P4ROOT/tools \
-            --devrel $P4ROOT/devrel/SDK/inc/GL \
-            --unshare-namespaces \
-            nvmake \
-            NV_COLOR_OUTPUT=1 \
-            NV_GUARDWORD= \
-            NV_COMPRESS_THREADS=$(nproc) \
-            NV_FAST_PACKAGE_COMPRESSION=zstd drivers dist linux $nvmake_arch $nvmake_config -j$nvmake_jobs "$@" \
-            && echo "[$(date)] Nvmake success -- drivers dist linux $nvmake_arch $nvmake_config -j$nvmake_jobs $@" | tee -a /tmp/nvmake.log \
-            || echo "[$(date)] Nvmake failed  -- drivers dist linux $nvmake_arch $nvmake_config -j$nvmake_jobs $@" | tee -a /tmp/nvmake.log
-    else
-        time $P4ROOT/misc/linux/unix-build \
-            --tools  $P4ROOT/tools \
-            --devrel $P4ROOT/devrel/SDK/inc/GL \
-            --unshare-namespaces \
-            nvmake \
-            NV_COLOR_OUTPUT=1 \
-            NV_GUARDWORD= \
-            NV_COMPRESS_THREADS=$(nproc) \
-            NV_FAST_PACKAGE_COMPRESSION=zstd linux $nvmake_arch $nvmake_config -j$nvmake_jobs "$@"
-    fi
+    time $P4ROOT/misc/linux/unix-build \
+        --tools  $P4ROOT/tools \
+        --devrel $P4ROOT/devrel/SDK/inc/GL \
+        --unshare-namespaces \
+        nvmake \
+        NV_COLOR_OUTPUT=1 \
+        NV_GUARDWORD= \
+        NV_COMPRESS_THREADS=$(nproc) \
+        NV_FAST_PACKAGE_COMPRESSION=zstd       $nvmake_more_args linux $nvmake_arch $nvmake_config -j$nvmake_jobs "$@" \
+        && echo "[$(date)] Nvmake succeeded -- $nvmake_more_args linux $nvmake_arch $nvmake_config -j$nvmake_jobs $@" | tee -a /tmp/nvmake.log \
+        || echo "[$(date)] Nvmake failed    -- $nvmake_more_args linux $nvmake_arch $nvmake_config -j$nvmake_jobs $@" | tee -a /tmp/nvmake.log
 
     popd >/dev/null
 }
