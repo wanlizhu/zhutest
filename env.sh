@@ -2854,3 +2854,14 @@ function zhu-run-in-proton {
 
     $proton_dir/files/bin/wine "$@"
 }
+
+function zhu-ssh-test-machine {
+    if [[ -z $(which sshpass) ]]; then
+        sudo apt install -y sshpass
+    fi
+    if [[ ! -e ~/.zhutest.passwd.test ]]; then
+        read -s -p "Password: " passwd
+        echo "$passwd" > ~/.zhutest.passwd.test
+    fi
+    sshpass -p ~/.zhutest.passwd.test ssh wanliz@wanliz-test.client.nvidia.com
+}
