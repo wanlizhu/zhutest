@@ -2838,6 +2838,16 @@ function zhu-rsync-p4sw-bugfix_main {
     time rsync -ah --progress --exclude="_out/" --exclude=".git/" --exclude=".vscode/" $user@$host_ip:/home/$user/wanliz-p4sw-bugfix_main/ $HOME/wanliz-p4sw-bugfix_main 
 }
 
+function zhu-rsync-driver {
+    read -e -i wanliz-test.client.nvidia.com -p "Rsync from remote host: " host_ip
+    read -e -i wanliz  -p "As user: " user
+    read -e -i amd64   -p "Driver arch: " arch
+    read -e -i release -p "Driver config: " config
+    read -p "Driver version: " version
+    
+    time rsync -ah --progress $user@$host_ip:/home/$user/wanliz-p4sw-bugfix_main/_out/Linux_${arch}_${config}/NVIDIA-Linux-${arch/amd64/x86_64}-${version}-internal.run $HOME/Downloads/NVIDIA-Linux-${arch/amd64/x86_64}-${version}-internal.run
+}
+
 function zhu-ttyacm0 {
     sudo screen /dev/ttyACM0 115200
 }
@@ -2849,3 +2859,4 @@ function zhu-n1x5 {
 function zhu-n1x5-host {
     ssh root@linux-bringup2.nvidia.com
 }
+
