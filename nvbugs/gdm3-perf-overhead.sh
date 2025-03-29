@@ -7,7 +7,7 @@ function zhu-test-gdm3-perf-overhead {
 
     fps1=$(cat /tmp/maya.gdm3.log | grep 'result FPS' | awk '{print $5}')
     fps2=$(cat /tmp/maya.xserver.log | grep 'result FPS' | awk '{print $5}')
-    ratio=$(echo "scale=2; ($fps2-$fps1)/$fps1" | bc)
+    ratio=$(echo "scale=2; ($fps2-$fps1)*1.0/$fps1" | bc)
     echo 
     echo "FPS on GDM3: $fps1"
     echo "FPS on Xserver: $fps2 ($ratio)"
