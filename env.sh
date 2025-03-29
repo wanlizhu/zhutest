@@ -597,7 +597,7 @@ function zhu-install-nvidia-driver-localbuild {
     fi 
 }
 
-function zhu-install-nvidia-driver-cloudbuild {
+function zhu-install-nvidia-driver-prebuilt {
     zhu-mount-linuxqa || return -1
     path="/mnt"
     echo "[1] release build"
