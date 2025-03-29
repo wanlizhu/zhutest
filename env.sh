@@ -74,6 +74,12 @@ if [[ $USER == wanliz ]]; then
     fi
 fi
 
+if [[ -d $HOME/zhutest/nvbugs ]]; then
+    for file in $HOME/zhutest/nvbugs/*.sh; do 
+        source $file 
+    done 
+fi
+
 function zhu-reload {
     if [[ -e ~/zhutest/env.sh ]]; then
         source ~/zhutest/env.sh
