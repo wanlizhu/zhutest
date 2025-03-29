@@ -421,10 +421,10 @@ function zhu-xserver {
             sleep 1
         fi 
 
-        if [[ $1 == -y ]]; then
-            ans=yes 
-        else
+        if [[ $1 == -i ]]; then
             read -e -i yes -p "Run X server in a detached session? (yes/no): " ans
+        else
+            ans=yes 
         fi 
 
         if [[ $ans == yes ]]; then
