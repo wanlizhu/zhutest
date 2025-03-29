@@ -2845,7 +2845,8 @@ function zhu-rsync-driver {
     read -e -i release -p "Driver config: " config
     read -p "Driver version: " version
     
-    time rsync -ah --progress $user@$host_ip:/home/$user/wanliz-p4sw-bugfix_main/_out/Linux_${arch}_${config}/NVIDIA-Linux-${arch/amd64/x86_64}-${version}-internal.run $HOME/Downloads/NVIDIA-Linux-${arch/amd64/x86_64}-${version}-internal.run
+
+    time rsync -ah --progress $user@$host_ip:/home/$user/wanliz-p4sw-bugfix_main/_out/Linux_${arch}_${config}/NVIDIA-Linux-${arch/amd64/x86_64}-${version}-internal.run NVIDIA-Linux-${arch/amd64/x86_64}-${version}-internal.run
 }
 
 function zhu-ttyacm0 {
