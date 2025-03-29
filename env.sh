@@ -1709,12 +1709,8 @@ function zhu-test-viewperf-catia {
     pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
     mkdir -p results/catia-06 
     rm -rf results/catia-06/results.xml
-    
-    if [[ "$1" != --notaskset ]]; then
-        zhu-ask-for-taskset
-    fi 
 
-    $TASKSET ./viewperf/bin/viewperf viewsets/catia/config/catia.xml -resolution 1920x1080 \
+    ./viewperf/bin/viewperf viewsets/catia/config/catia.xml -resolution 1920x1080 \
         && cat results/catia-06/results.xml \
         || echo "Failed to run viewsets/catia"
     popd >/dev/null 
@@ -1727,12 +1723,8 @@ function zhu-test-viewperf-creo {
     pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
     mkdir -p results/creo-03 
     rm -rf results/creo-03/results.xml
-    
-    if [[ "$1" != --notaskset ]]; then
-        zhu-ask-for-taskset
-    fi 
 
-    $TASKSET ./viewperf/bin/viewperf viewsets/creo/config/creo.xml -resolution 1920x1080 \
+    ./viewperf/bin/viewperf viewsets/creo/config/creo.xml -resolution 1920x1080 \
         && cat results/creo-03/results.xml \
         || echo "Failed to run viewsets/creo"
     popd >/dev/null 
@@ -1745,12 +1737,8 @@ function zhu-test-viewperf-energy {
     pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
     mkdir -p results/energy-03 
     rm -rf results/energy-03/results.xml
-    
-    if [[ "$1" != --notaskset ]]; then
-        zhu-ask-for-taskset
-    fi 
 
-    $TASKSET ./viewperf/bin/viewperf viewsets/energy/config/energy.xml -resolution 1920x1080 \
+    ./viewperf/bin/viewperf viewsets/energy/config/energy.xml -resolution 1920x1080 \
         && cat results/energy-03/results.xml \
         || echo "Failed to run viewsets/energy"
     popd >/dev/null 
@@ -1764,11 +1752,7 @@ function zhu-test-viewperf-maya {
     mkdir -p results/maya-06 
     rm -rf results/maya-06/results.xml
     
-    if [[ "$1" != --notaskset ]]; then
-        zhu-ask-for-taskset
-    fi 
-
-    $TASKSET ./viewperf/bin/viewperf viewsets/maya/config/maya.xml -resolution 1920x1080 \
+    ./viewperf/bin/viewperf viewsets/maya/config/maya.xml -resolution 1920x1080 \
         && cat results/maya-06/results.xml \
         || echo "Failed to run viewsets/maya"
     popd >/dev/null 
@@ -1781,12 +1765,8 @@ function zhu-test-viewperf-medical {
     pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
     mkdir -p results/medical-03 
     rm -rf results/medical-03/results.xml
-    
-    if [[ "$1" != --notaskset ]]; then
-        zhu-ask-for-taskset
-    fi 
 
-    $TASKSET ./viewperf/bin/viewperf viewsets/medical/config/medical.xml -resolution 1920x1080 \
+    ./viewperf/bin/viewperf viewsets/medical/config/medical.xml -resolution 1920x1080 \
         && cat results/medical-03/results.xml \
         || echo "Failed to run viewsets/medical"
     popd >/dev/null 
@@ -1799,12 +1779,8 @@ function zhu-test-viewperf-snx {
     pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
     mkdir -p results/snx-04 
     rm -rf results/snx-04/results.xml
-    
-    if [[ "$1" != --notaskset ]]; then
-        zhu-ask-for-taskset
-    fi 
 
-    $TASKSET ./viewperf/bin/viewperf viewsets/snx/config/snx.xml -resolution 1920x1080 \
+    ./viewperf/bin/viewperf viewsets/snx/config/snx.xml -resolution 1920x1080 \
         && cat results/snx-04/results.xml \
         || echo "Failed to run viewsets/snx"
     popd >/dev/null 
@@ -1817,12 +1793,8 @@ function zhu-test-viewperf-sw {
     pushd ~/zhutest-workload.d/viewperf2020.$(uname -m) || return -1
     mkdir -p results/solidworks-07
     rm -rf results/solidworks-07/results.xml
-    
-    if [[ "$1" != --notaskset ]]; then
-        zhu-ask-for-taskset
-    fi 
 
-    $TASKSET ./viewperf/bin/viewperf viewsets/sw/config/sw.xml -resolution 1920x1080 \
+    ./viewperf/bin/viewperf viewsets/sw/config/sw.xml -resolution 1920x1080 \
         && cat results/solidworks-07/results.xml \
         || echo "Failed to run viewsets/sw"
     popd >/dev/null 
@@ -1856,15 +1828,6 @@ function zhu-test-viewperf-in-gui {
     #done
 }
 
-function zhu-ask-for-taskset {
-    TASKSET=""
-    read -p "Pin the testing process to a specific CPU (ID or blank to skip): " cpu_id
-    if [[ ! -z "$cpu_id" ]]; then
-        TASKSET="taskset -c $cpu_id"
-    fi
-}
-
-
 function zhu-test-viewperf-catia-subtest1 {
     zhu-validate-display || return -1
     zhu-install-viewperf || return -1 
@@ -1891,8 +1854,7 @@ EOF
     if [[ $1 == --dryrun ]]; then
         echo "./viewperf/bin/viewperf viewsets/catia/config/subtest1.xml -resolution 1920x1080"
     else
-        zhu-ask-for-taskset
-        $TASKSET ./viewperf/bin/viewperf viewsets/catia/config/subtest1.xml -resolution 1920x1080 && {
+        ./viewperf/bin/viewperf viewsets/catia/config/subtest1.xml -resolution 1920x1080 && {
             cat results/catia-06/results.xml | grep FPS | xmllint --xpath 'string(//Test/@FPS)' - >> /tmp/fps.log 
             echo "Viewperf Catia-06:subtest1 result FPS: $(cat /tmp/fps.log | tail -1)"
         }
@@ -1927,8 +1889,7 @@ EOF
     if [[ $1 == --dryrun ]]; then
         echo "./viewperf/bin/viewperf viewsets/maya/config/subtest5.xml -resolution 1920x1080 "
     else
-        zhu-ask-for-taskset
-        $TASKSET ./viewperf/bin/viewperf viewsets/maya/config/subtest5.xml -resolution 1920x1080 && {
+        ./viewperf/bin/viewperf viewsets/maya/config/subtest5.xml -resolution 1920x1080 && {
             cat results/maya-06/results.xml | grep FPS | xmllint --xpath 'string(//Test/@FPS)' - >> /tmp/fps.log 
             echo "Viewperf Maya-06:subtest5 result FPS: $(cat /tmp/fps.log | tail -1)"
         }
