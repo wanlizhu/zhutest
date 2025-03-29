@@ -385,7 +385,7 @@ function zhu-generate-perf-and-flamegraph {
     fi 
 }
 
-function zhu-start-gdm3 {
+function zhu-gdm3 {
     if [[ $XDG_SESSION_TYPE == tty ]]; then
         sudo kill -15 $(pidof Xorg)
         sleep 1
@@ -393,7 +393,7 @@ function zhu-start-gdm3 {
     fi
 }
 
-function zhu-start-bare-xsession {
+function zhu-xserver {
     # When run via SSH/TTY session
     if [[ ! -z $(who am i) ]]; then 
         if [[ $EUID == 0 ]]; then
@@ -415,10 +415,16 @@ function zhu-start-bare-xsession {
             sleep 1
         fi 
 
-        read -e -i yes -p "Run X server in a detached session? (yes/no): " ans
+        if [[ $1 == -y ]]; then
+            ans=yes 
+        else
+            read -e -i yes -p "Run X server in a detached session? (yes/no): " ans
+        fi 
+
         if [[ $ans == yes ]]; then
             export XAUTHORITY=""
-            $SUDO screen -dmS bare-xsession X :0 +iglx
+            $SUDO screen -dmS xserver X :0 +iglx
+            export DISPLAY=:0
             sleep 1
             if [[ -z $(pidof Xorg) ]]; then
                 echo "Failed to start up a new Xorg session!"; return -1
@@ -435,7 +441,7 @@ function zhu-start-bare-xsession {
     fi
 }
 
-function zhu-start-openbox {
+function zhu-replace-with-openbox {
     if [[ $XDG_SESSION_TYPE == tty ]]; then
         [[ -z $DISPLAY ]] && export DISPLAY=:0 
         [[ -z $(dpkg -l | grep "^ii  openbox ") ]] && sudo apt install -y openbox
@@ -2023,7 +2029,7 @@ function zhu-check-vncserver {
     sudo ss -tulpn | grep -E "5900|5901|5902"
 }
 
-function zhu-start-vnc-server-for-headless-system {
+function zhu-vnc-server-for-headless-system {
     if [[ ! -z $(zhu-check-vncserver) ]]; then
         zhu-check-vncserver
         echo "A valid VNC server is already running..."
@@ -2089,7 +2095,7 @@ WantedBy=multi-user.target
     fi
 }
 
-function zhu-start-vnc-server-for-physical-display {
+function zhu-vnc-server-for-physical-display {
     if [[ ! -z $(zhu-check-vncserver) ]]; then
         zhu-check-vncserver
         echo "A valid VNC server is already running..."
@@ -2177,7 +2183,7 @@ WantedBy=multi-user.target
     fi
 }
 
-function zhu-start-vnc-server {
+function zhu-vnc-server {
     if [[ -z $DISPLAY ]]; then
         read -e -i yes -p "Set DISPLAY to :0? (yes/no): " ans
         if [[ $ans == yes ]]; then
@@ -2190,9 +2196,9 @@ function zhu-start-vnc-server {
     read -p "Which VNC server to start? : " selection
 
     if [[ $selection == 1 ]]; then
-        zhu-start-vnc-server-for-headless-system
+        zhu-vnc-server-for-headless-system
     elif [[ $selection == 2 ]]; then
-        zhu-start-vnc-server-for-physical-display
+        zhu-vnc-server-for-physical-display
     fi
 }
 
