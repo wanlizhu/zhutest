@@ -2841,3 +2841,11 @@ function zhu-rsync-p4sw-bugfix_main {
 function zhu-ttyacm0 {
     sudo screen /dev/ttyACM0 115200
 }
+
+function zhu-n1x5 {
+    ssh nvidia@linux-n1x5.client.nvidia.com
+}
+
+function zhu-n1x5-host {
+    ssh root@linux-bringup2.nvidia.com
+}
