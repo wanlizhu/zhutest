@@ -1,0 +1,13 @@
+#!/bin/sh -e
+# Script to dispatch NetworkManager events
+#
+# Runs ifupdown scripts when NetworkManager fiddles with interfaces.
+# See NetworkManager(8) for further documentation of the dispatcher events.
+if [ -n "$DHCP4_IP_ADDRESS" ]; then
+    logger -t ddns "NetworkManager iface='$1' action='$2' DHCP4_IP_ADDRESS=$DHCP4_IP_ADDRESS"
+    export new_ip_address=$DHCP4_IP_ADDRESS
+    export reason="BOUND"
+    export hostname="$HOSTNAME"
+    export interface="$1"
+    /etc/dhcp/dhclient-exit-hooks.d/ddns
+fi

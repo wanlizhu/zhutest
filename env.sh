@@ -11,7 +11,53 @@ if [[ -z $DISPLAY ]]; then
     fi
 fi
 
-if sudo ls >/dev/null 2>&1; then
+if [[ $USER == wanliz ]]; then
+    export P4CLIENT=wanliz-p4sw-bugfix_main
+    export P4ROOT=/media/wanliz/wzhu-ssd-ext4-4t/$P4CLIENT
+    export P4IGNORE=/home/wanliz/.p4ignore 
+    export P4PORT=p4proxy-sc.nvidia.com:2006
+    export P4USER=wanliz 
+
+    if [[ ! -e $P4IGNORE && -d $(dirname $P4IGNORE) ]]; then
+        echo "_out" > $P4IGNORE
+        echo ".git" >> $P4IGNORE
+        echo ".vscode" >> $P4IGNORE
+    fi
+
+    if [[ $UID != "0" ]]; then
+        if ! sudo grep -q "$USER ALL=(ALL) NOPASSWD:ALL" /etc/sudoers; then
+            echo "Enable sudo without password"
+            echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
+        fi
+    fi 
+
+    if ! echo "$PATH" | tr ':' '\n' | grep -q "dvs/dvsbuild"; then
+        export PATH="$P4ROOT/automation/dvs/dvsbuild:$PATH" 
+    fi
+
+    if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-systems-internal"; then
+        export PATH="~/nsight-systems-internal/current/host-linux-x64:$PATH" 
+    fi
+
+    if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-graphics-internal"; then
+        export PATH="~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64:$PATH"
+    fi
+
+    if ! echo "$PATH" | tr ':' '\n' | grep -q "gfxreconstruct.git"; then
+        export PATH="~/gfxreconstruct.git/build/linux/x64/output/bin:$PATH"
+    fi
+
+    if ! echo "$PATH" | tr ':' '\n' | grep -q "apitrace.$(uname -m)"; then
+        export PATH="~/apitrace.$(uname -m)/bin:$PATH"
+    fi
+
+    if [[ $(uname -m) == aarch64 ]]; then
+        if [[ -e $HOME/.fex-emu/Config.json ]]; then
+            which jq >/dev/null || sudo apt install -y jq 
+            export rootfs="$HOME/.fex-emu/RootFS/$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)"
+        fi 
+    fi
+
     if [[ $DISPLAY == *"localhost"* ]]; then
         # When X11 forwarding is enabled
         export XAUTHORITY=~/.Xauthority
@@ -26,64 +72,14 @@ if sudo ls >/dev/null 2>&1; then
     if [[ $XDG_SESSION_TYPE == x11 ]]; then
         xhost + >/dev/null 2>&1
     fi
-
-    if [[ $USER == wanliz ]]; then
-        export P4CLIENT=wanliz-p4sw-bugfix_main
-        export P4ROOT=/media/wanliz/wzhu-ssd-ext4-4t/$P4CLIENT
-        export P4IGNORE=/home/wanliz/.p4ignore 
-        export P4PORT=p4proxy-sc.nvidia.com:2006
-        export P4USER=wanliz 
-
-        if [[ ! -e $P4IGNORE && -d $(dirname $P4IGNORE) ]]; then
-            echo "_out" > $P4IGNORE
-            echo ".git" >> $P4IGNORE
-            echo ".vscode" >> $P4IGNORE
-        fi
-
-        if [[ $UID != "0" ]]; then
-            if ! sudo grep -q "$USER ALL=(ALL) NOPASSWD:ALL" /etc/sudoers; then
-                echo "Enable sudo without password"
-                echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
-            fi
-        fi 
-
-        if ! echo "$PATH" | tr ':' '\n' | grep -q "dvs/dvsbuild"; then
-            export PATH="$P4ROOT/automation/dvs/dvsbuild:$PATH" 
-        fi
-
-        if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-systems-internal"; then
-            export PATH="~/nsight-systems-internal/current/host-linux-x64:$PATH" 
-        fi
-
-        if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-graphics-internal"; then
-            export PATH="~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64:$PATH"
-        fi
-
-        if ! echo "$PATH" | tr ':' '\n' | grep -q "gfxreconstruct.git"; then
-            export PATH="~/gfxreconstruct.git/build/linux/x64/output/bin:$PATH"
-        fi
-
-        if ! echo "$PATH" | tr ':' '\n' | grep -q "apitrace.$(uname -m)"; then
-            export PATH="~/apitrace.$(uname -m)/bin:$PATH"
-        fi
-
-        if [[ $(uname -m) == aarch64 ]]; then
-            if [[ -e $HOME/.fex-emu/Config.json ]]; then
-                which jq >/dev/null || sudo apt install -y jq 
-                export rootfs="$HOME/.fex-emu/RootFS/$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)"
-            fi 
-        fi
-    fi
-else # if `sudo ls` failed
-    echo "Running inside FEX, config nothing!" >/dev/null 
-fi 
+fi
 
 function zhu-reload {
-    if [[ -e ~/zhutest/utils.sh ]]; then
-        source ~/zhutest/utils.sh
-        echo "~/zhutest/utils.sh sourced!"
+    if [[ -e ~/zhutest/env.sh ]]; then
+        source ~/zhutest/env.sh
+        echo "~/zhutest/env.sh sourced!"
     else
-        echo "~/zhutest/utils.sh doesn't exist!"
+        echo "~/zhutest/env.sh doesn't exist!"
     fi
 }
 
@@ -94,6 +90,18 @@ function zhu-enable-no-password-sudo {
             echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
         fi
     fi 
+}
+
+function zhu-setup-nvidia-ddns {
+    sudo mkdir -p /etc/dhcp/dhclient-exit-hooks.d
+    sudo cp ~/zhutest/etc/ddns-for-dhcp /etc/dhcp/dhclient-exit-hooks.d/ddns
+    sudo chmod 755 /etc/dhcp/dhclient-exit-hooks.d/ddns
+
+    sudo mkdir -p /etc/NetworkManager/dispatcher.d
+    sudo cp ~/zhutest/etc/ddns-for-networkmanager /etc/NetworkManager/dispatcher.d/ddns
+    sudo chmod 755 /etc/NetworkManager/dispatcher.d/ddns
+
+    echo "Todo: reboot your system to apply changes!"
 }
 
 function zhu-is-installed {
@@ -365,7 +373,7 @@ function zhu-generate-perf-and-flamegraph {
     fi
 
     if [[ -z $frequency ]]; then
-        frequency=5
+        frequency=5000
     fi
 
     data_path=$output_dir/perf.data
@@ -537,51 +545,44 @@ function zhu-download-nvidia-driver {
 }
 
 function zhu-install-nvidia-driver-localbuild {
-    if [[ -e $1 ]]; then
-        if [[ $(systemctl is-active display-manager) == active ]]; then
-            was_dm_active=yes
-            sudo systemctl stop display-manager 
-        else
-            was_dm_active=no
-        fi
+    if [[ ! -e $1 ]]; then
+        echo "Error: $1 doesn't exist!"
+        return -1
+    fi 
 
-        if [[ ! -z $(pidof Xorg) ]]; then
-            echo "Xorg $(pidof Xorg) is still running..."
-            read -e -i yes -p "Kill this Xorg process? (yes/no): " killXorg
-            if [[ $killXorg == yes ]]; then
-                sudo kill -15 $(pidof Xorg)
-                sleep 1
-            else
-                return -1
-            fi
-        fi
-
-        if [[ "$(realpath $1)" != "/mnt/linuxqa/"* ]]; then
-            chmod +x $(realpath $1) 
-        fi 
-
-        sudo rm -rf /var/log/nvidia-installer.log
-        sudo $(realpath $1) \
-            && echo "Nvidia driver is installed!" \
-            || cat /var/log/nvidia-installer.log
-
-        if [[ $was_dm_active == yes ]]; then 
-            read -e -i yes -p "Do you want to start display manager? " start_dm
-            if [[ $start_dm == yes ]]; then 
-                sudo systemctl start display-manager
-            fi 
-        fi 
+    if [[ $(systemctl is-active display-manager) == active ]]; then
+        was_dm_active=yes
+        sudo systemctl stop display-manager 
     else
-        mapfile -t files < <(find $P4ROOT/_out ~/Downloads -type f -name 'NVIDIA-*.run')
-        ((${#files[@]})) || { echo "No nvidia .run found"; return -1; }
-        select file in "${files[@]}"; do 
-            [[ $file ]] && { 
-                zhu-install-nvidia-driver-localbuild $file 
-                return 
-            }
-            echo "Invalid choice, try again"
-        done
+        was_dm_active=no
     fi
+
+    if [[ ! -z $(pidof Xorg) ]]; then
+        echo "Xorg $(pidof Xorg) is still running..."
+        read -e -i yes -p "Kill this Xorg process? (yes/no): " killXorg
+        if [[ $killXorg == yes ]]; then
+            sudo kill -15 $(pidof Xorg)
+            sleep 1
+        else
+            return -1
+        fi
+    fi
+
+    if [[ "$(realpath $1)" != "/mnt/linuxqa/"* ]]; then
+        chmod +x $(realpath $1) 
+    fi 
+
+    sudo rm -rf /var/log/nvidia-installer.log
+    sudo $(realpath $1) \
+        && echo "Nvidia driver is installed!" \
+        || cat /var/log/nvidia-installer.log
+
+    if [[ $was_dm_active == yes ]]; then 
+        read -e -i yes -p "Do you want to start display manager? " start_dm
+        if [[ $start_dm == yes ]]; then 
+            sudo systemctl start display-manager
+        fi 
+    fi 
 }
 
 function zhu-install-nvidia-driver-cloudbuild {
@@ -663,74 +664,48 @@ function zhu-install-nvidia-driver-cloudbuild {
 
 function zhu-build-nvidia-driver {
     pushd . >/dev/null
+
+    sudo apt install -y libelf-dev &>/dev/null 
     if [[ ! -e ./makefile.nvmk ]]; then
-        read -e -i yes -p "Cd to $P4ROOT? (yes/no): " cdroot
+        read -e -i yes -p "Change CWD to $P4ROOT? (yes/no): " cdroot
         if [[ $cdroot == yes ]]; then
             cd $P4ROOT
         fi 
     fi
 
-    nvmake_arch=amd64
-    nvmake_config=release
-    nvmake_jobs=$(nproc)
-    nvmake_cleanbuild=no
+    if [[ -z "$1" ]]; then
+        nvmake_args="nvmake driver dist linux amd64 release -j$(nproc)"
+        echo "$nvmake_args"
+        read -p "Press [ENTER] to continue: " _
+    else
+        nvmake_args="$@"
+    fi 
 
-    while [[ $# -gt 0 ]]; do 
-        case "$1" in
-            --) shift; break ;;
-            *) 
-                case "$1" in
-                    amd64|x86) nvmake_arch=$1 ;;
-                    release|debug|develop) nvmake_config=$1 ;;
-                    -j1) nvmake_jobs=1 ;;
-                    cleanbuild) nvmake_cleanbuild=yes ;;
-                esac
-                shift 
-            ;;
-        esac
-    done
-
-    if [[ $nvmake_cleanbuild == yes || "$1" == sweep ]]; then
+    if [[ "$1" == sweep ]]; then
         $P4ROOT/misc/linux/unix-build \
             --tools  $P4ROOT/tools \
             --devrel $P4ROOT/devrel/SDK/inc/GL \
             --unshare-namespaces \
             nvmake sweep 
-        if [[ "$1" == sweep ]]; then
-            return 
-        fi
+        return 
     fi
 
-    sudo apt install -y libelf-dev &>/dev/null 
-
-    if [[ -d drivers ]]; then
-        time $P4ROOT/misc/linux/unix-build \
-            --tools  $P4ROOT/tools \
-            --devrel $P4ROOT/devrel/SDK/inc/GL \
-            --unshare-namespaces \
-            nvmake \
-            NV_COLOR_OUTPUT=1 \
-            NV_GUARDWORD= \
-            NV_COMPRESS_THREADS=$(nproc) \
-            NV_FAST_PACKAGE_COMPRESSION=zstd drivers dist linux $nvmake_arch $nvmake_config -j$nvmake_jobs "$@" \
-            && echo "[$(date)] Nvmake success -- drivers dist linux $nvmake_arch $nvmake_config -j$nvmake_jobs $@" | tee -a /tmp/nvmake.log \
-            || echo "[$(date)] Nvmake failed  -- drivers dist linux $nvmake_arch $nvmake_config -j$nvmake_jobs $@" | tee -a /tmp/nvmake.log
-    else
-        time $P4ROOT/misc/linux/unix-build \
-            --tools  $P4ROOT/tools \
-            --devrel $P4ROOT/devrel/SDK/inc/GL \
-            --unshare-namespaces \
-            nvmake \
-            NV_COLOR_OUTPUT=1 \
-            NV_GUARDWORD= \
-            NV_COMPRESS_THREADS=$(nproc) \
-            NV_FAST_PACKAGE_COMPRESSION=zstd linux $nvmake_arch $nvmake_config -j$nvmake_jobs "$@"
-    fi
+    time $P4ROOT/misc/linux/unix-build \
+        --tools  $P4ROOT/tools \
+        --devrel $P4ROOT/devrel/SDK/inc/GL \
+        --unshare-namespaces \
+        nvmake \
+        NV_COLOR_OUTPUT=1 \
+        NV_GUARDWORD= \
+        NV_COMPRESS_THREADS=$(nproc) \
+        NV_FAST_PACKAGE_COMPRESSION=zstd       $nvmake_args \
+        && echo "[$(date)] Nvmake succeeded -- $nvmake_args" | tee -a /tmp/nvmake.log \
+        || echo "[$(date)] Nvmake failed    -- $nvmake_args" | tee -a /tmp/nvmake.log
 
     popd >/dev/null
 }
 
-function zhu-list-functions {
+function zhu-lsfunc {
     declare -f | grep 'zhu-' | grep -v declare | grep '()'
 }
 
@@ -2846,3 +2821,43 @@ function zhu-run-in-proton {
 
     $proton_dir/files/bin/wine "$@"
 }
+
+function zhu-ssh-test-machine {
+    ssh wanliz@wanliz-test.client.nvidia.com
+}
+
+function zhu-rsync-zhutest-workload {
+    read -e -i wanliz-test.client.nvidia.com -p "Rsync from remote host: " host_ip
+    read -e -i wanliz -p "As user: " user
+    time rsync -ah --progress $user@$host_ip:/home/$user/zhutest-workload.d/ $HOME/zhutest-workload.d 
+}
+
+function zhu-rsync-p4sw-bugfix_main {
+    read -e -i wanliz-test.client.nvidia.com -p "Rsync from remote host: " host_ip
+    read -e -i wanliz -p "As user: " user
+    time rsync -ah --progress --exclude="_out/" --exclude=".git/" --exclude=".vscode/" $user@$host_ip:/home/$user/wanliz-p4sw-bugfix_main/ $HOME/wanliz-p4sw-bugfix_main 
+}
+
+function zhu-rsync-driver {
+    read -e -i wanliz-test.client.nvidia.com -p "Rsync from remote host: " host_ip
+    read -e -i wanliz  -p "As user: " user
+    read -e -i amd64   -p "Driver arch: " arch
+    read -e -i release -p "Driver config: " config
+    read -p "Driver version: " version
+    
+
+    time rsync -ah --progress $user@$host_ip:/home/$user/wanliz-p4sw-bugfix_main/_out/Linux_${arch}_${config}/NVIDIA-Linux-${arch/amd64/x86_64}-${version}-internal.run NVIDIA-Linux-${arch/amd64/x86_64}-${version}-internal.run
+}
+
+function zhu-ttyacm0 {
+    sudo screen /dev/ttyACM0 115200
+}
+
+function zhu-n1x5 {
+    ssh nvidia@linux-n1x5.client.nvidia.com
+}
+
+function zhu-n1x5-host {
+    ssh root@linux-bringup2.nvidia.com
+}
+
