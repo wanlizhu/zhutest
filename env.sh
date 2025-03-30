@@ -2724,7 +2724,7 @@ function zhu-stat-interrupts-snapshot {
 
 # $1: target pid to wait
 function zhu-stat-gpu-interrupts {
-    if [[ -z $1 || -z $2 ]]; then
+    if [[ -z $1 ]]; then
         echo "Error: target pid is required!"
         return -1
     fi
