@@ -2724,11 +2724,12 @@ function zhu-stat-ftrace-interrupts {
     count=$(trace-cmd report -i /tmp/trace.dat | grep "irq=$gpu_irq" | grep irq_handler_entry | wc -l)
     echo "Interrupts count: $count"
     
+    [[ -z $(which gawk) ]] && sudo apt install -y gawk
     factor_us=1000000
     total_time=$(trace-cmd report -i /tmp/trace.dat | gawk -v target="$gpu_irq" -v factor="$factor_us" '
         /irq_handler_entry/ {
             if ($0 ~ ("irq=" target)) {
-                entry[$2] = $1 + 0;  # force numeric conversion
+                entry[$2] = $1 * 1.0;  # force numeric conversion
                 next;
             }
         }
