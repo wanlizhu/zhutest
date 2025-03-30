@@ -2748,7 +2748,7 @@ function zhu-stat-gpu-interrupts {
     count_snapshot_end=$(zhu-stat-interrupts-snapshot $vendor)
     count_snapshot=$((count_snapshot_end - count_snapshot_begin))
 
-    echo "Interrupts #1 (snapshot): $count_snapshot"
+    echo "Interrupts #1 (/proc/interrupts): $count_snapshot"
     echo "Interrupts #2 (ftrace): $count_ftrace"
 }
 
