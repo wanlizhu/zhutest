@@ -2725,18 +2725,17 @@ function zhu-stat-ftrace-interrupts {
     echo "Interrupts count: $count"
     
     factor_us=1000000
-    total_time=$(trace-cmd report -i /tmp/trace.dat | awk -v target="$gpu_irq" -v factor="$factor_us" '
-        BEGIN { total = 0 }
+    total_time=$(trace-cmd report -i /tmp/trace.dat | gawk -v target="$gpu_irq" -v factor="$factor_us" '
         /irq_handler_entry/ {
             if ($0 ~ ("irq=" target)) {
-                entry[$2] = strtonum($1)
-                next
+                entry[$2] = $1 + 0;  # force numeric conversion
+                next;
             }
         }
         /irq_handler_exit/ {
             if ($0 ~ ("irq=" target) && ($2 in entry)) {
-                total += (strtonum($1) - entry[$2])
-                delete entry[$2]
+                total += ($1 + 0) - entry[$2];
+                delete entry[$2];
             }
         }
         END { printf "%.0f", total * factor }
