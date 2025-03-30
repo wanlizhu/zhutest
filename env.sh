@@ -2735,7 +2735,7 @@ function zhu-stat-ftrace-interrupts {
         }
         /irq_handler_exit/ {
             if ($0 ~ ("irq=" target) && ($2 in entry)) {
-                total += ($1 + 0) - entry[$2];
+                total += ($1 * 1.0) - entry[$2];
                 delete entry[$2];
             }
         }
