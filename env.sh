@@ -1704,6 +1704,7 @@ function zhu-install-viewperf {
 }
 
 function zhu-test-viewperf {
+    echo "" > /tmp/viewperf.scores
     zhu-test-viewperf-catia "$@"
     zhu-test-viewperf-creo "$@"
     zhu-test-viewperf-energy "$@" 
@@ -1711,6 +1712,7 @@ function zhu-test-viewperf {
     zhu-test-viewperf-medical "$@" 
     zhu-test-viewperf-snx "$@" 
     zhu-test-viewperf-sw "$@" 
+    cat /tmp/viewperf.scores
 }
 
 function zhu-test-viewperf-catia {
@@ -1721,9 +1723,11 @@ function zhu-test-viewperf-catia {
     mkdir -p results/catia-06 
     rm -rf results/catia-06/results.xml
 
-    ./viewperf/bin/viewperf viewsets/catia/config/catia.xml -resolution 1920x1080 \
-        && cat results/catia-06/results.xml \
-        || echo "Failed to run viewsets/catia"
+    ./viewperf/bin/viewperf viewsets/catia/config/catia.xml -resolution 1920x1080 && {
+        cat results/catia-06/results.xml
+        fps=$(cat results/catia-06/results.xml | grep "Composite Score" | awk -F'"' '{print $2}')
+        echo "FPS of catia-06: $fps" | tee -a /tmp/viewperf.scores
+    } || echo "Failed to run viewsets/catia"
     popd >/dev/null 
 }
 
@@ -1735,9 +1739,12 @@ function zhu-test-viewperf-creo {
     mkdir -p results/creo-03 
     rm -rf results/creo-03/results.xml
 
-    ./viewperf/bin/viewperf viewsets/creo/config/creo.xml -resolution 1920x1080 \
-        && cat results/creo-03/results.xml \
-        || echo "Failed to run viewsets/creo"
+    ./viewperf/bin/viewperf viewsets/creo/config/creo.xml -resolution 1920x1080 && {
+        cat results/creo-03/results.xml
+        fps=$(cat results/creo-03/results.xml | grep "Composite Score" | awk -F'"' '{print $2}')
+        echo "FPS of creo-03: $fps" | tee -a /tmp/viewperf.scores
+    } || echo "Failed to run viewsets/creo"
+
     popd >/dev/null 
 }
 
@@ -1749,9 +1756,11 @@ function zhu-test-viewperf-energy {
     mkdir -p results/energy-03 
     rm -rf results/energy-03/results.xml
 
-    ./viewperf/bin/viewperf viewsets/energy/config/energy.xml -resolution 1920x1080 \
-        && cat results/energy-03/results.xml \
-        || echo "Failed to run viewsets/energy"
+    ./viewperf/bin/viewperf viewsets/energy/config/energy.xml -resolution 1920x1080 && {
+        cat results/energy-03/results.xml
+        fps=$(cat results/energy-03/results.xml | grep "Composite Score" | awk -F'"' '{print $2}')
+        echo "FPS of energy-03: $fps" | tee -a /tmp/viewperf.scores
+    } || echo "Failed to run viewsets/energy"
     popd >/dev/null 
 }
 
@@ -1763,9 +1772,11 @@ function zhu-test-viewperf-maya {
     mkdir -p results/maya-06 
     rm -rf results/maya-06/results.xml
     
-    ./viewperf/bin/viewperf viewsets/maya/config/maya.xml -resolution 1920x1080 \
-        && cat results/maya-06/results.xml \
-        || echo "Failed to run viewsets/maya"
+    ./viewperf/bin/viewperf viewsets/maya/config/maya.xml -resolution 1920x1080 && {
+        cat results/maya-06/results.xml
+        fps=$(cat results/maya-06/results.xml | grep "Composite Score" | awk -F'"' '{print $2}')
+        echo "FPS of maya-06: $fps" | tee -a /tmp/viewperf.scores
+    } || echo "Failed to run viewsets/maya"
     popd >/dev/null 
 }
 
@@ -1777,9 +1788,11 @@ function zhu-test-viewperf-medical {
     mkdir -p results/medical-03 
     rm -rf results/medical-03/results.xml
 
-    ./viewperf/bin/viewperf viewsets/medical/config/medical.xml -resolution 1920x1080 \
-        && cat results/medical-03/results.xml \
-        || echo "Failed to run viewsets/medical"
+    ./viewperf/bin/viewperf viewsets/medical/config/medical.xml -resolution 1920x1080 && {
+        cat results/medical-03/results.xml
+        fps=$(cat results/medical-03/results.xml | grep "Composite Score" | awk -F'"' '{print $2}')
+        echo "FPS of medical-03: $fps" | tee -a /tmp/viewperf.scores
+    } || echo "Failed to run viewsets/medical"
     popd >/dev/null 
 }
 
@@ -1791,9 +1804,11 @@ function zhu-test-viewperf-snx {
     mkdir -p results/snx-04 
     rm -rf results/snx-04/results.xml
 
-    ./viewperf/bin/viewperf viewsets/snx/config/snx.xml -resolution 1920x1080 \
-        && cat results/snx-04/results.xml \
-        || echo "Failed to run viewsets/snx"
+    ./viewperf/bin/viewperf viewsets/snx/config/snx.xml -resolution 1920x1080 && {
+        cat results/snx-04/results.xml
+        fps=$(cat results/snx-04/results.xml | grep "Composite Score" | awk -F'"' '{print $2}')
+        echo "FPS of snx-04: $fps" | tee -a /tmp/viewperf.scores
+    } || echo "Failed to run viewsets/snx"
     popd >/dev/null 
 }
 
@@ -1805,9 +1820,11 @@ function zhu-test-viewperf-sw {
     mkdir -p results/solidworks-07
     rm -rf results/solidworks-07/results.xml
 
-    ./viewperf/bin/viewperf viewsets/sw/config/sw.xml -resolution 1920x1080 \
-        && cat results/solidworks-07/results.xml \
-        || echo "Failed to run viewsets/sw"
+    ./viewperf/bin/viewperf viewsets/sw/config/sw.xml -resolution 1920x1080 && {
+        cat results/solidworks-07/results.xml
+        fps=$(cat results/solidworks-04/results.xml | grep "Composite Score" | awk -F'"' '{print $2}')
+        echo "FPS of solidworks-04: $fps" | tee -a /tmp/viewperf.scores
+    } || echo "Failed to run viewsets/sw"
     popd >/dev/null 
 }
 
