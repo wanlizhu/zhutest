@@ -2698,15 +2698,15 @@ function zhu-stat-ftrace-interrupts {
         sudo rm -rf /tmp/trace.dat
         echo "irq == $1" | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null
         if [[ -z $2 ]]; then
-            sudo trace-cmd record -e irq_handler_entry
+            sudo trace-cmd record -e irq_handler_entry 2>/dev/null
         else
-            sudo trace-cmd record -e irq_handler_entry &
+            sudo trace-cmd record -e irq_handler_entry 2>/dev/null &
             ftrace_pid=$!
             while [[ -d /proc/$2 ]]; do 
                 echo "wait for $2 to quit"
                 sleep 1 
             done 
-            sudo kill -INT $ftrace_pid &>/dev/null 
+            sudo kill -INT $ftrace_pid 
             while [[ -d /proc/$ftrace_pid ]]; do 
                 sleep 1; 
             done 
@@ -2745,7 +2745,7 @@ function zhu-stat-gpu-interrupts {
 
     gpu_irq=$(grep $vendor /proc/interrupts | awk '{print $1}' | cut -d: -f1 | head -n 1)
     count_snapshot_begin=$(zhu-stat-interrupts-snapshot $vendor)
-    count_ftrace=$(zhu-stat-ftrace-interrupts $gpu_irq $1 | grep "Interrupts count:" | awk '{print $2}')
+    count_ftrace=$(zhu-stat-ftrace-interrupts $gpu_irq $1 | grep "Interrupts count:" | awk '{print $3}')
     count_snapshot_end=$(zhu-stat-interrupts-snapshot $vendor)
     count_snapshot=$((count_snapshot_end - count_snapshot_begin))
 
