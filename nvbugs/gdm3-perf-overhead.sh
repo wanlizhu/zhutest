@@ -1,16 +1,21 @@
 function zhu-test-gdm3-perf-overhead {
     zhu-test-viewperf-maya-subtest5 | tee /tmp/maya.gdm3.log || return -1 &
+    sleep 3
     zhu-stat-gpu-interrupts $(pidof viewperf) | tee /tmp/maya.gdm3.int
 
-    zhu-test-unigine-heaven | tee /tmp/heaven.gdm3.log || return -1
+    zhu-test-unigine-heaven | tee /tmp/heaven.gdm3.log || return -1 &
+    sleep 3
     zhu-stat-gpu-interrupts $(pidof heaven_x64) | tee /tmp/heaven.gdm3.int
 
     zhu-xserver 
 
-    zhu-test-viewperf-maya-subtest5 | tee /tmp/maya.xserver.log || return -1
+    zhu-test-viewperf-maya-subtest5 | tee /tmp/maya.xserver.log || return -1 &
+    sleep 3
     zhu-stat-gpu-interrupts $(pidof viewperf) | tee /tmp/maya.xserver.int
-    zhu-test-unigine-heaven | tee /tmp/heaven.xserver.log || return -1
+    zhu-test-unigine-heaven | tee /tmp/heaven.xserver.log || return -1 &
+    sleep 3
     zhu-stat-gpu-interrupts $(pidof heaven_x64) | tee /tmp/heaven.xserver.int
+    
     zhu-gdm3 
 
     fps1=$(cat /tmp/maya.gdm3.log | grep 'result FPS' | awk '{print $5}')
