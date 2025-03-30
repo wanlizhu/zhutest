@@ -2694,26 +2694,47 @@ function zhu-stat-ftrace-interrupts {
         return -1
     fi
 
-    pushd /tmp >/dev/null 
-        sudo rm -rf /tmp/trace.dat
-        echo "irq == $1" | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null
-        if [[ -z $2 ]]; then
-            sudo trace-cmd record -e irq_handler_entry 2>/dev/null
-        else
-            sudo trace-cmd record -e irq_handler_entry 2>/dev/null &
-            ftrace_pid=$!
-            while [[ -d /proc/$2 ]]; do 
-                sleep 1 
-            done 
-            sudo kill -INT $ftrace_pid 
-            while [[ -d /proc/$ftrace_pid ]]; do 
-                sleep 1; 
-            done 
-        fi 
-        echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null 
-        count=$(trace-cmd report | grep "irq=$1" | wc -l)
-        echo "Interrupts count: $count"
-    popd >/dev/null 
+    sudo rm -rf /tmp/trace.dat
+    echo "irq == $1" | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null
+    echo "irq == $1" | sudo tee /sys/kernel/tracing/events/irq/irq_handler_exit/filter >/dev/null
+    
+    if [[ -z $2 ]]; then
+        sudo trace-cmd record -e irq_handler_entry -e irq_handler_exit -o /tmp/trace.dat 2>/dev/null
+    else
+        sudo trace-cmd record -e irq_handler_entry -e irq_handler_exit -o /tmp/trace.dat 2>/dev/null &
+        ftrace_pid=$!
+        while [[ -d /proc/$2 ]]; do 
+            sleep 1 
+        done 
+        sudo kill -INT $ftrace_pid 
+        while [[ -d /proc/$ftrace_pid ]]; do 
+            sleep 1; 
+        done 
+    fi 
+    
+    echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null 
+    echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_exit/filter >/dev/null 
+
+    count=$(trace-cmd report -i /tmp/trace.dat | grep "irq=$1" | grep irq_handler_entry | wc -l)
+    echo "Interrupts count: $count"
+    
+    total_time=$(trace-cmd report -i /tmp/trace.dat | awk -v irq="$1" '
+        /irq_handler_entry/ && $0 ~ "irq="irq/ {
+            # Save the timestamp (in seconds) for this CPU.
+            entry[$2] = $1;
+            next;
+        }
+        /irq_handler_exit/ && $0 ~ "irq="irq/ {
+            # If an entry event exists for this CPU, compute the difference.
+            if ($2 in entry) {
+                diff = $1 - entry[$2];
+                total += diff;
+                delete entry[$2];
+            }
+        }
+        END { print total }
+    ')
+    echo "Interrupts total time: $total_time"
 }
 
 function zhu-stat-interrupts-snapshot {
