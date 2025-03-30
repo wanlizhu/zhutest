@@ -2775,7 +2775,7 @@ function zhu-stat-gpu-interrupts {
     fi
 
     count_snapshot_begin=$(zhu-stat-interrupts-snapshot $vendor)
-    count_ftrace_and_time=$(zhu-stat-ftrace-interrupts $vendor $1 | grep "Interrupts count:" | awk '{print $3, " ", $4, " ", $5, " ", $6}')
+    count_ftrace_and_time=$(zhu-stat-ftrace-interrupts $vendor $1 | grep "Interrupts count:" | awk '{print $3, $4, $5, $6}')
     count_snapshot_end=$(zhu-stat-interrupts-snapshot $vendor)
     count_snapshot=$((count_snapshot_end - count_snapshot_begin))
     
