@@ -41,23 +41,15 @@ function zhu-test-gdm3-perf-overhead {
     int_ratio_43=$(echo "scale=4; $int4/$int3" | bc)
 
     echo 
-    echo "INT#1 (reading /proc/interrupts) Result:"
-    echo -e "VP-Maya's INT#1 on GDM3: \t$int1"
-    echo -e "VP-Maya's INT#1 on Xserver: \t$int2 ($int_ratio_21 * gdm3)"
-    echo -e " Heaven's INT#1 on GDM3: \t$int3"
-    echo -e " Heaven's INT#1 on Xserver: \t$int4 ($int_ratio_43 * gdm3)"
+    echo "Interrupts Count #1 (Reading /proc/interrupts, lower overhead):"
+    echo -e "VP-Maya's INT on GDM3: \t$int1"
+    echo -e "VP-Maya's INT on Xserver: \t$int2"
+    echo -e " Heaven's INT on GDM3: \t$int3"
+    echo -e " Heaven's INT on Xserver: \t$int4"
 
-    int1_2=$(cat /tmp/maya.gdm3.int | grep 'Interrupts #2' | awk '{print $4}')
-    int2_2=$(cat /tmp/maya.xserver.int | grep 'Interrupts #2' | awk '{print $4}')
-    int3_2=$(cat /tmp/heaven.gdm3.int | grep 'Interrupts #2' | awk '{print $4}')
-    int4_2=$(cat /tmp/heaven.xserver.int | grep 'Interrupts #2' | awk '{print $4}')
-    int_ratio_21_2=$(echo "scale=4; $int2_2/$int1_2" | bc)
-    int_ratio_43_2=$(echo "scale=4; $int4_2/$int3_2" | bc)
-
-    echo 
-    echo "INT#2 (reading ftrace) Result:"
-    echo -e "VP-Maya's INT#2 on GDM3: \t$int1_2"
-    echo -e "VP-Maya's INT#2 on Xserver: \t$int2_2 ($int_ratio_21_2 * gdm3)"
-    echo -e " Heaven's INT#2 on GDM3: \t$int3_2"
-    echo -e " Heaven's INT#2 on Xserver: \t$int4_2 ($int_ratio_43_2 * gdm3)"
+    echo "Interrupts Count #2 (Reading ftrace, higher overhead):"
+    echo -e "VP-Maya's INT on GDM3: \t$int1_2"
+    echo -e "VP-Maya's INT on Xserver: \t$int2_2"
+    echo -e " Heaven's INT on GDM3: \t$int3_2"
+    echo -e " Heaven's INT on Xserver: \t$int4_2"
 }
