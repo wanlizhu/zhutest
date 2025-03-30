@@ -41,7 +41,7 @@ function zhu-test-gdm3-perf-overhead {
     int_ratio_43=$(echo "scale=4; $int4/$int3" | bc)
 
     echo 
-    echo "INT#1 (reading /proc/interrupts) Result:"
+    echo "INT#1 (snapshot of /proc/interrupts) Result:"
     echo -e "VP-Maya's INT#1 on GDM3: \t$int1"
     echo -e "VP-Maya's INT#1 on Xserver: \t$int2 ($int_ratio_21 * gdm3)"
     echo -e " Heaven's INT#1 on GDM3: \t$int3"
