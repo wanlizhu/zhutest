@@ -4,7 +4,7 @@ export vblank_mode=0
 export __GL_DEBUG_BYPASS_ASSERT=c 
 
 if [[ -z $DISPLAY ]]; then
-    if [[ -z $(ls /tmp/.X11-unix) ]]; then
+    if [[ -z $(ls /tmp/.X11-unix 2>/dev/null) ]]; then
         export DISPLAY=:0
     elif [[ -e /tmp/.X11-unix/X0 ]]; then 
         export DISPLAY=:0
