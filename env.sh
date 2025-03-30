@@ -403,6 +403,11 @@ function zhu-gdm3 {
     fi
 }
 
+function zhu-xserver-with-vnc {
+    zhu-xserver || return -1
+    zhu-vnc-server-for-physical-display
+}
+
 function zhu-xserver {
     # When run via SSH/TTY session
     if [[ ! -z $(who am i) ]]; then 
@@ -2027,7 +2032,38 @@ function zhu-check-vncserver {
     sudo ss -tulpn | grep -E "5900|5901|5902"
 }
 
+function zhu-vnc-server-for-headless-system-as-autostart {
+    zhu-vnc-server-for-headless-system --dryrun || return -1
+    if [[ -z "$vncserver_args" ]]; then
+        return -1
+    fi
+
+    echo "[Unit]
+Description=TigerVNC server
+After=syslog.target network.target
+
+[Service]
+Type=forking
+User=$USER
+WorkingDirectory=$HOME
+ExecStartPre=-/usr/bin/tigervncserver -kill :%i > /dev/null 2>&1
+ExecStart=/usr/bin/tigervncserver $vncserver_args :%i
+ExecStop=/usr/bin/tigervncserver -kill :%i
+
+[Install]
+WantedBy=multi-user.target
+" > /etc/systemd/system/tigervncserver@.service
+    sudo systemctl daemon-reload
+    sudo systemctl enable tigervncserver@${DISPLAY/:/}.service
+    sudo systemctl start tigervncserver@${DISPLAY/:/}.service
+}
+
 function zhu-vnc-server-for-headless-system {
+    if [[ -z $DISPLAY ]]; then
+        echo "DISPLAY is null!"
+        return -1
+    fi
+
     if [[ ! -z $(zhu-check-vncserver) ]]; then
         zhu-check-vncserver
         echo "A valid VNC server is already running..."
@@ -2056,53 +2092,60 @@ exec $desktop_session
 " > ~/.vnc/xstartup
     chmod +x ~/.vnc/xstartup
 
-    read -p "Start virtual desktop on display 0 or 1: " dp
-    vncserver_args="-localhost no :$dp -geometry 1920x1080 -depth 16 +iglx"
+    vncserver_args="-localhost no $DISPLAY -geometry 1920x1080 -depth 16 +iglx"
 
-    read -e -i no -p "Autostart on boot? (yes/no): " autostart
-    if [[ $autostart == yes ]]; then
-        echo "[Unit]
-Description=TigerVNC server
-After=syslog.target network.target
-
-[Service]
-Type=forking
-User=$USER
-WorkingDirectory=$HOME
-ExecStartPre=-/usr/bin/tigervncserver -kill :%i > /dev/null 2>&1
-ExecStart=/usr/bin/tigervncserver $vncserver_args :%i
-ExecStop=/usr/bin/tigervncserver -kill :%i
-
-[Install]
-WantedBy=multi-user.target
-" > /etc/systemd/system/tigervncserver@.service
-        sudo systemctl daemon-reload
-        sudo systemctl enable tigervncserver@$dp.service
-        sudo systemctl start tigervncserver@$dp.service
-    else
-        export DISPLAY=:$dp 
-        /usr/bin/tigervncserver -kill :$dp >/dev/null 2>&1
-        read -e -i yes -p "Run tigervncserver a in detached session? (yes/no): " ans
-        if [[ $ans == yes ]]; then 
-            screen -dmS tigervncserver /usr/bin/tigervncserver $vncserver_args :$dp
+    if [[ "$1" != "--dryrun" ]]; then
+        /usr/bin/tigervncserver -kill $DISPLAY >/dev/null 2>&1
+        read -e -i yes -p "Run tigervncserver and detach? (yes/no): " run_and_detach
+        if [[ $run_and_detach == yes ]]; then 
+            screen -dmS tigervncserver /usr/bin/tigervncserver $vncserver_args $DISPLAY 
             sleep 1
             /usr/bin/tigervncserver -list 
         else 
-            /usr/bin/tigervncserver $vncserver_args :$dp 
+            /usr/bin/tigervncserver $vncserver_args $DISPLAY 
         fi 
+    fi 
+}
+
+function zhu-vnc-server-for-physical-display-as-autostart {
+    zhu-vnc-server-for-physical-display --dryrun || return -1
+    if [[ -z "$x11vnc_args" ]]; then
+        return -1
     fi
+
+    echo "[Unit]
+Description=x11vnc service
+After=display-manager.service
+
+[Service]
+ExecStart=/usr/bin/x11vnc $x11vnc_args 
+User=$USER
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
+" | sudo tee /etc/systemd/system/x11vnc.service
+    sudo systemctl enable x11vnc.service 
+    sudo systemctl start x11vnc.service 
+    echo "x11vnc.service is running and scheduled as auto-start!"
 }
 
 function zhu-vnc-server-for-physical-display {
+    if [[ -z $DISPLAY ]]; then
+        echo "DISPLAY is null!"
+        return -1
+    fi
+
     if [[ ! -z $(zhu-check-vncserver) ]]; then
         zhu-check-vncserver
         echo "A valid VNC server is already running..."
         read -p "Press [ENTER] to continue: " _
     fi  
 
-    if [[ -z $(pidof Xorg) ]]; then
+    if [[ -z $(pidof Xorg) && "$1" != "--dryrun" ]]; then
         echo "Xorg is not running, a running X server is required for x11vnc!"
-        echo "[1] Start Xorg without a session"
+        echo "[1] Start Xorg as is"
         echo "[2] Start Xorg with openbox"
         echo "[3] Start Xorg with display-manager"
         read -p "Select: " selection
@@ -2144,7 +2187,10 @@ function zhu-vnc-server-for-physical-display {
         auth_args="-auth $XAUTHORITY"
     fi
 
-    x11vnc -storepasswd
+    if [[ ! -e $HOME/.vnc/passwd ]]; then
+        x11vnc -storepasswd
+    fi 
+
     x11vnc_args="$auth_args -forever --loop -noxdamage -repeat -rfbauth $HOME/.vnc/passwd -rfbport 5900 -display :0 -shared"
     xorg_user=$(ps -o user -p $(pidof Xorg) | tail -1)
     if [[ $xorg_user == root ]]; then
@@ -2153,27 +2199,9 @@ function zhu-vnc-server-for-physical-display {
         SUDO=""
     fi
 
-    read -e -i no -p "Autostart on boot? (yes/no): " autostart
-    if [[ $autostart == yes ]]; then
-        echo "[Unit]
-Description=x11vnc service
-After=display-manager.service
-
-[Service]
-ExecStart=/usr/bin/x11vnc $x11vnc_args 
-User=$USER
-Restart=on-failure
-RestartSec=2
-
-[Install]
-WantedBy=multi-user.target
-" | sudo tee /etc/systemd/system/x11vnc.service
-        sudo systemctl enable x11vnc.service 
-        sudo systemctl start x11vnc.service 
-        echo "x11vnc.service is running and scheduled as auto-start!"
-    else
-        read -e -i yes -p "Run x11vnc a in detached session? (yes/no): " ans
-        if [[ $ans == yes ]]; then 
+    if [[ "$1" != "--dryrun" ]]; then
+        read -e -i yes -p "Run x11vnc and detach? (yes/no): " run_and_detach
+        if [[ $run_and_detach == yes ]]; then 
             $SUDO screen -dmS x11vnc /usr/bin/x11vnc $x11vnc_args
         else
             $SUDO /usr/bin/x11vnc $x11vnc_args
