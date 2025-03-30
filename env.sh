@@ -2721,10 +2721,9 @@ function zhu-stat-ftrace-interrupts {
     echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null 
     echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_exit/filter >/dev/null 
 
-    count=$(trace-cmd report -i /tmp/trace.dat | grep "irq=$gpu_irq" | grep irq_handler_exit | grep ret=handled | wc -l)
-    echo "Interrupts count: $count"
-    
     [[ -z $(which gawk) ]] && sudo apt install -y gawk
+
+    count=$(trace-cmd report -i /tmp/trace.dat | grep "irq=$gpu_irq" | grep irq_handler_exit | grep ret=handled | wc -l)
     factor_us=1000000
     total_time=$(trace-cmd report -i /tmp/trace.dat | gawk -v target="$gpu_irq" -v factor="$factor_us" '
         /irq_handler_entry/ {
@@ -2745,8 +2744,8 @@ function zhu-stat-ftrace-interrupts {
         END { printf "%.03f", total * factor }
     ')
     avg_time=$(echo "scale=3; $total_time / $count" | bc)
-    echo "Interrupts total time: $total_time us"
-    echo "Interrupts average time: $avg_time us"
+
+    echo "Interrupts count: $count (Avg: $avg_time us)"
 }
 
 function zhu-stat-interrupts-snapshot {
@@ -2776,12 +2775,12 @@ function zhu-stat-gpu-interrupts {
     fi
 
     count_snapshot_begin=$(zhu-stat-interrupts-snapshot $vendor)
-    count_ftrace=$(zhu-stat-ftrace-interrupts $vendor $1 | grep "Interrupts count:" | awk '{print $3}')
+    count_ftrace_and_time=$(zhu-stat-ftrace-interrupts $vendor $1 | grep "Interrupts count:" | awk '{print $3, " ", $4, " ", $5, " ", $6}')
     count_snapshot_end=$(zhu-stat-interrupts-snapshot $vendor)
     count_snapshot=$((count_snapshot_end - count_snapshot_begin))
-
+    
     echo "Interrupts #1 (/proc/interrupts): $count_snapshot"
-    echo "Interrupts #2 (ftrace): $count_ftrace"
+    echo "Interrupts #2 (ftrace): $count_ftrace_and_time"
 }
 
 function zhu-p4git-reset-hard {

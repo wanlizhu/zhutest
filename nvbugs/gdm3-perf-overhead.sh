@@ -37,19 +37,22 @@ function zhu-test-gdm3-perf-overhead {
     int2=$(cat /tmp/maya.xserver.int | grep 'Interrupts #1' | awk '{print $4}')
     int3=$(cat /tmp/heaven.gdm3.int | grep 'Interrupts #1' | awk '{print $4}')
     int4=$(cat /tmp/heaven.xserver.int | grep 'Interrupts #1' | awk '{print $4}')
-    int_ratio_21=$(echo "scale=4; $int2/$int1" | bc)
-    int_ratio_43=$(echo "scale=4; $int4/$int3" | bc)
 
     echo 
     echo "Interrupts Count #1 (Reading /proc/interrupts, lower overhead):"
-    echo -e "VP-Maya's INT on GDM3: \t$int1"
-    echo -e "VP-Maya's INT on Xserver: \t$int2"
-    echo -e " Heaven's INT on GDM3: \t$int3"
-    echo -e " Heaven's INT on Xserver: \t$int4"
+    echo -e "VP-Maya's INT#1 on GDM3: \t$int1"
+    echo -e "VP-Maya's INT#1 on Xserver: \t$int2"
+    echo -e " Heaven's INT#1 on GDM3: \t$int3"
+    echo -e " Heaven's INT#1 on Xserver: \t$int4"
+
+    int1_2=$(cat /tmp/maya.gdm3.int | grep 'Interrupts #2' | awk '{print $4, " ", $5, " ", $6, " ", $7}')
+    int2_2=$(cat /tmp/maya.xserver.int | grep 'Interrupts #2' | awk '{print $4, " ", $5, " ", $6, " ", $7}')
+    int3_2=$(cat /tmp/heaven.gdm3.int | grep 'Interrupts #2' | awk '{print $4, " ", $5, " ", $6, " ", $7}')
+    int4_2=$(cat /tmp/heaven.xserver.int | grep 'Interrupts #2' | awk '{print $4, " ", $5, " ", $6, " ", $7}')
 
     echo "Interrupts Count #2 (Reading ftrace, higher overhead):"
-    echo -e "VP-Maya's INT on GDM3: \t$int1_2"
-    echo -e "VP-Maya's INT on Xserver: \t$int2_2"
-    echo -e " Heaven's INT on GDM3: \t$int3_2"
-    echo -e " Heaven's INT on Xserver: \t$int4_2"
+    echo -e "VP-Maya's INT#2 on GDM3: \t$int1_2"
+    echo -e "VP-Maya's INT#2 on Xserver: \t$int2_2"
+    echo -e " Heaven's INT#2 on GDM3: \t$int3_2"
+    echo -e " Heaven's INT#2 on Xserver: \t$int4_2"
 }
