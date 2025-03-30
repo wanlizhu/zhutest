@@ -2687,22 +2687,30 @@ function zhu-nsight-graphics-gpu-trace {
 }
 
 # $1: irq number to filter
-# $2: target pid to wait
+# $2 (optional): target pid to wait
 function zhu-stat-ftrace-interrupts {
-    if [[ -z $1 || -z $2 ]]; then
+    if [[ -z $1 ]]; then
         echo "Error: irq number is required!"
-        echo "Error: target pid is required!"
         return -1
     fi
 
     pushd /tmp >/dev/null 
-        rm -rf /tmp/trace.dat
+        sudo rm -rf /tmp/trace.dat
         echo "irq == $1" | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null
-        sudo trace-cmd record -e irq_handler_entry &
-        ftrace_pid=$!
-        while [[ -d /proc/$2 ]]; do echo "wait for $2 to quit"; sleep 1; done 
-        sudo kill -INT $ftrace_pid 
-        while [[ -d /proc/$ftrace_pid ]]; do sleep 1; done 
+        if [[ -z $2 ]]; then
+            sudo trace-cmd record -e irq_handler_entry
+        else
+            sudo trace-cmd record -e irq_handler_entry &
+            ftrace_pid=$!
+            while [[ -d /proc/$2 ]]; do 
+                echo "wait for $2 to quit"
+                sleep 1 
+            done 
+            sudo kill -INT $ftrace_pid 
+            while [[ -d /proc/$ftrace_pid ]]; do 
+                sleep 1; 
+            done 
+        fi 
         echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null 
         count=$(trace-cmd report | grep "irq=$1" | wc -l)
         echo "Interrupts count: $count"
