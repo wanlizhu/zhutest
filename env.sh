@@ -2724,7 +2724,7 @@ function zhu-stat-ftrace-interrupts {
     count=$(trace-cmd report -i /tmp/trace.dat | grep "irq=$gpu_irq" | grep irq_handler_entry | wc -l)
     echo "Interrupts count: $count"
     
-    total_time=$(trace-cmd report -i "$tracefile" | awk -v target="$irq" '
+    total_time=$(trace-cmd report -i /tmp/trace.dat | awk -v target="$irq" '
         /irq_handler_entry/ {
             if ($0 ~ ("irq="target)) {
                 entry[$2] = $1;
