@@ -405,7 +405,8 @@ function zhu-gdm3 {
 
 function zhu-xserver-with-vnc {
     zhu-xserver || return -1
-    zhu-vnc-server-for-physical-display
+    zhu-vnc-server-for-physical-display || return -1
+    ip a | grep 'inet '
 }
 
 function zhu-xserver {
