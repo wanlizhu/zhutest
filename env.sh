@@ -2703,7 +2703,6 @@ function zhu-stat-ftrace-interrupts {
             sudo trace-cmd record -e irq_handler_entry 2>/dev/null &
             ftrace_pid=$!
             while [[ -d /proc/$2 ]]; do 
-                echo "wait for $2 to quit"
                 sleep 1 
             done 
             sudo kill -INT $ftrace_pid 
