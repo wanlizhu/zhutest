@@ -41,7 +41,7 @@ function zhu-test-gdm3-perf-overhead {
     int_ratio_43=$(echo "scale=4; $int4/$int3" | bc)
 
     echo 
-    echo "INT#1 (snapshot of /proc/interrupts) Result:"
+    echo "INT#1 (reading /proc/interrupts) Result:"
     echo -e "VP-Maya's INT#1 on GDM3: \t$int1"
     echo -e "VP-Maya's INT#1 on Xserver: \t$int2 ($int_ratio_21 * gdm3)"
     echo -e " Heaven's INT#1 on GDM3: \t$int3"
@@ -56,8 +56,8 @@ function zhu-test-gdm3-perf-overhead {
 
     echo 
     echo "INT#2 (reading ftrace) Result:"
-    echo -e "VP-Maya's INT#1 on GDM3: \t$int1_2"
-    echo -e "VP-Maya's INT#1 on Xserver: \t$int2_2 ($int_ratio_21_2 * gdm3)"
-    echo -e " Heaven's INT#1 on GDM3: \t$int3_2"
-    echo -e " Heaven's INT#1 on Xserver: \t$int4_2 ($int_ratio_43_2 * gdm3)"
+    echo -e "VP-Maya's INT#2 on GDM3: \t$int1_2"
+    echo -e "VP-Maya's INT#2 on Xserver: \t$int2_2 ($int_ratio_21_2 * gdm3)"
+    echo -e " Heaven's INT#2 on GDM3: \t$int3_2"
+    echo -e " Heaven's INT#2 on Xserver: \t$int4_2 ($int_ratio_43_2 * gdm3)"
 }
