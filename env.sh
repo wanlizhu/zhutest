@@ -2744,7 +2744,7 @@ function zhu-stat-ftrace-interrupts {
         }
         END { printf "%.03f", total * factor }
     ')
-    avg_time=$((total_time / count))
+    avg_time=$(echo "scale=3; $total_time / $count" | bc)
     echo "Interrupts total time: $total_time us (Avg: $avg_time us)"
 }
 
