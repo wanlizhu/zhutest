@@ -464,23 +464,11 @@ function zhu-replace-with-openbox {
     fi
 }
 
-function zhu-disable-nvidia-interrupt-handler {
-    echo "options nvidia NVreg_EnableMSI=0" | sudo tee /etc/modprobe.d/nvidia-disable-interrupt-handler.conf
-    sudo update-initramfs -u
-    echo "[Action Required] Reboot system to activate changes!"
-}
-
-function zhu-enable-nvidia-interrupt-handler {
-    sudo rm -rf /etc/modprobe.d/nvidia-disable-interrupt-handler.conf
-    sudo update-initramfs -u
-    echo "[Action Required] Reboot system to activate changes!"
-}
-
-function zhu-watch-interrupt-count {
+function zhu-perf-interrupt-watch {
     sudo perf stat -e irq:irq_handler_entry -I 1000 -a
 }
 
-function zhu-interrupt-event {
+function zhu-perf-interrupt-event {
     sudo perf record -g -e irq:irq_handler_entry -a sleep 5
     sudo perf report --no-children --sort comm,dso
 }
@@ -2698,40 +2686,63 @@ function zhu-nsight-graphics-gpu-trace {
     ngfx --activity "GPU Trace Profiler" --exe "$exe" --args "$args" --dir "$dir" --start-after-frames $start_after_frames --limit-to-frames 1 --auto-export --architecture "$architecture" --metric-set-name "$metric_set_name" --multi-pass-metrics --set-gpu-clocks base --disable-nvtx-ranges 1
 }
 
-function zhu-show-interrupt-count {
-    # Determine GPU IRQ based on loaded module
-    if lsmod | grep -q nvidia; then
-        gpu_irq=$(grep 'nvidia' /proc/interrupts | awk '{print $1}' | cut -d: -f1 | head -n 1)
-    else
-        gpu_irq=$(grep 'amdgpu' /proc/interrupts | awk '{print $1}' | cut -d: -f1 | head -n 1)
+# $1: irq number to filter
+# $2: target pid to wait
+function zhu-stat-ftrace-interrupts {
+    if [[ -z $1 || -z $2 ]]; then
+        echo "Error: irq number is required!"
+        echo "Error: target pid is required!"
+        return -1
     fi
 
-    rm -rf trace.dat
-    echo "[1/4] Set ftrace filter for irq_handler_entry events on the GPU IRQ"
-    echo "irq == $gpu_irq" | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null
-    echo "[2/4] Start recording all irq_handler_entry events (without limiting to a particular function)"
-    sudo trace-cmd record -e irq_handler_entry &
-    tracecmd_pid=$!
+    pushd /tmp >/dev/null 
+        rm -rf /tmp/trace.dat
+        echo "irq == $1" | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null
+        sudo trace-cmd record -e irq_handler_entry &
+        ftrace_pid=$!
+        while [[ -d /proc/$2 ]]; do echo "wait for $2 to quit"; sleep 1; done 
+        sudo kill -INT $ftrace_pid 
+        while [[ -d /proc/$ftrace_pid ]]; do sleep 1; done 
+        echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null 
+        count=$(trace-cmd report | grep "irq=$1" | wc -l)
+        echo "Interrupts count: $count"
+    popd >/dev/null 
+}
 
+function zhu-stat-interrupts-snapshot {
     if [[ -z $1 ]]; then
-        echo "[3/4] Let it ($tracecmd_pid) run for 10 seconds..."
-        sleep 10
-    else
-        echo "[3/4] Wait for process $1 to quit..."
-        while [[ -d /proc/$1 ]]; do 
-            sleep 2
-        done
+        return -1
     fi
 
-    sudo kill -INT $tracecmd_pid
-    echo "[4/4] Clean up the ftrace filter for irq_handler_entry events"
-    echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null 
-
-    while [[ -d /proc/$tracecmd_pid ]]; do 
-        sleep 1
+    sum=0
+    for i in $(seq $(nproc)); do 
+        num=$(grep "$1" /proc/interrupts | awk "{print \$$(($i + 1))}")
+        sum=$((sum + num))
     done
-    echo "The number of interrupt (irq=$gpu_irq) is: "
-    trace-cmd report | grep "irq=$gpu_irq" | wc -l
+    echo $sum
+}
+
+# $1: target pid to wait
+function zhu-stat-gpu-interrupts {
+    if [[ -z $1 || -z $2 ]]; then
+        echo "Error: target pid is required!"
+        return -1
+    fi
+
+    if lsmod | grep -q nvidia; then
+        vendor="nvidia"
+    else
+        vendor="amdgpu"
+    fi
+
+    gpu_irq=$(grep $vendor /proc/interrupts | awk '{print $1}' | cut -d: -f1 | head -n 1)
+    count_snapshot_begin=$(zhu-stat-interrupts-snapshot $vendor)
+    count_ftrace=$(zhu-stat-ftrace-interrupts $gpu_irq $1 | grep "Interrupts count:" | awk '{print $2}')
+    count_snapshot_end=$(zhu-stat-interrupts-snapshot $vendor)
+    count_snapshot=$((count_snapshot_end - count_snapshot_begin))
+
+    echo "Interrupts #1 (snapshot): $count_snapshot"
+    echo "Interrupts #2 (ftrace): $count_ftrace"
 }
 
 function zhu-p4git-reset-hard {
