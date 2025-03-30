@@ -2706,7 +2706,7 @@ function zhu-stat-ftrace-interrupts {
                 echo "wait for $2 to quit"
                 sleep 1 
             done 
-            sudo kill -INT $ftrace_pid 
+            sudo kill -INT $ftrace_pid &>/dev/null 
             while [[ -d /proc/$ftrace_pid ]]; do 
                 sleep 1; 
             done 
