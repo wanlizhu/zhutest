@@ -2721,7 +2721,7 @@ function zhu-stat-ftrace-interrupts {
     echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null 
     echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_exit/filter >/dev/null 
 
-    count=$(trace-cmd report -i /tmp/trace.dat | grep "irq=$gpu_irq" | grep irq_handler_entry | wc -l)
+    count=$(trace-cmd report -i /tmp/trace.dat | grep "irq=$gpu_irq" | grep irq_handler_exit | grep ret=handled | wc -l)
     echo "Interrupts count: $count"
     
     [[ -z $(which gawk) ]] && sudo apt install -y gawk
@@ -2729,13 +2729,16 @@ function zhu-stat-ftrace-interrupts {
     total_time=$(trace-cmd report -i /tmp/trace.dat | gawk -v target="$gpu_irq" -v factor="$factor_us" '
         /irq_handler_entry/ {
             if ($0 ~ ("irq=" target)) {
-                entry[$2] = $1 * 1.0;  # force numeric conversion
+                # Extract timestamp from field 3 by removing the trailing colon.
+                ts = substr($3, 1, length($3)-1) * 1.0;
+                entry[$2] = ts;
                 next;
             }
         }
         /irq_handler_exit/ {
             if ($0 ~ ("irq=" target) && ($2 in entry)) {
-                total += ($1 * 1.0) - entry[$2];
+                ts = substr($3, 1, length($3)-1) * 1.0;
+                total += (ts - entry[$2]);
                 delete entry[$2];
             }
         }
