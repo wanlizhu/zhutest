@@ -2686,17 +2686,23 @@ function zhu-nsight-graphics-gpu-trace {
     ngfx --activity "GPU Trace Profiler" --exe "$exe" --args "$args" --dir "$dir" --start-after-frames $start_after_frames --limit-to-frames 1 --auto-export --architecture "$architecture" --metric-set-name "$metric_set_name" --multi-pass-metrics --set-gpu-clocks base --disable-nvtx-ranges 1
 }
 
-# $1: irq number to filter
+# $1: gpu vendor name to filter
 # $2 (optional): target pid to wait
 function zhu-stat-ftrace-interrupts {
     if [[ -z $1 ]]; then
-        echo "Error: irq number is required!"
+        echo "Error:gpu vendor name is required!"
+        return -1
+    fi
+
+    gpu_irq=$(grep $1 /proc/interrupts | awk '{print $1}' | cut -d: -f1 | head -n 1)
+    if [[ -z $gpu_irq ]]; then
+        echo "Failed to find IRQ associated with $1"
         return -1
     fi
 
     sudo rm -rf /tmp/trace.dat
-    echo "irq == $1" | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null
-    echo "irq == $1" | sudo tee /sys/kernel/tracing/events/irq/irq_handler_exit/filter >/dev/null
+    echo "irq == $gpu_irq" | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null
+    echo "irq == $gpu_irq" | sudo tee /sys/kernel/tracing/events/irq/irq_handler_exit/filter >/dev/null
     
     if [[ -z $2 ]]; then
         sudo trace-cmd record -e irq_handler_entry -e irq_handler_exit -o /tmp/trace.dat 2>/dev/null
@@ -2715,10 +2721,10 @@ function zhu-stat-ftrace-interrupts {
     echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_entry/filter >/dev/null 
     echo 0 | sudo tee /sys/kernel/tracing/events/irq/irq_handler_exit/filter >/dev/null 
 
-    count=$(trace-cmd report -i /tmp/trace.dat | grep "irq=$1" | grep irq_handler_entry | wc -l)
+    count=$(trace-cmd report -i /tmp/trace.dat | grep "irq=$gpu_irq" | grep irq_handler_entry | wc -l)
     echo "Interrupts count: $count"
     
-    total_time=$(trace-cmd report -i /tmp/trace.dat | awk -v irq="$1" '
+    total_time=$(trace-cmd report -i /tmp/trace.dat | awk -v irq="$gpu_irq" '
         /irq_handler_entry/ && $0 ~ "irq="irq/ {
             # Save the timestamp (in seconds) for this CPU.
             entry[$2] = $1;
@@ -2763,9 +2769,8 @@ function zhu-stat-gpu-interrupts {
         vendor="amdgpu"
     fi
 
-    gpu_irq=$(grep $vendor /proc/interrupts | awk '{print $1}' | cut -d: -f1 | head -n 1)
     count_snapshot_begin=$(zhu-stat-interrupts-snapshot $vendor)
-    count_ftrace=$(zhu-stat-ftrace-interrupts $gpu_irq $1 | grep "Interrupts count:" | awk '{print $3}')
+    count_ftrace=$(zhu-stat-ftrace-interrupts $vendor $1 | grep "Interrupts count:" | awk '{print $3}')
     count_snapshot_end=$(zhu-stat-interrupts-snapshot $vendor)
     count_snapshot=$((count_snapshot_end - count_snapshot_begin))
 
