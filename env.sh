@@ -2118,8 +2118,10 @@ function zhu-vnc-server-for-headless-system {
     desktop_session=/usr/bin/xfce4-session
     sudo apt install -y xfce4-session || return -1
 
-    mkdir -p ~/.vnc
-    tigervncpasswd
+    if [[ ! -f ~/.vnc/passwd ]]; then 
+        mkdir -p ~/.vnc
+        tigervncpasswd
+    fi 
     
     echo "#!/bin/sh
 unset SESSION_MANAGER
