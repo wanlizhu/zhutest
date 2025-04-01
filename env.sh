@@ -15,6 +15,28 @@ if [[ -z $DISPLAY ]]; then
     fi
 fi
 
+function zhu-update-path {
+    if ! echo "$PATH" | tr ':' '\n' | grep -q "dvs/dvsbuild"; then
+        export PATH="$P4ROOT/automation/dvs/dvsbuild:$PATH" 
+    fi
+
+    if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-systems-internal"; then
+        export PATH="~/nsight-systems-internal/current/host-linux-x64:$PATH" 
+    fi
+
+    if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-graphics-internal"; then
+        export PATH="~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64:$PATH"
+    fi
+
+    if ! echo "$PATH" | tr ':' '\n' | grep -q "gfxreconstruct.git"; then
+        export PATH="~/gfxreconstruct.git/build/linux/x64/output/bin:$PATH"
+    fi
+
+    if ! echo "$PATH" | tr ':' '\n' | grep -q "apitrace.$(uname -m)"; then
+        export PATH="~/apitrace.$(uname -m)/bin:$PATH"
+    fi
+}
+
 if [[ $USER == wanliz ]]; then
     export P4CLIENT=wanliz-p4sw-bugfix_main
     export P4ROOT=/media/wanliz/wzhu-ssd-ext4-4t/$P4CLIENT
@@ -35,25 +57,7 @@ if [[ $USER == wanliz ]]; then
         fi
     fi 
 
-    if ! echo "$PATH" | tr ':' '\n' | grep -q "dvs/dvsbuild"; then
-        export PATH="$P4ROOT/automation/dvs/dvsbuild:$PATH" 
-    fi
-
-    if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-systems-internal"; then
-        export PATH="~/nsight-systems-internal/current/host-linux-x64:$PATH" 
-    fi
-
-    if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-graphics-internal"; then
-        export PATH="~/nsight-graphics-internal/current/host/linux-desktop-nomad-x64:$PATH"
-    fi
-
-    if ! echo "$PATH" | tr ':' '\n' | grep -q "gfxreconstruct.git"; then
-        export PATH="~/gfxreconstruct.git/build/linux/x64/output/bin:$PATH"
-    fi
-
-    if ! echo "$PATH" | tr ':' '\n' | grep -q "apitrace.$(uname -m)"; then
-        export PATH="~/apitrace.$(uname -m)/bin:$PATH"
-    fi
+    zhu-update-path
 
     if [[ $(uname -m) == aarch64 ]]; then
         if [[ -e $HOME/.fex-emu/Config.json ]]; then
