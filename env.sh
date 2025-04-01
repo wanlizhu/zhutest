@@ -21,7 +21,7 @@ function zhu-update-path {
     fi
 
     if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-systems-internal"; then
-        export PATH="~/nsight-systems-internal/current/host-linux-x64:$PATH" 
+        export PATH="~/nsight-systems-internal/current/bin"
     fi
 
     if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-graphics-internal"; then
