@@ -855,6 +855,7 @@ function zhu-install-nsight-systems {
             pushd ~/nsight-systems-internal >/dev/null 
                 ln -sf $latest_subver current 
             popd >/dev/null 
+            sudo apt install -y libxcb-cursor-dev
         popd >/dev/null 
     fi
 }
