@@ -2187,6 +2187,14 @@ WantedBy=multi-user.target
     echo "x11vnc.service is running and scheduled as auto-start!"
 }
 
+function zhu-grub-default-saved {
+    echo "Todo: add or edit: GRUB_DEFAULT=saved"
+    echo "Todo: add or edit: GRUB_SAVEDEFAULT=true"
+    read -p "Press [ENTER] to continue: " _
+    sudo vim /etc/default/grub
+    sudo update-grub
+}
+
 function zhu-vnc-server-for-physical-display {
     if [[ -z $DISPLAY ]]; then
         echo "DISPLAY is null!"
