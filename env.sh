@@ -2934,6 +2934,7 @@ function zhu-rsync-linux-kernel {
     sudo rsync -ah --progress $user@$host_ip:/boot/vmlinuz-$kernel /boot/vmlinuz-$kernel
     sudo rsync -ah --progress $user@$host_ip:/boot/config-$kernel /boot/config-$kernel
     sudo rsync -ah --progress $user@$host_ip:/boot/System.map-$kernel /boot/System.map-$kernel
+    sudo update-initramfs -c -k $kernel
     sudo update-grub
 }
 
