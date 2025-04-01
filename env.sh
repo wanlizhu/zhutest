@@ -37,6 +37,15 @@ function zhu-update-path {
     fi
 }
 
+function zhu-setup-nopasswd-sudo {
+    if [[ $UID != "0" ]]; then
+        if ! sudo grep -q "$USER ALL=(ALL) NOPASSWD:ALL" /etc/sudoers; then
+            echo "Enable sudo without password"
+            echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
+        fi
+    fi 
+}
+
 if [[ $USER == wanliz ]]; then
     export P4CLIENT=wanliz-p4sw-bugfix_main
     export P4ROOT=/media/wanliz/wzhu-ssd-ext4-4t/$P4CLIENT
@@ -50,13 +59,7 @@ if [[ $USER == wanliz ]]; then
         echo ".vscode" >> $P4IGNORE
     fi
 
-    if [[ $UID != "0" ]]; then
-        if ! sudo grep -q "$USER ALL=(ALL) NOPASSWD:ALL" /etc/sudoers; then
-            echo "Enable sudo without password"
-            echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
-        fi
-    fi 
-
+    zhu-setup-nopasswd-sudo
     zhu-update-path
 
     if [[ $(uname -m) == aarch64 ]]; then
