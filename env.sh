@@ -564,6 +564,10 @@ function zhu-install-nvidia-driver-localbuild {
         return -1
     fi 
 
+    if [[ -z $(which pkg-config) ]]; then
+        sudo apt install -y pkg-config libglvnd-dev
+    fi
+
     if [[ $(systemctl is-active display-manager) == active ]]; then
         was_dm_active=yes
         sudo systemctl stop display-manager 
