@@ -439,6 +439,9 @@ function zhu-xserver {
         fi 
 
         if [[ $ans == yes ]]; then
+            if [[ -z $(which screen) ]]; then
+                sudo apt install -y screen 
+            fi
             export XAUTHORITY=""
             $SUDO screen -dmS xserver X :0 +iglx
             export DISPLAY=:0
