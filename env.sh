@@ -661,7 +661,7 @@ function zhu-install-nvidia-driver-prebuilt {
             return 
         else
             zhu-install-nvidia-driver-localbuild "$(realpath $path)" 
-            if [[ $(uname -m) == aarch64 ]]; then
+            if [[ $(uname -m) == aarch64 && -d ~/.fex-emu/RootFS ]]; then
                 echo 
                 driver="$(realpath $path)"
                 driver="${driver//aarch64/x86_64}"
