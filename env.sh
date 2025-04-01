@@ -443,7 +443,15 @@ function zhu-xserver {
                 sudo apt install -y screen 
             fi
             export XAUTHORITY=""
-            $SUDO screen -dmS xserver X :0 +iglx
+            read -e -i yes -p "Is a physical monitor connected? (yes/no): " monitor
+            if [[ $moniotr == yes ]]; then
+                $SUDO screen -dmS xserver X :0 +iglx
+            else
+                echo " - 1920x1080x24 (default)"
+                echo " - 3840x2160x24"
+                read -e -i 1920x1080x24 -p "Set virtual dimension: " dimension
+                $SUDO screen -dmS xserver X :0 +iglx -screen 0 $dimension 
+            fi 
             export DISPLAY=:0
             sleep 1
             if [[ -z $(pidof Xorg) ]]; then
