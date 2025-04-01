@@ -406,6 +406,7 @@ function zhu-gdm3 {
 function zhu-virtual-desktop-with-vnc {
     zhu-vnc-server-for-headless-system || return -1
     echo "DISPLAY=$DISPLAY"
+    xrandr | grep current
     ip a | grep 'inet '
 }
 
@@ -413,6 +414,7 @@ function zhu-xserver-with-vnc {
     zhu-xserver || return -1
     zhu-vnc-server-for-physical-display || return -1
     echo "DISPLAY=$DISPLAY"
+    xrandr | grep current
     ip a | grep 'inet '
 }
 
@@ -2241,6 +2243,14 @@ function zhu-vnc-server-for-physical-display {
         read -e -i yes -p "Run x11vnc and detach? (yes/no): " run_and_detach
         if [[ $run_and_detach == yes ]]; then 
             $SUDO screen -dmS x11vnc /usr/bin/x11vnc $x11vnc_args
+            dimension=$(xrandr | grep current | awk '{print $8 "x" $10}')
+            if [[ $dimension == "640x480" ]]; then
+                echo " - 1920x1080 (default)"
+                echo " - 2560x1440"
+                echo " - 3840x2160"
+                read -e -i "1920x1080" -p "Resize framebuffer: " fbsize
+                xrandr --fb $fbsize
+            fi
         else
             $SUDO /usr/bin/x11vnc $x11vnc_args
         fi 
