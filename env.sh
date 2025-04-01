@@ -2943,6 +2943,6 @@ function zhu-rsync-firmware {
     read -e -i wanliz  -p "As user: " user
     read -p "Firmware: " firmware
 
-    sudo mkdir -p /boot/firmware
-    sudo rsync -ah --progress $user@$host_ip:/boot/firmware/$firmware /boot/firmware/$firmware 
+    sudo mkdir -p /boot/efi/firmware
+    sudo rsync -ah --progress $user@$host_ip:/boot/efi/firmware/$firmware /boot/efi/firmware/$firmware 
 }
