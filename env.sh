@@ -566,7 +566,7 @@ function zhu-download-nvidia-driver {
     echo TODO
 }
 
-function zhu-kill-Xorg {
+function zhu-kill-xorg {
     sudo kill -15 $(pidof Xorg)
 }
 
