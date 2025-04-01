@@ -566,6 +566,10 @@ function zhu-download-nvidia-driver {
     echo TODO
 }
 
+function zhu-kill-Xorg {
+    sudo kill -15 $(pidof Xorg)
+}
+
 function zhu-install-nvidia-driver-localbuild {
     if [[ ! -e $1 ]]; then
         echo "Error: $1 doesn't exist!"
