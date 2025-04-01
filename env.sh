@@ -403,6 +403,12 @@ function zhu-gdm3 {
     fi
 }
 
+function zhu-virtual-desktop-with-vnc {
+    zhu-vnc-server-for-headless-system || return -1
+    echo "DISPLAY=$DISPLAY"
+    ip a | grep 'inet '
+}
+
 function zhu-xserver-with-vnc {
     zhu-xserver || return -1
     zhu-vnc-server-for-physical-display || return -1
