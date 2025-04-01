@@ -443,7 +443,7 @@ function zhu-xserver {
                 sudo apt install -y screen 
             fi
             export XAUTHORITY=""
-            read -e -i yes -p "Is a physical monitor connected? (yes/no): " monitor
+            read -e -i yes -p "Physical monitor connected? (yes/no): " monitor
             if [[ $moniotr == yes ]]; then
                 $SUDO screen -dmS xserver X :0 +iglx
             else
