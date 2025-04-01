@@ -837,8 +837,8 @@ function zhu-install-nsight-systems {
     read -e -i yes -p "Upgrade to $latest_subver? " upgrade_nsys 
     if [[ $upgrade_nsys == yes ]]; then
         pushd ~/Downloads >/dev/null
-            wget --no-check-certificate --header="X-JFrog-Art-Api: $ARTIFACTORY_API_KEY" https://urm.nvidia.com/artifactory/swdt-nsys-generic/ctk/$latest_version/$latest_subver/nsight_systems-linux-x86_64-$latest_subver.tar.gz || return -1
-            tar -zxvf nsight_systems-linux-x86_64-$latest_subver.tar.gz
+            wget --no-check-certificate --header="X-JFrog-Art-Api: $ARTIFACTORY_API_KEY" https://urm.nvidia.com/artifactory/swdt-nsys-generic/ctk/$latest_version/$latest_subver/nsight_systems-linux-$(uname -m)-$latest_subver.tar.gz || return -1
+            tar -zxvf nsight_systems-linux-$(uname -m)-$latest_subver.tar.gz
             mkdir -p ~/nsight-systems-internal 
             mv nsight_systems ~/nsight-systems-internal/$latest_subver 
             pushd ~/nsight-systems-internal >/dev/null 
