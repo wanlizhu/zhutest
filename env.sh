@@ -811,6 +811,10 @@ function zhu-install-nsight-systems {
         echo $(zhu-decrypt 'U2FsdGVkX18elI7G2zmszU2FUxbRUHvvE8I+ZRUBdyZVdczSVW59b/Klyq8fgihi2oIXR6P1zDVjptpwVemHV71PgHm6exawmqpqxpS6UuJfBTxiW60s4VR6JJVlWYVt') > ~/.zhutest.artifactory.apikey
     fi  
 
+    if [[ -z $(which curl) ]]; then
+        sudo apt install -y curl
+    fi
+
     ARTIFACTORY_API_KEY=$(cat ~/.zhutest.artifactory.apikey)
     latest_version=$(curl -s -H "X-JFrog-Art-Api: $ARTIFACTORY_API_KEY" https://urm.nvidia.com/artifactory/api/storage/swdt-nsys-generic/ctk/ \
         | jq -r '.children[] | .uri | select(test("^/[0-9]") and (test("^/202") | not))' \
@@ -832,6 +836,11 @@ function zhu-install-nsight-systems {
         fi
     else
         echo "Installed version is NULL"
+    fi
+
+    if [[ -z $latest_subver ]]; then    
+        echo "Failed to find the latest subversion!"
+        return -1
     fi
     
     read -e -i yes -p "Upgrade to $latest_subver? " upgrade_nsys 
