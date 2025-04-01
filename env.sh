@@ -2925,15 +2925,23 @@ function zhu-rsync-driver {
     time rsync -ah --progress $user@$host_ip:/home/$user/wanliz-p4sw-bugfix_main/_out/Linux_${arch}_${config}/NVIDIA-Linux-${arch/amd64/x86_64}-${version}-internal.run NVIDIA-Linux-${arch/amd64/x86_64}-${version}-internal.run
 }
 
-function zhu-ttyacm0 {
-    sudo screen /dev/ttyACM0 115200
+function zhu-rsync-linux-kernel {
+    read -e -i wanliz-test.client.nvidia.com -p "Rsync from remote host: " host_ip
+    read -e -i wanliz  -p "As user: " user
+    read -p "Linux kernel: " kernel
+
+    sudo rsync -ah --progress $user@$host_ip:/lib/modules/$kernel/ /lib/modules/$kernel/
+    sudo rsync -ah --progress $user@$host_ip:/boot/vmlinuz-$kernel /boot/vmlinuz-$kernel
+    sudo rsync -ah --progress $user@$host_ip:/boot/config-$kernel /boot/config-$kernel
+    sudo rsync -ah --progress $user@$host_ip:/boot/System.map-$kernel /boot/System.map-$kernel
+    sudo update-grub
 }
 
-function zhu-n1x5 {
-    ssh nvidia@linux-n1x5.client.nvidia.com
-}
+function zhu-rsync-firmware {
+    read -e -i wanliz-test.client.nvidia.com -p "Rsync from remote host: " host_ip
+    read -e -i wanliz  -p "As user: " user
+    read -p "Firmware: " firmware
 
-function zhu-n1x5-host {
-    ssh root@linux-bringup2.nvidia.com
+    sudo mkdir -p /boot/firmware
+    sudo rsync -ah --progress $user@$host_ip:/boot/firmware/$firmware /boot/firmware/$firmware 
 }
-
