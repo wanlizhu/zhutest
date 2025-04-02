@@ -3026,22 +3026,30 @@ function zhu-rsync-driver {
 }
 
 function zhu-rsync-linux-kernel {
+    if [[ $EUID != 0 ]]; then
+        echo "Please run as sudo!"
+        return -1
+    fi
+
     read -e -i wanliz-test.client.nvidia.com -p "Rsync from remote host: " host_ip
     read -e -i wanliz  -p "As user: " user
+    ssh $user@$host_ip "ls -al /boot"
     read -p "Linux kernel: " kernel
+    read -s -p "Password: " passwd
 
-    sudo rsync -ah --progress $user@$host_ip:/boot/vmlinuz-$kernel /boot/vmlinuz-$kernel
-    sudo rsync -ah --progress $user@$host_ip:/boot/config-$kernel /boot/config-$kernel
-    sudo rsync -ah --progress $user@$host_ip:/boot/System.map-$kernel /boot/System.map-$kernel
-    sudo rsync -ah --progress $user@$host_ip:/lib/modules/$kernel/ /lib/modules/$kernel/
-    sudo rsync -ah --progress $user@$host_ip:/usr/src/linux-headers-$kernel/ /usr/src/linux-headers-$kernel/
-    sudo update-initramfs -c -k $kernel
-    sudo update-grub
+    sshpass -p "$passwd" rsync -ah --progress $user@$host_ip:/boot/vmlinuz-$kernel /boot/vmlinuz-$kernel
+    sshpass -p "$passwd" rsync -ah --progress $user@$host_ip:/boot/config-$kernel /boot/config-$kernel
+    sshpass -p "$passwd" rsync -ah --progress $user@$host_ip:/boot/System.map-$kernel /boot/System.map-$kernel
+    sshpass -p "$passwd" rsync -ah --progress $user@$host_ip:/lib/modules/$kernel/ /lib/modules/$kernel/
+    sshpass -p "$passwd" rsync -ah --progress $user@$host_ip:/usr/src/linux-headers-$kernel/ /usr/src/linux-headers-$kernel/
+    update-initramfs -c -k $kernel
+    update-grub
 }
 
 function zhu-rsync-firmware {
     read -e -i wanliz-test.client.nvidia.com -p "Rsync from remote host: " host_ip
     read -e -i wanliz  -p "As user: " user
+    ssh $user@$host_ip "ls -al /boot/efi/firmware"
     read -p "Firmware: " firmware
 
     sudo mkdir -p /boot/efi/firmware
@@ -3051,3 +3059,4 @@ function zhu-rsync-firmware {
 function zhu-install-picx {
     echo 
 }
+
