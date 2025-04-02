@@ -1269,8 +1269,9 @@ function zhu-test-3dmark-atten-wildlife {
 
     pushd ~/zhutest-workload.d/3dmark-attan-wildlife.$(uname -m) || return -1
         rm -rf result.json
-        chmod +x run_dev_player_linux_$(zhu-uname-m2).sh 
-        ./run_dev_player_linux_$(zhu-uname-m2).sh || return -1
+        chmod +x bin/linux/$(zhu-uname-m2)/dev_player
+        ./bin/linux/$(zhu-uname-m2)/dev_player --out=result.json --asset_root=assets_desktop --timeline=timelines_heavy/attan_gt1_heavy_timeline.txt || return -1
+
         which jq >/dev/null || sudo apt install -y jq 
         result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT") | .value' result.json)
         echo "3DMark - Wildlife - Vulkan rasterization"
@@ -1313,6 +1314,7 @@ function zhu-test-3dmark-disco-steelnomad {
         rm -rf result_vulkan.json
         chmod +x ./bin/linux/$(zhu-uname-m2)/release_workload
         ./bin/linux/$(zhu-uname-m2)/release_workload --in=settings/gt1_desktop_vulkan.json --out=result_vulkan.json || return -1
+        
         which jq >/dev/null || sudo apt install -y jq 
         result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT") | .value' result_vulkan.json)
         echo "3DMark - Steel Nomad - Modern Vulkan rasterization"
@@ -1354,8 +1356,9 @@ function zhu-test-3dmark-pogo-solarbay {
 
     pushd ~/zhutest-workload.d/3dmark-pogo-solarbay.$(uname -m) || return -1
         rm -rf result.json
-        chmod +x run_dev_player_linux_$(zhu-uname-m2).sh
-        ./run_dev_player_linux_$(zhu-uname-m2).sh || return -1
+        chmod +x bin/linux/$(zhu-uname-m2)/dev_player
+        ./bin/linux/$(zhu-uname-m2)/dev_player --out=result.json --asset_root=assets_desktop --timeline=timelines/pogo_timeline.txt | return -1
+
         which jq >/dev/null || sudo apt install -y jq 
         result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT" and .resultType == "") | .value' result.json)
         echo "3DMark - Solar Bay - Vulkan raytracing"
