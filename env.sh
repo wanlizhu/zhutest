@@ -1269,7 +1269,7 @@ function zhu-test-3dmark-atten-wildlife {
 
     pushd ~/zhutest-workload.d/3dmark-attan-wildlife.$(uname -m) || return -1
         rm -rf result.json
-        chmod +x run_linux_$(zhu-uname-m2).sh 
+        chmod +x run_dev_player_linux_$(zhu-uname-m2).sh 
         ./run_dev_player_linux_$(zhu-uname-m2).sh || return -1
         which jq >/dev/null || sudo apt install -y jq 
         result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT") | .value' result.json)
