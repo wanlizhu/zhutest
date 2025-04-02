@@ -1418,6 +1418,10 @@ function zhu-install-nvidia-driver-in-fex {
 
     cd $(dirname $1) 
     driver=$(realpath $1)
+    if [[ -d $(basename $driver) ]]; then
+        sudo rm -rf $(basename $driver)
+    fi
+
     chmod +x $driver 
     $driver -x || return -1
 
