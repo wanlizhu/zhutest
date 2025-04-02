@@ -1309,8 +1309,7 @@ function zhu-test-3dmark-disco-steelnomad {
 
     pushd ~/zhutest-workload.d/3dmark-disco-steelnomad.$(uname -m) || return -1
         rm -rf result_vulkan.json
-        chmod +x run_workload_linux_vulkan.sh
-        ./run_workload_linux_vulkan.sh || return -1
+        ./bin/linux/$(zhu-uname-m2)/release_workload --in=settings/gt1_desktop_vulkan.json --out=result_vulkan.json || return -1
         which jq >/dev/null || sudo apt install -y jq 
         result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT") | .value' result_vulkan.json)
         echo "3DMark - Steel Nomad - Modern Vulkan rasterization"
