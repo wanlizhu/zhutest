@@ -1246,7 +1246,7 @@ function zhu-install-3dmark-atten-wildlife {
         pushd ~/zhutest-workload.d/3dmark-attan-wildlife.$(uname -m) >/dev/null  
         if [[ $(uname -m) == x86_64 ]]; then
             unzip /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Attan_Wild_Life/3dmark-attan-extreme-1.1.2.1-workload-bin.zip || return -1
-        elif [[ $(uname -m) == aarch64 ]]
+        elif [[ $(uname -m) == aarch64 ]]; then 
             if ! mountpoint -q /mnt/d3d_benchmarks; then
                 sudo apt install -y cifs-utils || return -1
                 sudo mkdir -p /mnt/d3d_benchmarks
