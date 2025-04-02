@@ -688,7 +688,7 @@ function zhu-install-nvidia-driver-prebuilt {
             echo "$(realpath $path)"
             return 
         else
-            zhu-install-nvidia-driver-localbuild "$(realpath $path)" 
+            zhu-install-nvidia-driver-localbuild "$(realpath $path)" || return -1
             if [[ $(uname -m) == aarch64 && -d ~/.fex-emu/RootFS ]]; then
                 echo 
                 driver="$(realpath $path)"
@@ -3042,4 +3042,8 @@ function zhu-rsync-firmware {
 
     sudo mkdir -p /boot/efi/firmware
     sudo rsync -ah --progress $user@$host_ip:/boot/efi/firmware/$firmware /boot/efi/firmware/$firmware 
+}
+
+function zhu-install-picx {
+    echo 
 }
