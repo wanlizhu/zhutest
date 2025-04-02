@@ -1409,6 +1409,7 @@ function zhu-fix-snap-readonly-filesystem-issue {
 }
 
 function zhu-fex-emu {
+    zhu-fex-emu-config || return -1
     which jq >/dev/null || sudo apt install -y jq 
     which patchelf >/dev/null || sudo apt install -y patchelf
     ubuntu=$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)
