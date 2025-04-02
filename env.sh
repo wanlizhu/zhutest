@@ -1136,7 +1136,7 @@ function zhu-install-fex {
     fi
 
     sudo apt update
-    sudo apt install -y python3 python3-venv python3-pip \
+    sudo apt install -y cmake python3 python3-venv python3-pip \
         libepoxy-dev libstdc++-12-dev libsdl2-dev libssl-dev libglib2.0-dev \
         libpixman-1-dev libslirp-dev debootstrap git nasm \
         ninja-build build-essential clang lld \
@@ -2999,20 +2999,4 @@ function zhu-rsync-firmware {
 
     sudo mkdir -p /boot/efi/firmware
     sudo rsync -ah --progress $user@$host_ip:/boot/efi/firmware/$firmware /boot/efi/firmware/$firmware 
-}
-
-function zhu-max-n1x-clocks {
-    if [[ ! -d ~/iGPU_vfmax_scripts ]]; then
-        rsync -ah --progress /mnt/linuxqa/wlueking/n1x-bringup/iGPU_vfmax_scripts $HOME 
-    fi
-
-    if [[ ! -d ~/CPU_fmax_scripts ]]; then
-        rsync -ah --progress /mnt/linuxqa/wlueking/n1x-bringup/CPU_fmax_scripts $HOME 
-    fi
-
-    sudo bash $HOME/CPU_fmax_scripts/CPU_fmax_recipe.sh
-    pushd $HOME/iGPU_vfmax_scripts
-        sudo bash igpu_vf_unlock.sh
-        sudo bash igpu_vfmax_lock_recipe.sh
-    popd 
 }
