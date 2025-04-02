@@ -2029,7 +2029,15 @@ function zhu-check-xauthority {
         sleep 1
         if [[ -z $(pidof glxgears) ]]; then
             echo "$XAUTHORITY is invalid!"
-            return -1
+            if [[ $this_is_retry == yes ]]; then
+                return -1
+            else
+                this_is_retry=yes 
+                rm -rf ~/.Xauthority
+                zhu-check-xauthority
+                this_is_retry=
+                return 
+            fi
         fi
         kill -INT $(pidof glxgears)
     elif [[ $XDG_SESSION_TYPE == x11 ]]; then # Call via local display
