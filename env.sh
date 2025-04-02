@@ -2407,7 +2407,7 @@ function zhu-share-folder-via-nfs {
     sudo exportfs -v
 }
 
-function zhu-gtlfs-upload {
+function zhu-install-gtlfs {
     if [[ -z $(which gtlfs) ]]; then
         if [[ $(uname -s) == Linux ]]; then
             if [[ $(uname -m) == x86_64 ]]; then 
@@ -2421,25 +2421,15 @@ function zhu-gtlfs-upload {
             return -1
         fi
     fi
+}
 
+function zhu-gtlfs-upload {
+    zhu-install-gtlfs || return -1
     gtlfs push --username=wanliz "$1"
 }
 
 function zhu-gtlfs-download {
-    if [[ -z $(which gtlfs) ]]; then
-        if [[ $(uname -s) == Linux ]]; then
-            if [[ $(uname -m) == x86_64 ]]; then 
-                sudo wget --no-check-certificate -O /usr/local/bin/gtlfs https://gtlfs.nvidia.com/client/linux
-            elif [[ $(uname -m) == aarch64 ]]; then
-                sudo wget --no-check-certificate -O /usr/local/bin/gtlfs https://gtlfs.nvidia.com/client/gtlfs.arm64
-            fi  
-            sudo chown $USER:$(id -gn) /usr/local/bin/gtlfs
-            chmod +x /usr/local/bin/gtlfs
-        else
-            return -1
-        fi
-    fi
-
+    install-gtlfs || return -1
     pushd ~/Downloads >/dev/null 
     gtlfs pull "$1"
     popd >/dev/null 
