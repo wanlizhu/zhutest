@@ -426,8 +426,14 @@ function zhu-virtual-desktop-with-vnc {
     ip a | grep 'inet '
 }
 
+function zhu-share-desktop {
+   zhu-xserver-with-vnc
+}
+
 function zhu-xserver-with-vnc {
-    zhu-xserver || return -1
+    if [[ -z $(pidof Xorg) ]]; then
+        zhu-xserver || return -1
+    fi
     zhu-vnc-server-for-physical-display || return -1
     echo "DISPLAY=$DISPLAY"
     xrandr | grep current
@@ -2045,26 +2051,32 @@ function zhu-check-xauthority {
     echo "Checking Xauthority..."
     # Call via SSH session
     if [[ -z $XDG_SESSION_TYPE || $XDG_SESSION_TYPE == tty ]]; then
-        # When X11 forwarding is enabled
+        echo "XDG_SESSION_TYPE is $([[ -z $XDG_SESSION_TYPE ]] && echo null || echo $XDG_SESSION_TYPE)"
         if [[ $DISPLAY == *"localhost"* ]]; then
+            echo "X11 forwarding is enabled"
             export XAUTHORITY=~/.Xauthority
             chmod 600 ~/.Xauthority
-        else # When X11 forwarding is NOT enabled
+        else 
             if [[ -z $(pidof Xorg) ]]; then
-                echo "X server is not running"
+                echo "Xorg is not running"
                 return -1
             fi
 
-            if [[ ! -e ~/.Xauthority ]]; then  
+            if [[ ! -e ~/.Xauthority ]]; then 
+                echo "~/.Xauthority doesn't exist" 
                 active_auth=$(ps aux | grep '[X]org' | grep -oP '(?<=-auth )[^ ]+')
                 if [[ -z $active_auth ]]; then
                     echo "\"ps aux | grep '[X]org'\" returns no auth path"
                     export XAUTHORITY=""
+                    echo "The running Xorg has no -auth argument"
+                    echo "Set XAUTHORITY to null"
                 else
                     sudo cp $active_auth ~/.Xauthority
                     sudo chown $USER:$(id -gn) ~/.Xauthority
                     chmod 600 ~/.Xauthority
                     export XAUTHORITY=$HOME/.Xauthority
+                    echo "Copy $active_auth to ~/.Xauthority"
+                    echo "Set XAUTHORITY $HOME/.Xauthority"
                 fi 
             fi
         fi
@@ -2075,23 +2087,35 @@ function zhu-check-xauthority {
 
         glxgears & 
         sleep 1
+        success=no
         if [[ -z $(pidof glxgears) ]]; then
-            echo "$XAUTHORITY is invalid!"
+            echo "glxgears is not running as $XAUTHORITY is invalid!"
             if [[ $this_is_retry == yes ]]; then
                 return -1
             else
                 this_is_retry=yes 
+                echo "Delete ~/.Xauthority and retry"
                 rm -rf ~/.Xauthority
                 zhu-check-xauthority
                 this_is_retry=
                 return 
             fi
+        else
+            success=yes
         fi
+        
         kill -INT $(pidof glxgears)
-    elif [[ $XDG_SESSION_TYPE == x11 ]]; then # Call via local display
+        if [[ $success == yes ]]; then 
+            echo "Xauthority verification succeeded!"
+        fi
+    elif [[ $XDG_SESSION_TYPE == x11 ]]; then # Physical monitor
+        echo "XDG_SESSION_TYPE is x11 (calling from a physical monitor)"
         rm -rf ~/.zhurc.xauth
         echo "export XAUTHORITY=$XAUTHORITY" > ~/.zhurc.xauth
         xhost +
+    else
+        echo "XDG_SESSION_TYPE is $XDG_SESSION_TYPE which is not supported!"
+        return -1
     fi 
 }
 
@@ -2268,37 +2292,9 @@ function zhu-vnc-server-for-physical-display {
     fi  
 
     if [[ -z $(pidof Xorg) && "$1" != "--dryrun" ]]; then
-        echo "Xorg is not running, a running X server is required for x11vnc!"
-        echo "[1] Start Xorg as is"
-        echo "[2] Start Xorg with openbox"
-        echo "[3] Start Xorg with display-manager"
-        read -p "Select: " selection
-
-        if [[ -z $(which screen) ]]; then
-            sudo apt install -y screen || return -1
-        fi
-
-        if [[ $selection == 1 ]]; then
-            if [[ $UID == 0 ]]; then
-                screen -dmS xsession X :0
-            else
-                sudo screen -dmS xsession X :0
-            fi
-        elif [[ $selection == 2 ]]; then
-            zhu-startx-with-openbox || return -1
-        elif [[ $selection == 3 ]]; then
-            sudo systemctl start display-manager || return -1
-        else
-            return -1
-        fi
+        echo "Xorg is not running!"
+        return -1
     fi
-
-    while [[ -z $(pidof Xorg) ]]; do 
-        sleep 3
-        if [[ -z $(pidof Xorg) ]]; then
-            echo "[$(date)] Wait for Xorg to start up..."
-        fi 
-    done
 
     if [[ -z $(dpkg -l | grep x11vnc) ]]; then
         sudo apt install -y x11vnc || return -1
