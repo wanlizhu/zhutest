@@ -1287,7 +1287,7 @@ function zhu-install-3dmark-disco-steelnomad {
         pushd ~/zhutest-workload.d/3dmark-disco-steelnomad.$(uname -m) >/dev/null  
         if [[ $(uname -m) == x86_64 ]]; then
             unzip /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Disco_Steel_Nomad/3dmark-disco-1.0.0-bin.zip || return -1
-        elif [[ $(uname -m) == aarch64 ]]
+        elif [[ $(uname -m) == aarch64 ]]; then
             if ! mountpoint -q /mnt/d3d_benchmarks; then
                 sudo apt install -y cifs-utils || return -1
                 sudo mkdir -p /mnt/d3d_benchmarks
@@ -1334,7 +1334,7 @@ function zhu-install-3dmark-pogo-solarbay {
         pushd ~/zhutest-workload.d/3dmark-pogo-solarbay.$(uname -m) >/dev/null  
         if [[ $(uname -m) == x86_64 ]]; then
             unzip /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Pogo_Solar_Bay/3dmark-pogo-1.0.5.3-bin.zip || return -1 || return -1
-        elif [[ $(uname -m) == aarch64 ]]
+        elif [[ $(uname -m) == aarch64 ]]; then 
             if ! mountpoint -q /mnt/d3d_benchmarks; then
                 sudo apt install -y cifs-utils || return -1
                 sudo mkdir -p /mnt/d3d_benchmarks
