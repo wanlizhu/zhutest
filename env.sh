@@ -2,6 +2,7 @@
 export __GL_SYNC_TO_VBLANK=0
 export vblank_mode=0
 export __GL_DEBUG_BYPASS_ASSERT=c 
+export NVM_GTLAPI_USER=wanliz 
 
 if [[ -z $DISPLAY ]]; then
     if [[ -z $(ls /tmp/.X11-unix 2>/dev/null) ]]; then
