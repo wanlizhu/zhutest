@@ -1357,7 +1357,7 @@ function zhu-test-3dmark-pogo-solarbay {
     pushd ~/zhutest-workload.d/3dmark-pogo-solarbay.$(uname -m) || return -1
         rm -rf result.json
         chmod +x bin/linux/$(zhu-uname-m2)/dev_player
-        ./bin/linux/$(zhu-uname-m2)/dev_player --out=result.json --asset_root=assets_desktop --timeline=timelines/pogo_timeline.txt | return -1
+        ./bin/linux/$(zhu-uname-m2)/dev_player --out=result.json --asset_root=assets_desktop --timeline=timelines/pogo_timeline.txt || return -1
 
         which jq >/dev/null || sudo apt install -y jq 
         result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT" and .resultType == "") | .value' result.json)
