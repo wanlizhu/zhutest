@@ -15,6 +15,14 @@ if [[ -z $DISPLAY ]]; then
     fi
 fi
 
+function zhu-uname-m2 {
+    if [[ $(uname -m) == x86_64 ]]; then
+        echo "x64"
+    elif [[ $(uname -m) == aarch64 ]]; then
+        echo "arm64"
+    fi
+}
+
 function zhu-update-path {
     if ! echo "$PATH" | tr ':' '\n' | grep -q "dvs/dvsbuild"; then
         export PATH="$P4ROOT/automation/dvs/dvsbuild:$PATH" 
@@ -1228,98 +1236,127 @@ function zhu-cursor-click-on-window {
     xdotool mousemove --window $window_id $2 $3 click 1
 }
 
-function zhu-install-3dmark-wildlife {
+function zhu-install-3dmark-atten-wildlife {
     zhu-validate-display || return -1
 
-    if [[ ! -e ~/zhutest-workload.d/3dmark-wildlife-1.1.2.1 ]]; then
+    if [[ ! -d ~/zhutest-workload.d/3dmark-attan-wildlife.$(uname -m) ]]; then
         which rsync >/dev/null || sudo apt install -y rsync
         which unzip >/dev/null || sudo apt install -y unzip 
-        mkdir -p ~/zhutest-workload.d/3dmark-wildlife-1.1.2.1 
-        pushd ~/zhutest-workload.d/3dmark-wildlife-1.1.2.1 >/dev/null  
-        unzip /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Attan_Wild_Life/3dmark-attan-extreme-1.1.2.1-workload-bin.zip || return -1
+        mkdir -p ~/zhutest-workload.d/3dmark-attan-wildlife.$(uname -m)
+        pushd ~/zhutest-workload.d/3dmark-attan-wildlife.$(uname -m) >/dev/null  
+        if [[ $(uname -m) == x86_64 ]]; then
+            unzip /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Attan_Wild_Life/3dmark-attan-extreme-1.1.2.1-workload-bin.zip || return -1
+        elif [[ $(uname -m) == aarch64 ]]
+            if ! mountpoint -q /mnt/d3d_benchmarks; then
+                sudo apt install -y cifs-utils || return -1
+                sudo mkdir -p /mnt/d3d_benchmarks
+                sudo mount -t cifs -o username=wanliz,workgroup=NVIDIA.COM //netapp-hq/d3d_benchmarks /mnt/d3d_benchmarks || return -1
+            fi 
+            unzip /mnt/d3d_benchmarks/3DMark/3dmark-linux-arm64/3dmark-attan-extreme-999.999.197601.547-bin.zip || return -1
+        fi 
         popd >/dev/null 
-    fi
-
-    if [[ $(uname -m) == "aarch64" ]]; then
-        zhu-install-fex || return -1
     fi
 }
 
-function zhu-test-3dmark-wildlife {
-    zhu-install-3dmark-wildlife || return -1
+function zhu-test-3dmark-atten-wildlife {
+    zhu-install-3dmark-atten-wildlife || return -1
     if [[ $1 == --dryrun ]]; then
-        chmod +x $HOME/zhutest-workload.d/3dmark-wildlife-1.1.2.1/bin/linux/x64/workload
-        echo "cd $HOME/zhutest-workload.d/3dmark-wildlife-1.1.2.1 && ./bin/linux/x64/workload --in=settings/gt1.json --out=result.json"
+        chmod +x $HOME/zhutest-workload.d/3dmark-attan-wildlife.$(uname -m)/bin/linux/$(zhu-uname-m2)/workload
+        echo "cd $HOME/zhutest-workload.d/3dmark-attan-wildlife.$(uname -m) && ./bin/linux/$(zhu-uname-m2)/workload --in=settings/gt1.json --out=result.json"
         return
     fi
 
-    pushd ~/zhutest-workload.d/3dmark-wildlife-1.1.2.1 || return -1
-    rm -rf result.json
-    chmod +x run_linux_x64.sh 
-    ./run_linux_x64.sh || return -1
-
-    which jq >/dev/null || sudo apt install -y jq 
-    result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT") | .value' result.json)
-    echo "3DMark - Wildlife - Vulkan rasterization"
-    echo "Typed result: $result FPS"
+    pushd ~/zhutest-workload.d/3dmark-attan-wildlife.$(uname -m) || return -1
+        rm -rf result.json
+        chmod +x run_linux_$(zhu-uname-m2).sh 
+        ./run_linux_$(zhu-uname-m2).sh || return -1
+        which jq >/dev/null || sudo apt install -y jq 
+        result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT") | .value' result.json)
+        echo "3DMark - Wildlife - Vulkan rasterization"
+        echo "Typed result: $result FPS"
     popd >/dev/null 
 }
 
-function zhu-test-3dmark-steelnomad {
-    zhu-install-3dmark-steelnomad || return -1
+function zhu-install-3dmark-disco-steelnomad {
+    zhu-validate-display || return -1
+
+    if [[ ! -d ~/zhutest-workload.d/3dmark-disco-steelnomad.$(uname -m) ]]; then
+        which rsync >/dev/null || sudo apt install -y rsync
+        which unzip >/dev/null || sudo apt install -y unzip 
+        mkdir -p ~/zhutest-workload.d/3dmark-disco-steelnomad.$(uname -m)
+        pushd ~/zhutest-workload.d/3dmark-disco-steelnomad.$(uname -m) >/dev/null  
+        if [[ $(uname -m) == x86_64 ]]; then
+            unzip /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Disco_Steel_Nomad/3dmark-disco-1.0.0-bin.zip || return -1
+        elif [[ $(uname -m) == aarch64 ]]
+            if ! mountpoint -q /mnt/d3d_benchmarks; then
+                sudo apt install -y cifs-utils || return -1
+                sudo mkdir -p /mnt/d3d_benchmarks
+                sudo mount -t cifs -o username=wanliz,workgroup=NVIDIA.COM //netapp-hq/d3d_benchmarks /mnt/d3d_benchmarks || return -1
+            fi 
+            unzip /mnt/d3d_benchmarks/3DMark/3dmark-linux-arm64/3dmark-disco-999.999.196988.1915-bin.zip || return -1
+        fi 
+        popd >/dev/null 
+    fi
+}
+
+function zhu-test-3dmark-disco-steelnomad {
+    zhu-install-3dmark-disco-steelnomad || return -1
 
     if [[ $1 == --dryrun ]]; then
         echo TODO
         return
     fi
 
-    pushd ~/zhutest-workload.d/3dmark-steelnomad-1.0.0 || return -1
-    rm -rf result_vulkan.json
-    chmod +x run_workload_linux_vulkan.sh
-    ./run_workload_linux_vulkan.sh || return -1
-
-    which jq >/dev/null || sudo apt install -y jq 
-    result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT") | .value' result_vulkan.json)
-    echo "3DMark - Steel Nomad - Modern Vulkan rasterization"
-    echo "Typed result: $result FPS"
+    pushd ~/zhutest-workload.d/3dmark-disco-steelnomad.$(uname -m) || return -1
+        rm -rf result_vulkan.json
+        chmod +x run_workload_linux_vulkan.sh
+        ./run_workload_linux_vulkan.sh || return -1
+        which jq >/dev/null || sudo apt install -y jq 
+        result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT") | .value' result_vulkan.json)
+        echo "3DMark - Steel Nomad - Modern Vulkan rasterization"
+        echo "Typed result: $result FPS"
     popd >/dev/null 
 }
 
-function zhu-install-3dmark-solarbay {
+function zhu-install-3dmark-pogo-solarbay {
     zhu-validate-display || return -1
 
     if [[ $1 == --dryrun ]]; then
-        chmod +x $HOME/zhutest-workload.d/3dmark-solarbay-1.0.5.3/bin/linux/x64/dev_player
-        echo "cd $HOME/zhutest-workload.d/3dmark-solarbay-1.0.5.3 && ./bin/linux/x64/dev_player --out=result.json --asset_root=assets_desktop --timeline=timelines/pogo_timeline.txt"
+        chmod +x $HOME/zhutest-workload.d/3dmark-pogo-solarbay.$(uname -m)/bin/linux/$(zhu-uname-m2)/dev_player
+        echo "cd $HOME/zhutest-workload.d/3dmark-pogo-solarbay.$(uname -m) && ./bin/linux/$(zhu-uname-m2)/dev_player --out=result.json --asset_root=assets_desktop --timeline=timelines/pogo_timeline.txt"
         return
     fi
 
-    if [[ ! -e ~/zhutest-workload.d/3dmark-solarbay-1.0.5.3 ]]; then
+    if [[ ! -d ~/zhutest-workload.d/3dmark-pogo-solarbay.$(uname -m) ]]; then
         which rsync >/dev/null || sudo apt install -y rsync
         which unzip >/dev/null || sudo apt install -y unzip 
-        mkdir -p ~/zhutest-workload.d/3dmark-solarbay-1.0.5.3 
-        pushd ~/zhutest-workload.d/3dmark-solarbay-1.0.5.3 >/dev/null  
-        unzip /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Pogo_Solar_Bay/3dmark-pogo-1.0.5.3-bin.zip || return -1
+        mkdir -p ~/zhutest-workload.d/3dmark-pogo-solarbay.$(uname -m) 
+        pushd ~/zhutest-workload.d/3dmark-pogo-solarbay.$(uname -m) >/dev/null  
+        if [[ $(uname -m) == x86_64 ]]; then
+            unzip /mnt/linuxqa/nvtest/pynv_files/3DMark/3DMark_Pogo_Solar_Bay/3dmark-pogo-1.0.5.3-bin.zip || return -1 || return -1
+        elif [[ $(uname -m) == aarch64 ]]
+            if ! mountpoint -q /mnt/d3d_benchmarks; then
+                sudo apt install -y cifs-utils || return -1
+                sudo mkdir -p /mnt/d3d_benchmarks
+                sudo mount -t cifs -o username=wanliz,workgroup=NVIDIA.COM //netapp-hq/d3d_benchmarks /mnt/d3d_benchmarks || return -1
+            fi 
+            unzip /mnt/d3d_benchmarks/3DMark/3dmark-linux-arm64/3dmark-pogo-1.0.15.2-bin.zip || return -1
+        fi 
         popd >/dev/null 
-    fi
-
-    if [[ $(uname -m) == "aarch64" ]]; then
-        zhu-install-fex || return -1
     fi
 }
 
-function zhu-test-3dmark-solarbay {
-    zhu-install-3dmark-solarbay || return -1
+function zhu-test-3dmark-pogo-solarbay {
+    zhu-install-3dmark-pogo-solarbay || return -1
 
-    pushd ~/zhutest-workload.d/3dmark-solarbay-1.0.5.3 || return -1
-    rm -rf result.json
-    chmod +x run_dev_player_linux_x64.sh
-    ./run_dev_player_linux_x64.sh || return -1
-
-    which jq >/dev/null || sudo apt install -y jq 
-    result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT" and .resultType == "") | .value' result.json)
-    echo "3DMark - Solar Bay - Vulkan raytracing"
-    echo "Typed result: $result FPS"
+    pushd ~/zhutest-workload.d/3dmark-pogo-solarbay.$(uname -m) || return -1
+        rm -rf result.json
+        chmod +x run_dev_player_linux_$(zhu-uname-m2).sh
+        ./run_dev_player_linux_$(zhu-uname-m2).sh || return -1
+        which jq >/dev/null || sudo apt install -y jq 
+        result=$(jq -r '.outputs[] | select(.outputType == "TYPED_RESULT" and .resultType == "") | .value' result.json)
+        echo "3DMark - Solar Bay - Vulkan raytracing"
+        echo "Typed result: $result FPS"
     popd >/dev/null 
 }
 
