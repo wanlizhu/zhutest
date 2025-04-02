@@ -1254,6 +1254,7 @@ function zhu-install-3dmark-atten-wildlife {
             fi 
             unzip /mnt/d3d_benchmarks/3DMark/3dmark-linux-arm64/3dmark-attan-extreme-999.999.197601.547-bin.zip || return -1
         fi 
+        sudo apt install -y libc++-dev 
         popd >/dev/null 
     fi
 }
@@ -1295,6 +1296,7 @@ function zhu-install-3dmark-disco-steelnomad {
             fi 
             unzip /mnt/d3d_benchmarks/3DMark/3dmark-linux-arm64/3dmark-disco-999.999.196988.1915-bin.zip || return -1
         fi 
+        sudo apt install -y libc++-dev 
         popd >/dev/null 
     fi
 }
@@ -1342,6 +1344,7 @@ function zhu-install-3dmark-pogo-solarbay {
             fi 
             unzip /mnt/d3d_benchmarks/3DMark/3dmark-linux-arm64/3dmark-pogo-1.0.15.2-bin.zip || return -1
         fi 
+        sudo apt install -y libc++-dev 
         popd >/dev/null 
     fi
 }
