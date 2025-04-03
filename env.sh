@@ -730,8 +730,10 @@ function zhu-install-nvidia-driver-prebuilt {
                 read -e -i yes -p "Install this x86_64 build into FEX rootfs? (yes/no): " ans
                 if [[ $ans == yes ]]; then
                     mkdir -p $HOME/Downloads
-                    rsync -ah --progress $driver $HOME/Downloads/$(basename $driver) || return -1
-                    zhu-install-nvidia-driver-in-fex $HOME/Downloads/$(basename $driver)
+                    timestamp=$(date +%s)
+                    mkdir -p /tmp/$timestamp
+                    rsync -ah --progress $driver /tmp/$timestamp/$(basename $driver) || return -1
+                    zhu-install-nvidia-driver-in-fex /tmp/$timestamp/$(basename $driver)
                 fi
             fi
         fi 
