@@ -4,6 +4,10 @@ export vblank_mode=0
 export __GL_DEBUG_BYPASS_ASSERT=c 
 export NVM_GTLAPI_USER=wanliz 
 
+if [[ $(ulimit -c) == 0 ]]; then
+    ulimit -c unlimited
+fi
+
 if [[ -z $DISPLAY ]]; then
     if [[ -z $(ls /tmp/.X11-unix 2>/dev/null) ]]; then
         export DISPLAY=:0
