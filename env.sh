@@ -2082,74 +2082,73 @@ function zhu-list-steam-games {
 }
 
 function zhu-check-xauthority {
-    echo "Checking Xauthority..."
-    # Call via SSH session
-    if [[ -z $XDG_SESSION_TYPE || $XDG_SESSION_TYPE == tty ]]; then
-        echo "XDG_SESSION_TYPE is $([[ -z $XDG_SESSION_TYPE ]] && echo null || echo $XDG_SESSION_TYPE)"
-        if [[ $DISPLAY == *"localhost"* ]]; then
-            echo "X11 forwarding is enabled"
-            export XAUTHORITY=~/.Xauthority
-            chmod 600 ~/.Xauthority
-        else 
-            if [[ -z $(pidof Xorg) ]]; then
-                echo "Xorg is not running"
-                return -1
-            fi
-
-            if [[ ! -e ~/.Xauthority ]]; then 
-                echo "~/.Xauthority doesn't exist" 
-                active_auth=$(ps aux | grep '[X]org' | grep -oP '(?<=-auth )[^ ]+')
-                if [[ -z $active_auth ]]; then
-                    echo "\"ps aux | grep '[X]org'\" returns no auth path"
-                    export XAUTHORITY=""
-                    echo "The running Xorg has no -auth argument"
-                    echo "Set XAUTHORITY to null"
-                else
-                    sudo cp $active_auth ~/.Xauthority
-                    sudo chown $USER:$(id -gn) ~/.Xauthority
-                    chmod 600 ~/.Xauthority
-                    export XAUTHORITY=$HOME/.Xauthority
-                    echo "Copy $active_auth to ~/.Xauthority"
-                    echo "Set XAUTHORITY $HOME/.Xauthority"
-                fi 
-            fi
-        fi
-
-        if [[ -z $(which glxgears) ]]; then
-            sudo apt install -y mesa-utils || return -1
-        fi
-
-        glxgears & 
-        sleep 1
-        success=no
-        if [[ -z $(pidof glxgears) ]]; then
-            echo "glxgears is not running as $XAUTHORITY is invalid!"
-            if [[ $this_is_retry == yes ]]; then
-                return -1
-            else
-                this_is_retry=yes 
-                echo "Delete ~/.Xauthority and retry"
-                rm -rf ~/.Xauthority
-                zhu-check-xauthority
-                this_is_retry=
-                return 
-            fi
-        else
-            success=yes
-        fi
-        
-        kill -INT $(pidof glxgears)
-        if [[ $success == yes ]]; then 
-            echo "Xauthority verification succeeded!"
-        fi
-    elif [[ $XDG_SESSION_TYPE == x11 ]]; then # Physical monitor
-        echo "XDG_SESSION_TYPE is x11 (calling from a physical monitor)"
-        rm -rf ~/.zhurc.xauth
-        echo "export XAUTHORITY=$XAUTHORITY" > ~/.zhurc.xauth
-        xhost +
-    else
-        echo "XDG_SESSION_TYPE is $XDG_SESSION_TYPE which is not supported!"
+    if [[ -z $(pidof Xorg) ]]; then
+        echo "Xorg is not running"
         return -1
+    fi
+
+    if [[ -z $(which glxgears) ]]; then
+        sudo apt install -y mesa-utils || return -1
+    fi
+
+    if [[ -n $XDG_SESSION_TYPE && $XDG_SESSION_TYPE != tty && $XDG_SESSION_TYPE != x11 ]]; then
+        echo "XDG_SESSION_TYPE is \"$XDG_SESSION_TYPE\" which is not supported!"
+        return -1
+    fi
+
+    echo "Checking Xauthority..."
+    
+    echo "XDG_SESSION_TYPE is $([[ -z $XDG_SESSION_TYPE ]] && echo null || echo $XDG_SESSION_TYPE)"
+    if [[ $DISPLAY == *"localhost"* ]]; then
+        echo "X11 forwarding is enabled"
+        export XAUTHORITY=~/.Xauthority
+        chmod 600 ~/.Xauthority
+        echo "Export XAUTHORITY=~/.Xauthority"
+        return 
+    fi 
+
+    active_auth=$(ps aux | grep '[X]org' | grep -oP '(?<=-auth )[^ ]+')
+
+    if [[ -z $active_auth ]]; then
+        rm -rf ~/.Xauthority
+        export XAUTHORITY=""
+        echo "Delete ~/.Xauthority and reset"
+    else
+        sudo cp $active_auth ~/.Xauthority
+        sudo chown $USER:$(id -gn) ~/.Xauthority
+        chmod 600 ~/.Xauthority
+        export XAUTHORITY=$HOME/.Xauthority
+        echo "Copy $active_auth to ~/.Xauthority and export"
+    fi 
+
+    glxgears & 
+    sleep 1
+    success=no
+    if [[ -z $(pidof glxgears) ]]; then
+        echo "XAUTHORITY(\"$XAUTHORITY\") is invalid!"
+        if [[ $this_is_retry == yes ]]; then
+            return -1
+        else
+            this_is_retry=yes 
+            echo "Delete ~/.Xauthority and retry"
+            rm -rf ~/.Xauthority
+            zhu-check-xauthority
+            this_is_retry=
+            return 
+        fi
+    else
+        success=yes
+    fi
+
+    kill -INT $(pidof glxgears)
+    if [[ $success == yes ]]; then 
+        if [[ $this_is_retry != yes ]]; then 
+            echo "XAUTHORITY is $XAUTHORITY"
+            echo "Xauthority verification succeeded!"
+        fi 
+    else
+        echo "XAUTHORITY is $XAUTHORITY"
+        echo "Xauthority verification failed!"
     fi 
 }
 
@@ -2340,9 +2339,13 @@ function zhu-vnc-server-for-physical-display {
         auth_path=$(ps aux | grep '[X]org' | grep -oP '(?<=-auth )[^ ]+')
         if [[ ! -z $auth_path ]]; then
             auth_args="-auth $auth_path"
+            echo "Pass Xorg's -auth($auth_path) to -auth of x11vnc"
+        else
+            echo "Remove -auth of x11vnc"
         fi 
     else
         auth_args="-auth $XAUTHORITY"
+        echo "Pass \$XAUTHORITY($XAUTHORITY) to -auth of x11vnc"
     fi
 
     if [[ ! -e $HOME/.vnc/passwd ]]; then
