@@ -479,18 +479,21 @@ function zhu-xserver {
         fi 
 
         if [[ $1 == -i ]]; then
-            read -e -i yes -p "Run X server in a detached session? (yes/no): " ans
+            read -e -i yes -p "Run X server and detach? (yes/no): " ans
         else
             ans=yes 
+            echo "Run X server and detach"
         fi 
 
         if [[ $ans == yes ]]; then
             if [[ -z $(which screen) ]]; then
                 sudo apt install -y screen 
             fi
+            XAUTHORITY_backup=$XAUTHORITY
             export XAUTHORITY=""
             $SUDO screen -dmS xserver X :0 +iglx
             export DISPLAY=:0
+            export XAUTHORITY=$XAUTHORITY_backup 
             sleep 1
             if [[ -z $(pidof Xorg) ]]; then
                 echo "Failed to start up a new Xorg session!"; return -1
@@ -498,8 +501,10 @@ function zhu-xserver {
                 echo "Xorg $(pidof Xorg) has started!"
             fi
         else
+            XAUTHORITY_backup=$XAUTHORITY
             export XAUTHORITY=""
             $SUDO X :0 +iglx
+            export XAUTHORITY=$XAUTHORITY_backup 
         fi 
     else
         echo "Please run via SSH/TTY session!"
