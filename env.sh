@@ -2336,7 +2336,11 @@ function zhu-vnc-server-for-physical-display {
 
     zhu-check-xauthority || return -1
     if [[ -z $XAUTHORITY ]]; then
-        auth_args="" # Don't use -auth if XAUTHORITY is null
+        auth_args="" 
+        auth_path=$(ps aux | grep '[X]org' | grep -oP '(?<=-auth )[^ ]+')
+        if [[ ! -z $auth_path ]]; then
+            auth_args="-auth $auth_path"
+        fi 
     else
         auth_args="-auth $XAUTHORITY"
     fi
