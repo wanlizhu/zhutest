@@ -28,6 +28,11 @@ function zhu-uname-m2 {
     fi
 }
 
+function zhu-enable-coredump {
+    sudo apt install -y systemd-coredump
+    sudo snap set system system.coredump.enable=true
+}
+
 function zhu-update-path {
     if ! echo "$PATH" | tr ':' '\n' | grep -q "dvs/dvsbuild"; then
         export PATH="$P4ROOT/automation/dvs/dvsbuild:$PATH" 
