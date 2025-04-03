@@ -3059,7 +3059,17 @@ function zhu-rsync-firmware {
     sudo rsync -ah --progress $user@$host_ip:/boot/efi/firmware/$firmware /boot/efi/firmware/$firmware 
 }
 
+function zhu-rsync-steam {
+    read -e -i wanliz-test.client.nvidia.com -p "Rsync from remote host: " host_ip
+    read -e -i wanliz  -p "As user: " user
+    
+    if [[ -d ~/.steam && ! -d ~/.steam.backup ]]; then
+        mv ~/.steam ~/.steam.backup
+    fi
+
+    rsync -ah --progress $user@$host_ip:/home/$user/.steam/ ~/.steam/
+}
+
 function zhu-install-picx {
     echo 
 }
-
