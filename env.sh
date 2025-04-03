@@ -2345,7 +2345,7 @@ function zhu-vnc-server-for-physical-display {
         fi 
     else
         auth_args="-auth $XAUTHORITY"
-        echo "Pass \$XAUTHORITY($XAUTHORITY) to -auth of x11vnc"
+        echo "Pass XAUTHORITY($XAUTHORITY) to -auth of x11vnc"
     fi
 
     if [[ ! -e $HOME/.vnc/passwd ]]; then
