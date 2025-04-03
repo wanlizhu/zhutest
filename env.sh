@@ -3079,6 +3079,21 @@ function zhu-rsync-steam {
     rsync -ah --progress $user@$host_ip:/home/$user/.steam/ ~/.steam/
 }
 
+function zhu-n1x-max-clocks {
+    if [[ ! -d ~/iGPU_vfmax_scripts ]]; then
+        rsync -ah --progress /mnt/linuxqa/wlueking/n1x-bringup/iGPU_vfmax_scripts $HOME 
+    fi
+
+    if [[ ! -d ~/CPU_fmax_scripts ]]; then
+        rsync -ah --progress /mnt/linuxqa/wlueking/n1x-bringup/CPU_fmax_scripts $HOME 
+    fi
+
+    sudo nvidia-smi -pm 1
+    sudo $HOME/CPU_fmax_scripts/CPU_fmax_recipe.sh
+    sudo $HOME/iGPU_vfmax_scripts/igpu_vf_unlock.sh
+    sudo $HOME/iGPU_vfmax_scripts/igpu_vfmax_lock_recipe.sh
+}
+
 function zhu-install-picx {
     echo 
 }
