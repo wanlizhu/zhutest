@@ -430,6 +430,13 @@ function zhu-share-desktop {
    zhu-xserver-with-vnc
 }
 
+function zhu-disable-xhost-access-control {
+    if [[ -z $DISPLAY ]]; then
+        export DISPLAY=:0
+    fi
+    xhost +
+}
+
 function zhu-xserver-with-vnc {
     if [[ -z $(pidof Xorg) ]]; then
         zhu-xserver || return -1
