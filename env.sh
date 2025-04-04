@@ -3129,20 +3129,44 @@ function zhu-digits-max-clocks {
     sudo $HOME/iGPU_vfmax_scripts/igpu_vfmax_lock_recipe.sh
 }
 
-function zhu-ssh-n1x6 {
-    sshpass -p nvidia ssh nvidia@10.31.40.169
+function zhu-digits-connect {
+    if [[ $1 == 6 ]]; then 
+        if [[ $2 == h* ]]; then 
+            sshpass -p root ssh root@linux-bringup6.client.nvidia.com
+        else 
+            sshpass -p nvidia ssh nvidia@10.31.40.169
+        fi 
+    elif [[ $1 == 7 ]]; then
+        if [[ $2 == h* ]]; then 
+            sshpass -p root ssh root@linux-bringup7.client.nvidia.com
+        else 
+            sshpass -p nvidia ssh nvidia@10.31.40.190
+        fi 
+    fi 
 }
 
-function zhu-ssh-n1x6-host {
-    sshpass -p root ssh root@linux-bringup6.client.nvidia.com
-}
+function zhu-open-and-share-display {
+    if [[ ! -z $(pidof Xorg) ]]; then
+        echo "Kill running X server ($(pidof Xorg)) first!"
+        return -1
+    fi
 
-function zhu-ssh-n1x7 {
-    sshpass -p nvidia ssh nvidia@10.31.40.190
-}
+    if [[ -z $DISPLAY ]]; then
+        export DISPLAY=:0
+    fi
+    
+    if [[ ! -z $(sudo ls /root/nvtx 2>/dev/null) ]]; then
+        zhu-mount-linuxqa 
+        echo "NVTEST_NO_SMI=1 NVTEST_NO_RMMOD=1 NVTEST_NO_MODPROBE=1 /mnt/linuxqa/nvt.sh 3840x2160__runcmd --cmd 'sleep 2147483647' 2>&1 | tee /tmp/nvtest-xorg.log" > /tmp/nvtest-xorg.sh
+        chmod +x /tmp/nvtest-xorg.sh
+        su - root -c "screen -dmS nvtest-xorg bash /tmp/nvtest-xorg.sh"
+        echo "Wait for X server to start up"
+        while [[ -z $(pidof Xorg) ]]; do 
+            sleep 3
+        done
+    fi
 
-function zhu-ssh-n1x7-host {
-    sshpass -p root ssh root@linux-bringup7.client.nvidia.com
+    zhu-xserver-with-vnc
 }
 
 function zhu-install-picx {
