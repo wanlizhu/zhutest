@@ -3133,6 +3133,10 @@ function zhu-open-and-share-display {
     zhu-xserver-with-vnc
 }
 
+function zhu-digits-steam {
+    FEXInterpreter ~/.fex-emu/RootFS/Ubuntu_24_04/usr/games/steam
+}
+
 function zhu-install-picx {
     echo 
 }
