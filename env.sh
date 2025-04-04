@@ -3115,8 +3115,11 @@ function zhu-digits-max-clocks {
     fi
 
     if [[ ! -e /etc/modprobe.d/nvidia-power-feature.conf ]]; then
-        echo "options nvidia \"RmPowerFeature=0x55455555; RmPowerFeature2=0x55555550;\"" | sudo tee /etc/modprobe.d/nvidia-power-feature.conf
+        echo "options nvidia NVreg_RegistryDwords=\"RmPowerFeature=0x55455555; RmPowerFeature2=0x55555550;\"" | sudo tee /etc/modprobe.d/nvidia-power-feature.conf
         echo "Reboot to apply changes!"
+    else
+        cat /proc/driver/nvidia/params | grep RmPowerFeature
+        cat /proc/driver/nvidia/params | grep RmPowerFeature2
     fi
 
     sudo nvidia-smi -pm 1
