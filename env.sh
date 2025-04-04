@@ -3125,19 +3125,19 @@ function zhu-digits-max-clocks {
     sudo $HOME/iGPU_vfmax_scripts/igpu_vfmax_lock_recipe.sh
 }
 
-function 666 {
+function zhu-ssh-n1x6 {
     sshpass -p nvidia ssh nvidia@10.31.40.169
 }
 
-function h666 {
+function zhu-ssh-n1x6-host {
     sshpass -p root ssh root@linux-bringup6.client.nvidia.com
 }
 
-function 777 {
+function zhu-ssh-n1x7 {
     sshpass -p nvidia ssh nvidia@10.31.40.190
 }
 
-function h777 {
+function zhu-ssh-n1x7-host {
     sshpass -p root ssh root@linux-bringup7.client.nvidia.com
 }
 
