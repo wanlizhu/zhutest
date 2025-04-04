@@ -668,6 +668,13 @@ function zhu-install-nvidia-driver-localbuild {
             sudo systemctl start display-manager
         fi 
     fi 
+
+    if [[ $(uname -m) == aarch64 ]]; then
+        read -e -i yes -p "Enable max clocks? (yes/no): " maxclocks 
+        if [[ $maxclocks == yes ]]; then
+            zhu-digits-max-clocks 
+        fi
+    fi
 }
 
 function zhu-install-nvidia-driver-prebuilt {
