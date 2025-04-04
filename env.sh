@@ -723,26 +723,21 @@ function zhu-install-nvidia-driver-prebuilt {
     fi
 
     if [[ -e $(realpath $path) ]]; then
-        if [[ $1 == --dryrun ]]; then
-            echo "$(realpath $path)"
-            return 
-        else
-            zhu-install-nvidia-driver-localbuild "$(realpath $path)" || return -1
-            if [[ $(uname -m) == aarch64 && -d ~/.fex-emu/RootFS ]]; then
-                echo 
-                driver="$(realpath $path)"
-                driver="${driver//aarch64/x86_64}"
-                echo "$driver"
-                read -e -i yes -p "Install this x86_64 build into FEX rootfs? (yes/no): " ans
-                if [[ $ans == yes ]]; then
-                    mkdir -p $HOME/Downloads
-                    timestamp=$(date +%s)
-                    mkdir -p /tmp/$timestamp
-                    rsync -ah --progress $driver /tmp/$timestamp/$(basename $driver) || return -1
-                    zhu-install-nvidia-driver-in-fex /tmp/$timestamp/$(basename $driver)
-                fi
+        zhu-install-nvidia-driver-localbuild "$(realpath $path)" || return -1
+        if [[ $(uname -m) == aarch64 && -d ~/.fex-emu/RootFS ]]; then
+            echo 
+            driver="$(realpath $path)"
+            driver="${driver//aarch64/x86_64}"
+            echo "$driver"
+            read -e -i yes -p "Install this x86_64 build into FEX rootfs? (yes/no): " ans
+            if [[ $ans == yes ]]; then
+                mkdir -p $HOME/Downloads
+                timestamp=$(date +%s)
+                mkdir -p /tmp/$timestamp
+                rsync -ah --progress $driver /tmp/$timestamp/$(basename $driver) || return -1
+                zhu-install-nvidia-driver-in-fex /tmp/$timestamp/$(basename $driver)
             fi
-        fi 
+        fi
     else
         echo "$path not found!"
         return -1
@@ -1307,11 +1302,6 @@ function zhu-install-3dmark-atten-wildlife {
 
 function zhu-test-3dmark-atten-wildlife {
     zhu-install-3dmark-atten-wildlife || return -1
-    if [[ $1 == --dryrun ]]; then
-        chmod +x $HOME/zhutest-workload.d/3dmark-attan-wildlife.$(uname -m)/bin/linux/$(zhu-uname-m2)/workload
-        echo "cd $HOME/zhutest-workload.d/3dmark-attan-wildlife.$(uname -m) && ./bin/linux/$(zhu-uname-m2)/workload --in=settings/gt1.json --out=result.json"
-        return
-    fi
 
     pushd ~/zhutest-workload.d/3dmark-attan-wildlife.$(uname -m) || return -1
         rm -rf result.json
@@ -1351,11 +1341,6 @@ function zhu-install-3dmark-disco-steelnomad {
 function zhu-test-3dmark-disco-steelnomad {
     zhu-install-3dmark-disco-steelnomad || return -1
 
-    if [[ $1 == --dryrun ]]; then
-        echo TODO
-        return
-    fi
-
     pushd ~/zhutest-workload.d/3dmark-disco-steelnomad.$(uname -m) || return -1
         rm -rf result_vulkan.json
         chmod +x ./bin/linux/$(zhu-uname-m2)/release_workload
@@ -1370,12 +1355,6 @@ function zhu-test-3dmark-disco-steelnomad {
 
 function zhu-install-3dmark-pogo-solarbay {
     zhu-validate-display || return -1
-
-    if [[ $1 == --dryrun ]]; then
-        chmod +x $HOME/zhutest-workload.d/3dmark-pogo-solarbay.$(uname -m)/bin/linux/$(zhu-uname-m2)/dev_player
-        echo "cd $HOME/zhutest-workload.d/3dmark-pogo-solarbay.$(uname -m) && ./bin/linux/$(zhu-uname-m2)/dev_player --out=result.json --asset_root=assets_desktop --timeline=timelines/pogo_timeline.txt"
-        return
-    fi
 
     if [[ ! -d ~/zhutest-workload.d/3dmark-pogo-solarbay.$(uname -m) ]]; then
         which rsync >/dev/null || sudo apt install -y rsync
@@ -2011,14 +1990,10 @@ function zhu-test-viewperf-catia-subtest1 {
 EOF
     fi
 
-    if [[ $1 == --dryrun ]]; then
-        echo "./viewperf/bin/viewperf viewsets/catia/config/subtest1.xml -resolution 1920x1080"
-    else
-        ./viewperf/bin/viewperf viewsets/catia/config/subtest1.xml -resolution 1920x1080 && {
-            cat results/catia-06/results.xml | grep FPS | xmllint --xpath 'string(//Test/@FPS)' - >> /tmp/fps.log 
-            echo "Viewperf Catia-06:subtest1 result FPS: $(cat /tmp/fps.log | tail -1)"
-        }
-    fi
+    ./viewperf/bin/viewperf viewsets/catia/config/subtest1.xml -resolution 1920x1080 && {
+        cat results/catia-06/results.xml | grep FPS | xmllint --xpath 'string(//Test/@FPS)' - >> /tmp/fps.log 
+        echo "Viewperf Catia-06:subtest1 result FPS: $(cat /tmp/fps.log | tail -1)"
+    }
 
     popd >/dev/null
 }
@@ -2046,14 +2021,10 @@ function zhu-test-viewperf-maya-subtest5 {
 EOF
     fi
 
-    if [[ $1 == --dryrun ]]; then
-        echo "./viewperf/bin/viewperf viewsets/maya/config/subtest5.xml -resolution 1920x1080 "
-    else
-        ./viewperf/bin/viewperf viewsets/maya/config/subtest5.xml -resolution 1920x1080 && {
-            cat results/maya-06/results.xml | grep FPS | xmllint --xpath 'string(//Test/@FPS)' - >> /tmp/fps.log 
-            echo "Viewperf Maya-06:subtest5 result FPS: $(cat /tmp/fps.log | tail -1)"
-        }
-    fi 
+    ./viewperf/bin/viewperf viewsets/maya/config/subtest5.xml -resolution 1920x1080 && {
+        cat results/maya-06/results.xml | grep FPS | xmllint --xpath 'string(//Test/@FPS)' - >> /tmp/fps.log 
+        echo "Viewperf Maya-06:subtest5 result FPS: $(cat /tmp/fps.log | tail -1)"
+    }
 
     popd >/dev/null
 }
@@ -2208,31 +2179,31 @@ function zhu-check-vncserver {
     sudo ss -tulpn | grep -E "5900|5901|5902"
 }
 
-function zhu-vnc-server-for-headless-system-as-autostart {
-    zhu-vnc-server-for-headless-system --dryrun || return -1
-    if [[ -z "$vncserver_args" ]]; then
-        return -1
-    fi
-
-    echo "[Unit]
-Description=TigerVNC server
-After=syslog.target network.target
-
-[Service]
-Type=forking
-User=$USER
-WorkingDirectory=$HOME
-ExecStartPre=-/usr/bin/tigervncserver -kill :%i > /dev/null 2>&1
-ExecStart=/usr/bin/tigervncserver $vncserver_args :%i
-ExecStop=/usr/bin/tigervncserver -kill :%i
-
-[Install]
-WantedBy=multi-user.target
-" > /etc/systemd/system/tigervncserver@.service
-    sudo systemctl daemon-reload
-    sudo systemctl enable tigervncserver@${DISPLAY/:/}.service
-    sudo systemctl start tigervncserver@${DISPLAY/:/}.service
-}
+#function zhu-vnc-server-for-headless-system-as-autostart {
+#    zhu-vnc-server-for-headless-system --dont-start || return -1
+#    if [[ -z "$vncserver_args" ]]; then
+#        return -1
+#    fi
+#
+#    echo "[Unit]
+#Description=TigerVNC server
+#After=syslog.target network.target
+#
+#[Service]
+#Type=forking
+#User=$USER
+#WorkingDirectory=$HOME
+#ExecStartPre=-/usr/bin/tigervncserver -kill :%i > /dev/null 2>&1
+#ExecStart=/usr/bin/tigervncserver $vncserver_args :%i
+#ExecStop=/usr/bin/tigervncserver -kill :%i
+#
+#[Install]
+#WantedBy=multi-user.target
+#" > /etc/systemd/system/tigervncserver@.service
+#    sudo systemctl daemon-reload
+#    sudo systemctl enable tigervncserver@${DISPLAY/:/}.service
+#    sudo systemctl start tigervncserver@${DISPLAY/:/}.service
+#}
 
 function zhu-vnc-server-for-headless-system {
     if [[ -z $DISPLAY ]]; then
@@ -2272,42 +2243,35 @@ exec $desktop_session
 
     vncserver_args="-localhost no $DISPLAY -geometry 1920x1080 -depth 16 +iglx"
 
-    if [[ "$1" != "--dryrun" ]]; then
-        /usr/bin/tigervncserver -kill $DISPLAY >/dev/null 2>&1
-        read -e -i yes -p "Run tigervncserver and detach? (yes/no): " run_and_detach
-        if [[ $run_and_detach == yes ]]; then 
-            screen -dmS tigervncserver /usr/bin/tigervncserver $vncserver_args $DISPLAY 
-            sleep 1
-            /usr/bin/tigervncserver -list 
-        else 
-            /usr/bin/tigervncserver $vncserver_args $DISPLAY 
-        fi 
-    fi 
+    /usr/bin/tigervncserver -kill $DISPLAY >/dev/null 2>&1
+    screen -dmS tigervnc bash -c "/usr/bin/tigervncserver $vncserver_args $DISPLAY 2>&1 | tee /tmp/tigervnc.log"
+    sleep 1
+    /usr/bin/tigervncserver -list 
 }
 
-function zhu-vnc-server-for-physical-display-as-autostart {
-    zhu-vnc-server-for-physical-display --dryrun || return -1
-    if [[ -z "$x11vnc_args" ]]; then
-        return -1
-    fi
-
-    echo "[Unit]
-Description=x11vnc service
-After=display-manager.service
-
-[Service]
-ExecStart=/usr/bin/x11vnc $x11vnc_args 
-User=$USER
-Restart=on-failure
-RestartSec=2
-
-[Install]
-WantedBy=multi-user.target
-" | sudo tee /etc/systemd/system/x11vnc.service
-    sudo systemctl enable x11vnc.service 
-    sudo systemctl start x11vnc.service 
-    echo "x11vnc.service is running and scheduled as auto-start!"
-}
+#function zhu-vnc-server-for-physical-display-as-autostart {
+#    zhu-vnc-server-for-physical-display --dont-start || return -1
+#    if [[ -z "$x11vnc_args" ]]; then
+#        return -1
+#    fi
+#
+#    echo "[Unit]
+#Description=x11vnc service
+#After=display-manager.service
+#
+#[Service]
+#ExecStart=/usr/bin/x11vnc $x11vnc_args 
+#User=$USER
+#Restart=on-failure
+#RestartSec=2
+#
+#[Install]
+#WantedBy=multi-user.target
+#" | sudo tee /etc/systemd/system/x11vnc.service
+#    sudo systemctl enable x11vnc.service 
+#    sudo systemctl start x11vnc.service 
+#    echo "x11vnc.service is running and scheduled as auto-start!"
+#}
 
 function zhu-grub-default-saved {
     echo "Todo: add or edit: GRUB_DEFAULT=saved"
@@ -2329,7 +2293,7 @@ function zhu-vnc-server-for-physical-display {
         read -p "Press [ENTER] to continue: " _
     fi  
 
-    if [[ -z $(pidof Xorg) && "$1" != "--dryrun" ]]; then
+    if [[ -z $(pidof Xorg) && "$1" != "--dont-start" ]]; then
         echo "Xorg is not running!"
         return -1
     fi
@@ -2365,21 +2329,15 @@ function zhu-vnc-server-for-physical-display {
         SUDO=""
     fi
 
-    if [[ "$1" != "--dryrun" ]]; then
-        read -e -i yes -p "Run x11vnc and detach? (yes/no): " run_and_detach
-        if [[ $run_and_detach == yes ]]; then 
-            $SUDO screen -dmS x11vnc /usr/bin/x11vnc $x11vnc_args
-            dimension=$(xrandr | grep current | awk '{print $8 "x" $10}')
-            if [[ $dimension == "640x480" ]]; then
-                echo " - 1920x1080 (default)"
-                echo " - 2560x1440"
-                echo " - 3840x2160"
-                read -e -i "1920x1080" -p "Resize framebuffer: " fbsize
-                xrandr --fb $fbsize
-            fi
-        else
-            $SUDO /usr/bin/x11vnc $x11vnc_args
-        fi 
+    $SUDO screen -dmS bash -c "x11vnc /usr/bin/x11vnc $x11vnc_args 2>&1 | tee /tmp/x11vnc.log"
+    sleep 1
+    dimension=$(xrandr | grep current | awk '{print $8 "x" $10}')
+    if [[ $dimension == "640x480" ]]; then
+        echo " - 1920x1080 (default)"
+        echo " - 2560x1440"
+        echo " - 3840x2160"
+        read -e -i "1920x1080" -p "Resize framebuffer: " fbsize
+        xrandr --fb $fbsize
     fi
 }
 
