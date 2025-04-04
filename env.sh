@@ -3155,7 +3155,7 @@ function zhu-open-and-share-display {
         export DISPLAY=:0
     fi
     
-    if [[ ! -z $(sudo ls /root/nvtx 2>/dev/null) ]]; then
+    if [[ ! -z $(sudo ls /root/nvt 2>/dev/null) ]]; then
         zhu-mount-linuxqa 
         echo "NVTEST_NO_SMI=1 NVTEST_NO_RMMOD=1 NVTEST_NO_MODPROBE=1 /mnt/linuxqa/nvt.sh 3840x2160__runcmd --cmd 'sleep 2147483647' 2>&1 | tee /tmp/nvtest-xorg.log" > /tmp/nvtest-xorg.sh
         chmod +x /tmp/nvtest-xorg.sh
