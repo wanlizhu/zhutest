@@ -3125,9 +3125,11 @@ function zhu-digits-max-clocks {
         sleep 1
     fi
 
-    sudo modprobe nvidia NVreg_RegistryDwords="RmPowerFeature=0x55455555; RmPowerFeature2=0x55555550;"
-    cat /proc/driver/nvidia/params | grep RmPowerFeature
-    cat /proc/driver/nvidia/params | grep RmPowerFeature2 
+    if [[ -z $(sudo fuser -v /dev/nvidia*) ]]; then
+        sudo modprobe nvidia NVreg_RegistryDwords="RmPowerFeature=0x55455555; RmPowerFeature2=0x55555550;"
+        cat /proc/driver/nvidia/params | grep RmPowerFeature
+        cat /proc/driver/nvidia/params | grep RmPowerFeature2 
+    fi 
 
     sudo nvidia-smi -pm 1
     sudo $HOME/CPU_fmax_scripts/CPU_fmax_recipe.sh
