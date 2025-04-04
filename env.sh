@@ -2336,16 +2336,20 @@ function zhu-vnc-server-for-physical-display {
         SUDO=""
     fi
 
-    $SUDO screen -dmS bash -c "x11vnc /usr/bin/x11vnc $x11vnc_args 2>&1 | tee /tmp/x11vnc.log"
-    sleep 1
-    dimension=$(xrandr | grep current | awk '{print $8 "x" $10}')
-    if [[ $dimension == "640x480" ]]; then
-        echo " - 1920x1080 (default)"
-        echo " - 2560x1440"
-        echo " - 3840x2160"
-        read -e -i "1920x1080" -p "Resize framebuffer: " fbsize
-        xrandr --fb $fbsize
-    fi
+    if [[ $1 == "--debug" ]]; then
+        x11vnc /usr/bin/x11vnc $x11vnc_args
+    else
+        $SUDO screen -dmS bash -c "x11vnc /usr/bin/x11vnc $x11vnc_args 2>&1 | tee /tmp/x11vnc.log"
+        sleep 1
+        dimension=$(xrandr | grep current | awk '{print $8 "x" $10}')
+        if [[ $dimension == "640x480" ]]; then
+            echo " - 1920x1080 (default)"
+            echo " - 2560x1440"
+            echo " - 3840x2160"
+            read -e -i "1920x1080" -p "Resize framebuffer: " fbsize
+            xrandr --fb $fbsize
+        fi
+    fi 
 }
 
 function zhu-vnc-server {
