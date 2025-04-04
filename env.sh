@@ -576,16 +576,13 @@ function zhu-sync {
     fi
 
     if grep -q '://github.com/wanlizhu' .git/config; then
-        read -e -i yes -p "Inject login credential into URL (yes/no): " ans
-        if [[ $ans == yes ]]; then
-            github_token=$(zhu-decrypt 'U2FsdGVkX19LlJjrMCdfxGhU6d+rsxF4IhqaohiteKeVwM0WHGsCPL1z3kHo/xoH07+Qgf5yi9genmTamuF01g==')
-            if [[ $(uname -o) == Darwin ]]; then
-                # macOS uses BSD sed
-                sed -i "" "s|://github.com/wanlizhu|://wanlizhu:$github_token@github.com/wanlizhu|g" .git/config
-            else # Linux uses GNU sed
-                sed -i "s|://github.com/wanlizhu|://wanlizhu:$github_token@github.com/wanlizhu|g" .git/config
-            fi 
-        fi
+        github_token=$(zhu-decrypt 'U2FsdGVkX19LlJjrMCdfxGhU6d+rsxF4IhqaohiteKeVwM0WHGsCPL1z3kHo/xoH07+Qgf5yi9genmTamuF01g==')
+        if [[ $(uname -o) == Darwin ]]; then
+            # macOS uses BSD sed
+            sed -i "" "s|://github.com/wanlizhu|://wanlizhu:$github_token@github.com/wanlizhu|g" .git/config
+        else # Linux uses GNU sed
+            sed -i "s|://github.com/wanlizhu|://wanlizhu:$github_token@github.com/wanlizhu|g" .git/config
+        fi 
     fi
 
     if git diff --quiet && git diff --cached --quiet; then # No local changes
@@ -828,12 +825,16 @@ function zhu-gpufps {
 }
 
 function zhu-encrypt {
-    read -s -p "Zhu Encrypt Password: " passwd 
+    read -s -p "Base64 Password: " passwd 
     echo -n "$1" | openssl enc -aes-256-cbc -pbkdf2 -iter 10000 -salt -base64 -A -pass "pass:${passwd}" 
 }
 
 function zhu-decrypt {
-    read -s -p "Zhu Decrypt Password: " passwd 
+    if [[ ! -e ~/.zhurc.base64passwd ]]; then
+        read -s -p "Base64 Password: " passwd 
+        echo $passwd > ~/.zhurc.base64passwd
+    fi 
+    passwd=$(cat ~/.zhurc.base64passwd)
     echo -n "$1" | openssl enc -d -aes-256-cbc -pbkdf2 -iter 10000 -salt -base64 -A -pass "pass:${passwd}" 
 }
 
@@ -3118,8 +3119,8 @@ function zhu-digits-max-clocks {
         echo "options nvidia NVreg_RegistryDwords=\"RmPowerFeature=0x55455555; RmPowerFeature2=0x55555550;\"" | sudo tee /etc/modprobe.d/nvidia-power-feature.conf
         echo "Reboot to apply changes!"
     else
-        cat /proc/driver/nvidia/params | grep RmPowerFeature
-        cat /proc/driver/nvidia/params | grep RmPowerFeature2
+        cat /proc/driver/nvidia/params | grep RmPowerFeature=
+        cat /proc/driver/nvidia/params | grep RmPowerFeature2=
     fi
 
     sudo nvidia-smi -pm 1
