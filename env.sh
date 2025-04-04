@@ -2337,9 +2337,9 @@ function zhu-vnc-server-for-physical-display {
     fi
 
     if [[ $1 == "--debug" ]]; then
-        x11vnc /usr/bin/x11vnc $x11vnc_args
+        /usr/bin/x11vnc $x11vnc_args
     else
-        $SUDO screen -dmS bash -c "x11vnc /usr/bin/x11vnc $x11vnc_args 2>&1 | tee /tmp/x11vnc.log"
+        $SUDO screen -dmS x11vnc bash -c "/usr/bin/x11vnc $x11vnc_args 2>&1 | tee /tmp/x11vnc.log"
         sleep 1
         dimension=$(xrandr | grep current | awk '{print $8 "x" $10}')
         if [[ $dimension == "640x480" ]]; then
