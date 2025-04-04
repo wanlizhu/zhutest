@@ -610,6 +610,19 @@ function zhu-kill-xorg {
     sudo kill -15 $(pidof Xorg)
 }
 
+function zhu-unload-nvidia-modules {
+    if [[ ! -z $(sudo fuser -v /dev/nvidia*) ]]; then
+        sudo fuser -v /dev/nvidia*
+        read -e -i yes -p "Kill above process? (yes/no): " killproc
+        if [[ $killproc == yes ]]; then
+            for pid in $(sudo fuser -v /dev/nvidia* | grep -v 'COMMAND' | awk '{print $3}' | sort  | uniq); do 
+                sudo kill -9 $pid 
+            done
+        fi
+        sleep 1
+    fi
+}
+
 function zhu-install-nvidia-driver-localbuild {
     if [[ ! -e $1 ]]; then
         echo "Error: $1 doesn't exist!"
@@ -638,16 +651,7 @@ function zhu-install-nvidia-driver-localbuild {
         fi
     fi
 
-    if [[ ! -z $(sudo fuser -v /dev/nvidia*) ]]; then
-        sudo fuser -v /dev/nvidia*
-        read -e -i yes -p "Kill above process? (yes/no): " killproc
-        if [[ $killproc == yes ]]; then
-            for pid in $(sudo fuser -v /dev/nvidia* | grep -v 'COMMAND' | awk '{print $3}' | sort  | uniq); do 
-                sudo kill -9 $pid 
-            done
-        fi
-        sleep 1
-    fi
+    zhu-unload-nvidia-modules 
 
     if [[ "$(realpath $1)" != "/mnt/linuxqa/"* ]]; then
         chmod +x $(realpath $1) 
