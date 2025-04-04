@@ -3104,7 +3104,7 @@ function zhu-rsync-steam {
     rsync -ah --progress $user@$host_ip:/home/$user/.steam/ ~/.steam/
 }
 
-function zhu-n1x-max-clocks {
+function zhu-digits-max-clocks {
     if [[ ! -d ~/iGPU_vfmax_scripts ]]; then
         rsync -ah --progress /mnt/linuxqa/wlueking/n1x-bringup/iGPU_vfmax_scripts $HOME 
     fi
@@ -3112,6 +3112,25 @@ function zhu-n1x-max-clocks {
     if [[ ! -d ~/CPU_fmax_scripts ]]; then
         rsync -ah --progress /mnt/linuxqa/wlueking/n1x-bringup/CPU_fmax_scripts $HOME 
     fi
+
+    rm_power_feature=$(cat /proc/driver/nvidia/params | grep RmPowerFeature | awk '{print $2}')
+    rm_power_feature2=$(cat /proc/driver/nvidia/params | grep RmPowerFeature2 | awk '{print $2}')
+    if [[ -z $rm_power_feature || -z $rm_power_feature ]]; then
+        if [[ ! -z $(sudo fuser -v /dev/nvidia*) ]]; then
+            sudo fuser -v /dev/nvidia*
+            read -e -i yes -p "Kill above process? (yes/no): " killproc
+            if [[ $killproc == yes ]]; then
+                for pid in $(sudo fuser -v /dev/nvidia* | grep -v 'COMMAND' | awk '{print $3}' | sort  | uniq); do 
+                    sudo kill -9 $pid 
+                done
+            fi
+            sleep 1
+        fi
+        sudo modprobe nvidia NVreg_RegistryDwords="RmPowerFeature=0x55455555; RmPowerFeature2=0x55555550;"
+    fi 
+
+    cat /proc/driver/nvidia/params | grep RmPowerFeature
+    cat /proc/driver/nvidia/params | grep RmPowerFeature2 
 
     sudo nvidia-smi -pm 1
     sudo $HOME/CPU_fmax_scripts/CPU_fmax_recipe.sh
