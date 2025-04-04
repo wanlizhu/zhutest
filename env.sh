@@ -3101,7 +3101,8 @@ function zhu-rsync-steam {
         mv ~/.steam ~/.steam.backup
     fi
 
-    rsync -ah --progress $user@$host_ip:/home/$user/.steam/ ~/.steam/
+    # ssh_dispatch_run_fatal: Connection to 10.31.40.190 port 22: message authentication code incorrect
+    rsync -ah --progress -e "ssh -m hmac-sha2-512" $user@$host_ip:/home/$user/.steam/ ~/.steam/
 }
 
 function zhu-digits-max-clocks {
