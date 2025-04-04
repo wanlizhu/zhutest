@@ -3160,6 +3160,7 @@ function zhu-open-and-share-display {
         zhu-mount-linuxqa 
         echo "NVTEST_NO_SMI=1 NVTEST_NO_RMMOD=1 NVTEST_NO_MODPROBE=1 /mnt/linuxqa/nvt.sh 3840x2160__runcmd --cmd 'sleep 2147483647' 2>&1 | tee /tmp/nvtest-xorg.log" > /tmp/nvtest-xorg.sh
         chmod +x /tmp/nvtest-xorg.sh
+        echo "Password of root will be asked for"
         su - root -c "screen -dmS nvtest-xorg bash /tmp/nvtest-xorg.sh"
         echo "Wait for X server to start up"
         while [[ -z $(pidof Xorg) ]]; do 
