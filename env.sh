@@ -750,7 +750,7 @@ function zhu-build-nvidia-driver {
 
     sudo apt install -y libelf-dev &>/dev/null 
     if [[ ! -e ./makefile.nvmk ]]; then
-        read -e -i yes -p "Change CWD to $P4ROOT? (yes/no): " cdroot
+        read -e -i yes -p "Change workdir to $P4ROOT? (yes/no): " cdroot
         if [[ $cdroot == yes ]]; then
             cd $P4ROOT
         fi 
