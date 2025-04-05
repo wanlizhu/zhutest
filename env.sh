@@ -3153,14 +3153,24 @@ function zhu-sshkey {
         echo "Usage: zhu-sshkey user@host"
         return -1
     fi
-    
+
     if [[ ! -e ~/.ssh/id_ed25519 ]]; then
         ssh-keygen -t ed25519 
     fi 
     ssh-copy-id $1
 }
 
-function zhu-open-and-share-display {
+function zhu-check-desktop {
+    if [[ -z $(pidof Xorg) ]]; then
+        echo "No X server!"
+    else
+        ps aux | grep [X]org
+        echo  
+    fi
+    zhu-check-vncserver
+}
+
+function zhu-open-and-share-desktop {
     if [[ ! -z $(pidof Xorg) ]]; then
         if [[ ! -z $(zhu-check-vncserver) ]]; then
             echo "X server is running and sharing already!"
