@@ -639,12 +639,12 @@ function zhu-unload-nvidia-modules {
 function zhu-install-nvidia-driver-wanliz-build {
     read -e -i wanliz-test.client.nvidia.com -p "Rsync driver from host: " host
     read -e -i r575_00 -p "Branch: " branch
-    read -e -i aarch64 -p "Arch (amd64/aarch64): " arch
+    read -e -i $(uname -m) -p "Arch (x86_64/aarch64): " arch
     read -e -i release -p "Config: " config
     read -e -i $(ls /usr/lib/*-linux-gnu/libnvidia-glcore.so.*  | awk -F '.so.' '{print $2}' | head -1) -p "Version: " version
     
-    rsync -ah --progress wanliz@$host:/media/wanliz/wzhu-ssd-ext4-4t/wanliz-p4sw-$branch/_out/Linux_${arch}_${config}/NVIDIA-Linux-${arch/amd64/x86_64}-${version}-internal.run /tmp/NVIDIA-Linux-${arch/amd64/x86_64}-${version}-internal.run || return -1
-    zhu-install-nvidia-driver-localbuild /tmp/NVIDIA-Linux-${arch/amd64/x86_64}-${version}-internal.run
+    rsync -ah --progress wanliz@$host:/media/wanliz/wzhu-ssd-ext4-4t/wanliz-p4sw-$branch/_out/Linux_${arch/x86_64/amd64}_${config}/NVIDIA-Linux-${arch}-${version}-internal.run /tmp/NVIDIA-Linux-${arch}-${version}-internal.run || return -1
+    zhu-install-nvidia-driver-localbuild /tmp/NVIDIA-Linux-${arch}-${version}-internal.run
 }
 
 function zhu-install-nvidia-driver-localbuild {
