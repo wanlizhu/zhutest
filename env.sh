@@ -3148,6 +3148,18 @@ function zhu-digits-connect {
     fi 
 }
 
+function zhu-sshkey {
+    if [[ -z $1 ]]; then
+        echo "Usage: zhu-sshkey user@host"
+        return -1
+    fi
+    
+    if [[ ! -e ~/.ssh/id_ed25519 ]]; then
+        ssh-keygen -t ed25519 
+    fi 
+    ssh-copy-id $1
+}
+
 function zhu-open-and-share-display {
     if [[ ! -z $(pidof Xorg) ]]; then
         if [[ ! -z $(zhu-check-vncserver) ]]; then
