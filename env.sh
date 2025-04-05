@@ -3150,8 +3150,10 @@ function zhu-digits-connect {
 
 function zhu-open-and-share-display {
     if [[ ! -z $(pidof Xorg) ]]; then
-        echo "Kill running X server ($(pidof Xorg)) first!"
-        return -1
+        if [[ ! -z $(zhu-check-vncserver) ]]; then
+            echo "X server is running and sharing already!"
+            return 
+        fi
     fi
 
     if [[ -z $DISPLAY ]]; then
