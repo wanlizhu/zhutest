@@ -3170,6 +3170,10 @@ function zhu-check-desktop {
     zhu-check-vncserver
 }
 
+function z {
+    sudo env NVTEST_NO_SMI=1 NVTEST_NO_RMMOD=1 NVTEST_NO_MODPROBE=1 /mnt/linuxqa/nvt.sh 3840x2160_perf__viewperf2020v3
+}
+
 function zhu-open-and-share-desktop {
     if [[ ! -z $(pidof Xorg) ]]; then
         if [[ ! -z $(zhu-check-vncserver) ]]; then
