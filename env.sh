@@ -35,7 +35,7 @@ function zhu-enable-coredump {
 
 function zhu-update-path {
     if ! echo "$PATH" | tr ':' '\n' | grep -q "dvs/dvsbuild"; then
-        export PATH="$P4ROOT/automation/dvs/dvsbuild:$PATH" 
+        export PATH="$P4ROOT_BFM/automation/dvs/dvsbuild:$PATH" 
     fi
 
     if ! echo "$PATH" | tr ':' '\n' | grep -q "nsight-systems-internal"; then
@@ -79,6 +79,7 @@ function zhu-set-p4client {
 if [[ $USER == wanliz ]]; then
     export P4CLIENT=wanliz-p4sw-bugfix_main
     export P4ROOT=/media/wanliz/wzhu-ssd-ext4-4t/$P4CLIENT
+    export P4ROOT_BFM=/media/wanliz/wzhu-ssd-ext4-4t/wanliz-p4sw-bugfix_main
     export P4IGNORE=/home/wanliz/.p4ignore 
     export P4PORT=p4proxy-sc.nvidia.com:2006
     export P4USER=wanliz 
@@ -783,17 +784,17 @@ function zhu-build-nvidia-driver {
     fi 
 
     if [[ "$1" == sweep ]]; then
-        $P4ROOT/misc/linux/unix-build \
-            --tools  $P4ROOT/tools \
-            --devrel $P4ROOT/devrel/SDK/inc/GL \
+        $P4ROOT_BFM/misc/linux/unix-build \
+            --tools  $P4ROOT_BFM/tools \
+            --devrel $P4ROOT_BFM/devrel/SDK/inc/GL \
             --unshare-namespaces \
             nvmake sweep 
         return 
     fi
 
-    time $P4ROOT/misc/linux/unix-build \
-        --tools  $P4ROOT/tools \
-        --devrel $P4ROOT/devrel/SDK/inc/GL \
+    time $P4ROOT_BFM/misc/linux/unix-build \
+        --tools  $P4ROOT_BFM/tools \
+        --devrel $P4ROOT_BFM/devrel/SDK/inc/GL \
         --unshare-namespaces \
         nvmake \
         NV_COLOR_OUTPUT=1 \
