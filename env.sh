@@ -776,7 +776,7 @@ function zhu-build-nvidia-driver {
     fi
 
     if [[ -z "$1" ]]; then
-        nvmake_args="nvmake driver dist linux amd64 release -j$(nproc)"
+        nvmake_args="driver dist linux amd64 release -j$(nproc)"
         echo "$nvmake_args"
         read -p "Press [ENTER] to continue: " _
     else
