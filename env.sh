@@ -625,13 +625,17 @@ function zhu-kill-xorg {
 
 function zhu-unload-nvidia-modules {
     count=3
+    killproc=
     while [[ $count != "0" ]]; do 
         if [[ -z $(sudo fuser -v /dev/nvidia*) ]]; then
             break
         fi
         
-        sudo fuser -v /dev/nvidia*
-        read -e -i yes -p "Kill above process? (yes/no): " killproc
+        if [[ -z $killproc ]]; then 
+            sudo fuser -v /dev/nvidia*
+            read -e -i yes -p "Kill above process? (yes/no): " killproc
+        fi 
+
         if [[ $killproc == yes ]]; then
             for pid in $(sudo fuser -v /dev/nvidia* | grep -v 'COMMAND' | awk '{print $3}' | sort  | uniq); do 
                 sudo kill -9 $pid 
