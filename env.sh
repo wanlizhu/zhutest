@@ -624,16 +624,25 @@ function zhu-kill-xorg {
 }
 
 function zhu-unload-nvidia-modules {
-    if [[ ! -z $(sudo fuser -v /dev/nvidia*) ]]; then
+    count=3
+    while [[ $count != "0" ]]; do 
+        if [[ -z $(sudo fuser -v /dev/nvidia*) ]]; then
+            break
+        fi
+        
         sudo fuser -v /dev/nvidia*
         read -e -i yes -p "Kill above process? (yes/no): " killproc
         if [[ $killproc == yes ]]; then
             for pid in $(sudo fuser -v /dev/nvidia* | grep -v 'COMMAND' | awk '{print $3}' | sort  | uniq); do 
                 sudo kill -9 $pid 
             done
+        else
+            break 
         fi
+
         sleep 1
-    fi
+        count=$((count - 1))
+    done 
 }
 
 function zhu-install-nvidia-driver-wanliz-build {
