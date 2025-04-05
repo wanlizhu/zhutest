@@ -64,6 +64,18 @@ function zhu-setup-nopasswd-sudo {
     fi 
 }
 
+function zhu-set-p4client {
+    if [[ $1 == bugfix_main ]]; then
+        export P4CLIENT=wanliz-p4sw-bugfix_main
+    elif [[ $1 == r575 ]]; then
+        export P4CLIENT=wanliz-p4sw-r575_00
+    else
+        echo "Unknown client name: $1"
+        return -1
+    fi 
+    export P4ROOT=/media/wanliz/wzhu-ssd-ext4-4t/$P4CLIENT
+}
+
 if [[ $USER == wanliz ]]; then
     export P4CLIENT=wanliz-p4sw-bugfix_main
     export P4ROOT=/media/wanliz/wzhu-ssd-ext4-4t/$P4CLIENT
