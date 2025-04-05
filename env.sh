@@ -636,6 +636,16 @@ function zhu-unload-nvidia-modules {
     fi
 }
 
+function zhu-install-nvidia-driver-wanliz-build {
+    read -e -i wanliz-test.client.nvidia.com -p "Rsync driver from host: " host
+    read -e -i r575_00 -p "Branch: " branch
+    read -e -i aarch64 -p "Arch (amd64/aarch64): " arch
+    read -e -i release -p "Config: " config
+    read -e -i $(ls /usr/lib/*-linux-gnu/libnvidia-glcore.so.*  | awk -F '.so.' '{print $2}' | head -1) -p "Version: " version
+    
+    rsync -ah --progress wanliz@$host:/media/wanliz/wzhu-ssd-ext4-4t/wanliz-p4sw-$branch/_out/Linux_${arch}_${config}/NVIDIA-Linux-${arch/amd64/x86_64}-${version}-internal.run
+}
+
 function zhu-install-nvidia-driver-localbuild {
     if [[ ! -e $1 ]]; then
         echo "Error: $1 doesn't exist!"
@@ -691,6 +701,10 @@ function zhu-install-nvidia-driver-localbuild {
 }
 
 function zhu-install-nvidia-driver-prebuilt {
+    zhu-install-nvidia-driver-dvsbuild
+}
+
+function zhu-install-nvidia-driver-dvsbuild {
     zhu-mount-linuxqa || return -1
     path="/mnt"
     echo "[1] release build"
@@ -3036,17 +3050,6 @@ function zhu-rsync-p4sw-bugfix_main {
     read -e -i wanliz-test.client.nvidia.com -p "Rsync from remote host: " host_ip
     read -e -i wanliz -p "As user: " user
     time rsync -ah --progress --exclude="_out/" --exclude=".git/" --exclude=".vscode/" $user@$host_ip:/home/$user/wanliz-p4sw-bugfix_main/ $HOME/wanliz-p4sw-bugfix_main 
-}
-
-function zhu-rsync-driver {
-    read -e -i wanliz-test.client.nvidia.com -p "Rsync from remote host: " host_ip
-    read -e -i wanliz  -p "As user: " user
-    read -e -i amd64   -p "Driver arch: " arch
-    read -e -i release -p "Driver config: " config
-    read -p "Driver version: " version
-    
-
-    time rsync -ah --progress $user@$host_ip:/home/$user/wanliz-p4sw-bugfix_main/_out/Linux_${arch}_${config}/NVIDIA-Linux-${arch/amd64/x86_64}-${version}-internal.run NVIDIA-Linux-${arch/amd64/x86_64}-${version}-internal.run
 }
 
 function zhu-rsync-linux-kernel {
