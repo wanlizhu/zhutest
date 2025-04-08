@@ -3051,7 +3051,7 @@ function zhu-run-in-proton {
 }
 
 function zhu-ssh-test-machine {
-    ssh wanliz@wanliz-test.client.nvidia.com
+    ssh -o StrictHostKeyChecking=no wanliz@wanliz-test.client.nvidia.com
 }
 
 function zhu-rsync-zhutest-workload {
@@ -3074,7 +3074,7 @@ function zhu-rsync-linux-kernel {
 
     read -e -i wanliz-test.client.nvidia.com -p "Rsync from remote host: " host_ip
     read -e -i wanliz  -p "As user: " user
-    ssh $user@$host_ip "ls -al /boot"
+    ssh -o StrictHostKeyChecking=no $user@$host_ip "ls -al /boot"
     read -p "Linux kernel: " kernel
     read -s -p "Password: " passwd
 
@@ -3090,7 +3090,7 @@ function zhu-rsync-linux-kernel {
 function zhu-rsync-firmware {
     read -e -i wanliz-test.client.nvidia.com -p "Rsync from remote host: " host_ip
     read -e -i wanliz  -p "As user: " user
-    ssh $user@$host_ip "ls -al /boot/efi/firmware"
+    ssh -o StrictHostKeyChecking=no $user@$host_ip "ls -al /boot/efi/firmware"
     read -p "Firmware: " firmware
 
     sudo mkdir -p /boot/efi/firmware
@@ -3106,7 +3106,7 @@ function zhu-rsync-steam {
     fi
 
     # ssh_dispatch_run_fatal: Connection to 10.31.40.190 port 22: message authentication code incorrect
-    rsync -ah --progress -e "ssh -m hmac-sha2-512" $user@$host_ip:/home/$user/.steam/ ~/.steam/
+    rsync -ah --progress -e "ssh -o StrictHostKeyChecking=no -m hmac-sha2-512" $user@$host_ip:/home/$user/.steam/ ~/.steam/
 }
 
 function zhu-digits-max-clocks {
@@ -3135,15 +3135,15 @@ function zhu-digits-max-clocks {
 function zhu-digits-connect {
     if [[ $1 == 6 ]]; then 
         if [[ $2 == h* ]]; then 
-            sshpass -p root ssh root@linux-bringup6.client.nvidia.com
+            sshpass -p root ssh -o StrictHostKeyChecking=no root@linux-bringup6.client.nvidia.com
         else 
-            sshpass -p nvidia ssh nvidia@10.31.40.169
+            sshpass -p nvidia ssh -o StrictHostKeyChecking=no nvidia@10.31.40.169
         fi 
     elif [[ $1 == 7 ]]; then
         if [[ $2 == h* ]]; then 
-            sshpass -p root ssh root@linux-bringup7.client.nvidia.com
+            sshpass -p root ssh -o StrictHostKeyChecking=no root@linux-bringup7.client.nvidia.com
         else 
-            sshpass -p nvidia ssh nvidia@10.31.40.190
+            sshpass -p nvidia ssh -o StrictHostKeyChecking=no nvidia@10.31.40.190
         fi 
     fi 
 }
