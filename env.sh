@@ -160,7 +160,7 @@ function zhu-is-installed {
     fi
 }
 
-function zhu-connect-nvidia-vpn {
+function zhu-nvidia-vpn {
     if [[ -z $(which openconnect) ]]; then
         sudo apt install -y openconnect  || return -1
     fi
@@ -3133,6 +3133,10 @@ function zhu-digits-max-clocks {
 }
 
 function zhu-digits-connect {
+    zhu-connect 
+}
+
+function zhu-connect {
     if [[ $1 == 6 ]]; then 
         if [[ $2 == h* ]]; then 
             sshpass -p root ssh -o StrictHostKeyChecking=no root@linux-bringup6.client.nvidia.com
