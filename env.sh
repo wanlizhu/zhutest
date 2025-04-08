@@ -1560,7 +1560,7 @@ function zhu-fex-emu {
     popd 
 }
 
-function zhu-config-linux-kernel {
+function zhu-change-linux-kernel {
     if [[ ! -e /etc/default/grub ]]; then
         if [[ $(uname -m) == x86_64 ]]; then
             sudo apt install --reinstall grub-efi grub-efi-amd64 grub-efi-amd64-bin
