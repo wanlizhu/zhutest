@@ -1574,6 +1574,17 @@ EOML
     popd 
 }
 
+function zhu-apt-remove-arch-i386-and-amd64 {
+    for xx in `dpkg --get-selections | grep ":i386" | awk '{print $1}'` ; do 
+        sudo dpkg --purge --force-all $xx
+    done
+    sudo dpkg --remove-architecture i386
+    for xx in `dpkg --get-selections | grep ":amd64" | awk '{print $1}'` ; do 
+        sudo dpkg --purge --force-all $xx
+    done
+    sudo dpkg --remove-architecture amd64
+}
+
 function zhu-change-linux-kernel {
     if [[ ! -e /etc/default/grub ]]; then
         if [[ $(uname -m) == x86_64 ]]; then
