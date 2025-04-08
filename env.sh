@@ -1529,11 +1529,25 @@ function zhu-fix-snap-readonly-filesystem-issue {
 }
 
 function zhu-fex-emu {
-    zhu-fex-emu-config || return -1
     which jq >/dev/null || sudo apt install -y jq 
     which patchelf >/dev/null || sudo apt install -y patchelf
     ubuntu=$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)
     rootfs="$HOME/.fex-emu/RootFS/$ubuntu"
+
+    if [[ ! -e $rootfs/zhu-fex-emu-config.sh ]]; then 
+        cat <<EOML > $rootfs/zhu-fex-emu-config.sh 
+apt update
+apt reinstall passwd -y
+apt reinstall util-linux -y
+apt install vim -y
+apt install bsdutils -y
+apt install steam -y
+EOML
+        echo "Generated: $rootfs/zhu-fex-emu-config.sh"
+    else
+        echo "Existing: $rootfs/zhu-fex-emu-config.sh"
+    fi
+    chmod +x $rootfs/zhu-fex-emu-config.sh
     
     if [[ ! -e $rootfs/chroot.py ]]; then 
         wget  -O $rootfs/chroot.py https://raw.githubusercontent.com/FEX-Emu/RootFS/refs/heads/main/Scripts/chroot.py 
@@ -1625,35 +1639,6 @@ function zhu-check-apparmor {
     cat /sys/module/apparmor/parameters/enabled 
     echo 
     sudo aa-status
-}
-
-function zhu-fex-emu-config {
-    if [[ -z $(which jq) ]]; then
-        sudo apt install -y jq || return -1
-    fi 
-
-    ubuntu=$(jq -r '.Config.RootFS' $HOME/.fex-emu/Config.json)
-    rootfs="$HOME/.fex-emu/RootFS/$ubuntu"
-
-    if [[ ! -e $rootfs/zhu-fex-emu-config.sh ]]; then 
-        cat <<EOML > $rootfs/zhu-fex-emu-config.sh 
-apt update
-apt reinstall passwd -y
-apt reinstall util-linux -y
-apt reinstall mount -y 
-apt install vim -y
-apt install bsdutils -y
-apt install nfs-common -y
-apt install steam -y
-if [[ ! -d /home/nvidia ]]; then
-    adduser nvidia
-fi 
-EOML
-        echo "Generated: $rootfs/zhu-fex-emu-config.sh"
-    else
-        echo "Existing: $rootfs/zhu-fex-emu-config.sh"
-    fi
-    chmod +x $rootfs/zhu-fex-emu-config.sh
 }
 
 #function zhu-config-in-fex {
@@ -3202,7 +3187,7 @@ function zhu-open-and-share-desktop {
     zhu-xserver-with-vnc
 }
 
-function zhu-digits-steam {
+function zhu-steam {
     FEXInterpreter ~/.fex-emu/RootFS/Ubuntu_24_04/usr/games/steam
 }
 
